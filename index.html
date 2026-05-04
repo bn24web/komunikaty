@@ -74,7 +74,7 @@
         <span class="footerbar__dot" aria-hidden="true">•</span>
         <span>powered by ab: <span id="createdDate">2026-01-14</span></span>
         <span class="footerbar__dot" aria-hidden="true">•</span>
-        <span>Wersja: <span id="appVersion">v1.2.0</span></span>
+        <span>Wersja: <span id="appVersion">v1.2.1</span></span>
       </div>
 
       <div class="footerbar__counters" aria-label="Statystyki odsłon">
@@ -98,22 +98,36 @@
 
   <script>
     const CREATED = "2026-01-14";
-    const VERSION = "v1.2.0";
+    const VERSION = "v1.2.1";
 
     document.getElementById("createdDate").textContent = CREATED;
     document.getElementById("appVersion").textContent = VERSION;
 
     const GC = "https://komunikaty.goatcounter.com";
-    const KEY = "gc_counts_cache_v1";
+    const KEY = "gc_counts_cache_v2";
+    const GC_PATH = "/komunikaty";
+
+    /*
+      Licznik startowy.
+      GoatCounter liczy realne odwiedziny od nowej domeny,
+      a na stronie pokazujemy łączną liczbę jako realne odwiedziny + 100.
+    */
+    const TOTAL_OFFSET = 100;
 
     function ymd(d) {
       const pad = (n) => String(n).padStart(2, "0");
       return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
     }
 
+    function formatCount(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return value;
+      return n.toLocaleString("pl-PL");
+    }
+
     function setText(id, value) {
       const el = document.getElementById(id);
-      if (el) el.textContent = value;
+      if (el) el.textContent = formatCount(value);
     }
 
     function loadCache() {
@@ -145,7 +159,30 @@
       if (!r.ok) throw new Error("GoatCounter HTTP " + r.status);
 
       const data = await r.json();
-      return data.count;
+      return Number(data.count || 0);
+    }
+
+    async function gcCountWithFallback(start = null, end = null) {
+      const paths = [
+        GC_PATH,
+        GC_PATH + "/",
+        "/komunikaty",
+        "/komunikaty/",
+        "TOTAL",
+        "/TOTAL"
+      ];
+
+      let lastError = null;
+
+      for (const path of paths) {
+        try {
+          return await gcCount(path, start, end);
+        } catch (e) {
+          lastError = e;
+        }
+      }
+
+      throw lastError || new Error("GoatCounter failed");
     }
 
     (async () => {
@@ -164,9 +201,13 @@
         const d7 = new Date(today);
         d7.setDate(d7.getDate() - 7);
 
-        const total = await gcCount("TOTAL");
-        const todayCount = await gcCount("TOTAL", startToday);
-        const d7Count = await gcCount("TOTAL", ymd(d7));
+        const rawTotal = await gcCountWithFallback();
+        const rawToday = await gcCountWithFallback(startToday);
+        const rawD7 = await gcCountWithFallback(ymd(d7));
+
+        const total = rawTotal + TOTAL_OFFSET;
+        const todayCount = rawToday;
+        const d7Count = rawD7;
 
         setText("gc-total", total);
         setText("gc-today", todayCount);
@@ -176,6 +217,8 @@
           total,
           today: todayCount,
           d7: d7Count,
+          rawTotal,
+          offset: TOTAL_OFFSET,
           ts: Date.now()
         });
       } catch (e) {
