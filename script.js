@@ -75,7 +75,6 @@ const langFab = document.getElementById('langFab');
 
 let langSwitchBusy = false;
 
-// Pamięć ostatniego świadomego kliknięcia użytkownika
 let lastMainAccordionState = null;
 let lastDetailsState = null;
 let lastSubPanelId = null;
@@ -128,7 +127,7 @@ async function setLangReady(lang) {
 
   const activeSection = lang === 'PL' ? sectionPL : sectionEN;
 
-  for (let i = 0; i < 80; i++) {
+  for (let i = 0; i < 100; i++) {
     if (activeSection.querySelector('.accordion-header')) return;
     await new Promise(r => setTimeout(r, 50));
   }
@@ -267,6 +266,12 @@ function swapLangInId(id) {
   return null;
 }
 
+function clearLastOpenState() {
+  lastMainAccordionState = null;
+  lastDetailsState = null;
+  lastSubPanelId = null;
+}
+
 function rememberMainAccordion(header) {
   if (!header) return;
 
@@ -303,7 +308,6 @@ function rememberDetails(details) {
     : allDetails;
 
   const groupIndex = groupDetails.indexOf(details);
-
   const summaryText = getDetailsSummaryText(details);
 
   lastDetailsState = {
@@ -314,6 +318,20 @@ function rememberDetails(details) {
     detailsIndex,
     groupIndex
   };
+}
+
+function rememberSubPanel(panelId, triggerEl) {
+  if (!panelId) return;
+
+  const parentBody = triggerEl ? triggerEl.closest('.accordion-body') : null;
+  const parentHeader = findAccordionHeaderFromBody(parentBody);
+
+  if (parentHeader) {
+    rememberMainAccordion(parentHeader);
+  }
+
+  lastSubPanelId = panelId;
+  lastDetailsState = null;
 }
 
 function findMatchingDetails(targetBody, detailsState) {
@@ -388,18 +406,53 @@ function ensureOpenMain(header) {
   }
 }
 
+function getPanelByMappedId(root, id) {
+  if (!root || !id) return null;
+
+  const mappedId = swapLangInId(id) || id;
+
+  let panel = root.querySelector(`#${CSS.escape(mappedId)}`);
+  if (panel) return panel;
+
+  panel = root.querySelector(`#${CSS.escape(id)}`);
+  if (panel) return panel;
+
+  return null;
+}
+
 function ensureOpenSub(activeSection, targetId) {
-  if (!targetId) return;
+  if (!targetId) return null;
 
-  const safeId = CSS.escape(targetId);
-  const toggler = activeSection.querySelector(`[data-target="${safeId}"]`);
-  const panel = activeSection.querySelector(`#${safeId}`);
+  const mappedId = swapLangInId(targetId) || targetId;
+  const safeMappedId = CSS.escape(mappedId);
+  const safeOriginalId = CSS.escape(targetId);
 
-  if (!toggler || !panel) return;
+  let panel =
+    activeSection.querySelector(`#${safeMappedId}`) ||
+    activeSection.querySelector(`#${safeOriginalId}`);
 
-  if (!panel.classList.contains('active')) {
-    toggler.click();
-  }
+  if (!panel) return null;
+
+  const actualId = panel.id;
+  const safeActualId = CSS.escape(actualId);
+
+  const togglers = Array.from(activeSection.querySelectorAll(`[data-target="${safeActualId}"]`));
+
+  const rootBody = panel.closest('.accordion-body') || activeSection;
+
+  rootBody.querySelectorAll('.gastronomy-more.active').forEach(other => {
+    if (other !== panel) {
+      other.classList.remove('active');
+      other.style.display = 'none';
+    }
+  });
+
+  panel.classList.add('active');
+  panel.style.display = 'block';
+
+  togglers.forEach(t => t.classList.add('active'));
+
+  return panel;
 }
 
 async function waitForTargetHeader(section, key, index) {
@@ -413,10 +466,22 @@ async function waitForTargetHeader(section, key, index) {
   return null;
 }
 
-function clearLastOpenState() {
-  lastMainAccordionState = null;
-  lastDetailsState = null;
-  lastSubPanelId = null;
+async function waitForPanelById(section, id) {
+  if (!id) return null;
+
+  for (let i = 0; i < 80; i++) {
+    const mappedId = swapLangInId(id) || id;
+
+    const panel =
+      section.querySelector(`#${CSS.escape(mappedId)}`) ||
+      section.querySelector(`#${CSS.escape(id)}`);
+
+    if (panel) return panel;
+
+    await new Promise(r => setTimeout(r, 50));
+  }
+
+  return null;
 }
 
 // ========================
@@ -472,8 +537,6 @@ document.addEventListener('click', function (e) {
   const parentHeader = findAccordionHeaderFromBody(parentBody);
   if (parentHeader) rememberMainAccordion(parentHeader);
 
-  lastSubPanelId = body.id || null;
-
   const isOpen = btn.classList.contains('active');
 
   document.querySelectorAll('.connection-toggle').forEach(o => {
@@ -487,21 +550,18 @@ document.addEventListener('click', function (e) {
   btn.classList.toggle('active', !isOpen);
   body.classList.toggle('active', !isOpen);
 
-  if (isOpen) {
-    lastSubPanelId = null;
-  }
+  lastSubPanelId = isOpen ? null : (body.id || null);
+  lastDetailsState = null;
 });
 
 // ========================
-// PLUSIK GASTRONOMII
+// PLUSIKI / ROZWIJANE BLOKI .gastronomy-more
+// ważne dla komunikatów 7 i 8
 // ========================
 
 document.addEventListener('click', function (e) {
   const plus = e.target.closest('.gastronomy-plus');
   if (!plus) return;
-
-  e.preventDefault();
-  e.stopPropagation();
 
   const id = plus.getAttribute('data-target');
   if (!id) return;
@@ -509,9 +569,10 @@ document.addEventListener('click', function (e) {
   const block = document.getElementById(id);
   if (!block) return;
 
-  const parentBody = plus.closest('.accordion-body');
-  const parentHeader = findAccordionHeaderFromBody(parentBody);
-  if (parentHeader) rememberMainAccordion(parentHeader);
+  e.preventDefault();
+  e.stopPropagation();
+
+  rememberSubPanel(id, plus);
 
   const root = plus.closest('.accordion-body') || document;
 
@@ -522,17 +583,17 @@ document.addEventListener('click', function (e) {
     }
   });
 
-  block.classList.toggle('active');
+  const isCurrentlyActive = block.classList.contains('active');
 
-  const isActive = block.classList.contains('active');
-  block.style.display = isActive ? 'block' : 'none';
+  block.classList.toggle('active', !isCurrentlyActive);
+  block.style.display = !isCurrentlyActive ? 'block' : 'none';
 
-  lastSubPanelId = isActive ? id : null;
+  lastSubPanelId = !isCurrentlyActive ? id : null;
 });
 
 // ========================
 // ŚLEDZENIE DETAILS/SUMMARY
-// ważne dla komunikatów 6 i 7
+// ważne dla komunikatu 6
 // ========================
 
 document.addEventListener('click', function (e) {
@@ -553,35 +614,18 @@ document.addEventListener('click', function (e) {
 // ZAPIS I ODTWARZANIE POZYCJI
 // ========================
 
-function calculateDetailsRatio(details) {
-  if (!details) return 0;
+function calculateElementRatio(el) {
+  if (!el) return 0;
 
   const ref = getVisibleReferenceElement();
   const refY = ref ? ref.y : window.innerHeight * 0.45;
 
-  const rect = details.getBoundingClientRect();
-  const detailsTop = rect.top + window.scrollY;
-  const detailsHeight = Math.max(1, rect.height);
+  const rect = el.getBoundingClientRect();
+  const top = rect.top + window.scrollY;
+  const height = Math.max(1, rect.height);
   const refDocY = window.scrollY + refY;
 
-  let ratio = (refDocY - detailsTop) / detailsHeight;
-  ratio = Math.max(0, Math.min(1, ratio));
-
-  return ratio;
-}
-
-function calculateBodyRatio(body) {
-  if (!body) return 0;
-
-  const ref = getVisibleReferenceElement();
-  const refY = ref ? ref.y : window.innerHeight * 0.45;
-
-  const rect = body.getBoundingClientRect();
-  const bodyTop = rect.top + window.scrollY;
-  const bodyHeight = Math.max(1, rect.height);
-  const refDocY = window.scrollY + refY;
-
-  let ratio = (refDocY - bodyTop) / bodyHeight;
+  let ratio = (refDocY - top) / height;
   ratio = Math.max(0, Math.min(1, ratio));
 
   return ratio;
@@ -590,10 +634,6 @@ function calculateBodyRatio(body) {
 function captureViewportState() {
   const activeSection = getActiveSection();
 
-  // WAŻNE:
-  // Jeśli jesteśmy na głównej liście i żaden komunikat nie jest otwarty,
-  // nie próbujemy niczego dopasowywać. Zachowujemy absolutny scrollY.
-  // To usuwa problem "pełzania" strony po każdym kliknięciu PL/EN.
   const openBody = activeSection.querySelector('.accordion-body.active');
 
   if (!openBody) {
@@ -603,22 +643,10 @@ function captureViewportState() {
     };
   }
 
-  let header = null;
-
-  // 1. Najpierw bierzemy ostatnio kliknięty komunikat
-  if (lastMainAccordionState && lastMainAccordionState.lang === getActiveLang()) {
-    header = findHeaderByKeyOrIndex(
-      activeSection,
-      lastMainAccordionState.key,
-      lastMainAccordionState.index
-    );
-  }
-
-  // 2. Fallback: dopiero wtedy próbujemy po elemencie z ekranu
-  if (!header) {
-    const ref = getVisibleReferenceElement();
-    if (ref) header = findAccordionHeaderFromElement(ref.el);
-  }
+  // Najważniejsza zmiana:
+  // skoro jakiś akordeon jest otwarty, bierzemy realnie otwarty body,
+  // a nie ostatni zapamiętany header. To usuwa skoki do losowych komunikatów.
+  const header = findAccordionHeaderFromBody(openBody);
 
   if (!header) {
     return {
@@ -627,20 +655,19 @@ function captureViewportState() {
     };
   }
 
-  const body = header.nextElementSibling;
   const key = getHeaderKey(header.textContent);
   const index = getHeaderIndex(activeSection, header);
 
-  const wasOpen =
-    body &&
-    body.classList &&
-    body.classList.contains('accordion-body') &&
-    body.classList.contains('active');
-
   let sourceDetails = null;
 
-  if (wasOpen && lastDetailsState && lastDetailsState.lang === getActiveLang()) {
-    sourceDetails = findMatchingDetails(body, lastDetailsState);
+  if (lastDetailsState && lastDetailsState.lang === getActiveLang()) {
+    sourceDetails = findMatchingDetails(openBody, lastDetailsState);
+  }
+
+  let sourcePanel = null;
+
+  if (lastSubPanelId) {
+    sourcePanel = getPanelByMappedId(openBody, lastSubPanelId);
   }
 
   const ref = getVisibleReferenceElement();
@@ -650,20 +677,21 @@ function captureViewportState() {
     mode: 'smart',
     key,
     index,
-    wasOpen,
-    bodyRatio: wasOpen && body ? calculateBodyRatio(body) : 0,
+    wasOpen: true,
+    bodyRatio: calculateElementRatio(openBody),
     refY,
+
     subId: lastSubPanelId,
+    subPanelRatio: sourcePanel ? calculateElementRatio(sourcePanel) : 0,
+
     detailsState: lastDetailsState && lastDetailsState.lang === getActiveLang() ? lastDetailsState : null,
-    detailsRatio: sourceDetails ? calculateDetailsRatio(sourceDetails) : 0
+    detailsRatio: sourceDetails ? calculateElementRatio(sourceDetails) : 0
   };
 }
 
 async function restoreViewportState(state) {
   if (!state) return;
 
-  // Tryb absolutny: używany na głównej liście, kiedy nic nie jest otwarte.
-  // Nie otwiera żadnego akordeonu i nie zgaduje pozycji.
   if (state.mode === 'absolute') {
     await new Promise(resolve => requestAnimationFrame(resolve));
     await new Promise(resolve => requestAnimationFrame(resolve));
@@ -692,15 +720,11 @@ async function restoreViewportState(state) {
 
   const targetBody = targetHeader.nextElementSibling;
 
-  const mappedSubId = swapLangInId(state.subId);
+  let targetPanel = null;
 
-  if (mappedSubId) {
-    for (let i = 0; i < 50; i++) {
-      if (activeSection.querySelector(`#${CSS.escape(mappedSubId)}`)) break;
-      await new Promise(r => setTimeout(r, 50));
-    }
-
-    ensureOpenSub(activeSection, mappedSubId);
+  if (state.subId) {
+    await waitForPanelById(activeSection, state.subId);
+    targetPanel = ensureOpenSub(activeSection, state.subId);
   }
 
   let targetDetails = null;
@@ -723,7 +747,19 @@ async function restoreViewportState(state) {
 
   let targetY;
 
-  if (targetDetails) {
+  // Priorytet 1: konkretny panel .gastronomy-more, czyli komunikaty 7 i 8.
+  if (targetPanel) {
+    const panelTop = targetPanel.getBoundingClientRect().top + window.scrollY;
+    const panelHeight = Math.max(1, targetPanel.getBoundingClientRect().height);
+
+    targetY =
+      panelTop +
+      state.subPanelRatio * panelHeight -
+      state.refY;
+  }
+
+  // Priorytet 2: konkretny details, czyli komunikat 6.
+  else if (targetDetails) {
     const detailsTop = targetDetails.getBoundingClientRect().top + window.scrollY;
     const detailsHeight = Math.max(1, targetDetails.getBoundingClientRect().height);
 
@@ -731,7 +767,10 @@ async function restoreViewportState(state) {
       detailsTop +
       state.detailsRatio * detailsHeight -
       state.refY;
-  } else if (state.wasOpen && hasBody) {
+  }
+
+  // Priorytet 3: całe body komunikatu.
+  else if (state.wasOpen && hasBody) {
     const bodyTop = targetBody.getBoundingClientRect().top + window.scrollY;
     const bodyHeight = Math.max(1, targetBody.getBoundingClientRect().height);
 
@@ -739,7 +778,10 @@ async function restoreViewportState(state) {
       bodyTop +
       state.bodyRatio * bodyHeight -
       state.refY;
-  } else {
+  }
+
+  // Fallback.
+  else {
     const headerTop = targetHeader.getBoundingClientRect().top + window.scrollY;
     targetY = headerTop - 90;
   }
