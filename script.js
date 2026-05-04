@@ -643,9 +643,6 @@ function captureViewportState() {
     };
   }
 
-  // Najważniejsza zmiana:
-  // skoro jakiś akordeon jest otwarty, bierzemy realnie otwarty body,
-  // a nie ostatni zapamiętany header. To usuwa skoki do losowych komunikatów.
   const header = findAccordionHeaderFromBody(openBody);
 
   if (!header) {
@@ -747,7 +744,6 @@ async function restoreViewportState(state) {
 
   let targetY;
 
-  // Priorytet 1: konkretny panel .gastronomy-more, czyli komunikaty 7 i 8.
   if (targetPanel) {
     const panelTop = targetPanel.getBoundingClientRect().top + window.scrollY;
     const panelHeight = Math.max(1, targetPanel.getBoundingClientRect().height);
@@ -756,10 +752,7 @@ async function restoreViewportState(state) {
       panelTop +
       state.subPanelRatio * panelHeight -
       state.refY;
-  }
-
-  // Priorytet 2: konkretny details, czyli komunikat 6.
-  else if (targetDetails) {
+  } else if (targetDetails) {
     const detailsTop = targetDetails.getBoundingClientRect().top + window.scrollY;
     const detailsHeight = Math.max(1, targetDetails.getBoundingClientRect().height);
 
@@ -767,10 +760,7 @@ async function restoreViewportState(state) {
       detailsTop +
       state.detailsRatio * detailsHeight -
       state.refY;
-  }
-
-  // Priorytet 3: całe body komunikatu.
-  else if (state.wasOpen && hasBody) {
+  } else if (state.wasOpen && hasBody) {
     const bodyTop = targetBody.getBoundingClientRect().top + window.scrollY;
     const bodyHeight = Math.max(1, targetBody.getBoundingClientRect().height);
 
@@ -778,10 +768,7 @@ async function restoreViewportState(state) {
       bodyTop +
       state.bodyRatio * bodyHeight -
       state.refY;
-  }
-
-  // Fallback.
-  else {
+  } else {
     const headerTop = targetHeader.getBoundingClientRect().top + window.scrollY;
     targetY = headerTop - 90;
   }
