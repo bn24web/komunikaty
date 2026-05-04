@@ -1,0 +1,659 @@
+/* =========================
+   RESET / GLOBAL
+========================= */
+:root{
+  --pageWidth: 720px;
+  scroll-padding-top: 72px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
+
+body{
+  font-family: 'Inter','Segoe UI','Roboto','Helvetica Neue',sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  background: linear-gradient(180deg, #f4f6fa 0%, #eef2f7 100%);
+  color: #24324a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+strong{ font-weight: 700; }
+
+em{
+  font-style: italic;
+  font-size: 0.8rem;
+}
+
+/* =========================
+   LAYOUT APLIKACJI
+========================= */
+.app{
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.app__content{
+  flex: 1 0 auto;
+  width: min(100%, var(--pageWidth));
+  margin: 0 auto;
+}
+
+/* =========================
+   TABY
+========================= */
+.tabs{
+  display: flex;
+  flex-direction: row;
+  gap: 0.45rem;
+  margin: 0.45rem 0.5rem 0.55rem;
+  padding: 0.22rem;
+  background: rgba(255,255,255,0.78);
+  border: 1px solid rgba(36,50,74,0.08);
+  border-radius: 999px;
+  box-shadow: 0 8px 18px rgba(31,41,55,0.06);
+  backdrop-filter: blur(8px);
+}
+
+.tab{
+  flex: 1;
+  padding: 0.62rem 0.8rem;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #334155;
+  background: transparent;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease;
+  user-select: none;
+}
+
+.tab.active{
+  color: #fff;
+  background: linear-gradient(90deg, #1d4ed8 0%, #2563eb 52%, #60a5fa 100%);
+  box-shadow: 0 8px 18px rgba(37,99,235,0.28);
+}
+
+/* =========================
+   GŁÓWNY KONTENER
+========================= */
+.accordion-container{
+  width: 100%;
+  padding: 0 0.45rem;
+  margin: 0;
+}
+
+/* =========================
+   GŁÓWNE AKORDEONY
+========================= */
+.accordion-header{
+  width: 100%;
+  text-align: left;
+  padding: 1rem 1.05rem;
+  font-weight: 800;
+  font-size: 1.02rem;
+  letter-spacing: -0.02em;
+  color: #1f2937;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+  border: 1px solid rgba(36,50,74,0.08);
+  cursor: pointer;
+  margin-bottom: 0.55rem;
+  border-radius: 18px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: none !important;
+  box-shadow: 0 8px 20px rgba(31,41,55,0.06);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.accordion-body{
+  display: none;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  margin-bottom: 1rem;
+  overflow-x: auto;
+}
+
+.accordion-body.active{ display: block; }
+
+/* =========================
+   JEDYNY PODAKORDEON – LOTNISKA
+========================= */
+.connection-toggle{
+  width: 100%;
+  text-align: left;
+  padding: 0.95rem 1rem;
+  font-weight: 800;
+  font-size: 1rem;
+  color: #1e3a5f;
+  background: linear-gradient(90deg, #7cc6ff 0%, #dcedff 18%, #f8fbff 100%);
+  border: 1px solid rgba(36,50,74,0.08);
+  cursor: pointer;
+  margin-bottom: 0.55rem;
+  border-radius: 18px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: none !important;
+  box-shadow: 0 8px 20px rgba(59,130,246,0.10);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.connection-toggle + .accordion-subbody{
+  display: none !important;
+  padding: 1rem;
+  background: rgba(255,255,255,0.82);
+  border: 1px solid rgba(36,50,74,0.08);
+  border-radius: 18px;
+  margin-bottom: 1rem;
+  box-shadow: 0 8px 18px rgba(31,41,55,0.06);
+}
+
+.connection-toggle.active + .accordion-subbody{
+  display: block !important;
+}
+
+/* =========================
+   WYŁĄCZENIE STARYCH PODAKORDEONÓW
+   ZOSTAWIAMY ROZWIJANE TYLKO LOTNISKA
+========================= */
+.accordion-subheader{
+  display: none !important;
+}
+
+/* Zwykłe stare podsekcje mają być widoczne jako normalna treść */
+.accordion-subheader + .accordion-subbody{
+  display: block !important;
+}
+
+/* Ale podsekcja po .connection-toggle ma działać jako prawdziwy podakordeon */
+.connection-toggle + .accordion-subbody{
+  display: none !important;
+}
+
+.connection-toggle.active + .accordion-subbody{
+  display: block !important;
+}
+
+/* =========================
+   KOLOROWE BLOKI KOMUNIKATÓW
+   PRZYWRÓCONE DO STAREGO STYLU
+========================= */
+.green, .orange, .yellow, .cyan{
+  padding: 1rem 0.8rem;
+  margin: 0.5rem 0;
+  border-left: 5px solid;
+  width: 100%;
+  border-radius: 0;
+  overflow: visible;
+  box-shadow: none;
+}
+
+.green  { background: #e2f0d9; border-color: #a8d08d; }
+.orange { background: #fcd5b4; border-color: #f7931e; }
+.yellow { background: #fff9e5; border-color: #f4d35e; }
+.cyan   { background: #d9f0ed; border-color: #7ab8b3; }
+
+/* =========================
+   BLOKI TEKSTOWE
+   PRZYWRÓCONE DO STAREGO STYLU
+========================= */
+.speech-box{
+  background: #fff;
+  border: none;
+  padding: 0.8rem;
+  margin: 0;
+  border-radius: 0;
+  backdrop-filter: none;
+}
+
+.highlighted-info{
+  background: #e6e6e6;
+  padding: 0.8rem;
+  margin: 0.5rem 0;
+  font-weight: 700;
+  border-left: 4px solid #999;
+  border-radius: 0;
+  color: #1f2937;
+}
+
+/* =========================
+   TABELA LOTNISK
+========================= */
+.airport-table-wrapper{
+  overflow-x: auto;
+  margin: 1rem 0;
+  width: 100%;
+}
+
+.airport-table{
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  font-size: 0.85rem;
+  overflow: visible;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: none;
+}
+
+.airport-table th,
+.airport-table td{
+  border: 1px solid #ccc;
+  padding: 0.55rem 0.8rem;
+  text-align: left;
+  white-space: normal;
+}
+
+.airport-table th{
+  background: #eef4fb;
+  font-weight: 700;
+}
+
+/* =========================
+   SEKCJE JĘZYKOWE
+========================= */
+.section{ display: none; }
+.section.active{ display: block; }
+
+/* =========================
+   RESPONSYWNOŚĆ OGÓLNA
+========================= */
+@media (max-width: 768px){
+  .tabs{
+    margin: 0.45rem;
+    gap: 0.5rem;
+  }
+
+  .tab{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 46px;
+    font-size: 0.92rem;
+  }
+
+  .green, .orange, .yellow, .cyan{ padding: 0.8rem 0.6rem; }
+  .speech-box{ padding: 0.6rem; }
+}
+
+@media (max-width: 480px){
+  .accordion-container{ padding: 0 0.35rem; }
+  .accordion-body{ padding: 0; }
+
+  .accordion-header{
+    padding: 0.92rem 0.95rem;
+    font-size: 0.98rem;
+    border-radius: 16px;
+  }
+
+  .green, .orange, .yellow, .cyan{
+    padding: 0.6rem 0.5rem;
+    border-radius: 0;
+  }
+
+  .speech-box{
+    border-radius: 0;
+  }
+}
+
+/* =========================
+   GASTRONOMIA / KATALOG – ROZWIJANIE
+========================= */
+.gastronomy-header{
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  gap: 0.75rem;
+  padding: 0.7rem 0.9rem;
+}
+
+.gastronomy-header > strong{
+  flex: 1 1 auto;
+  min-width: 0;
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.gastronomy-header > .gastronomy-plus{
+  flex: 0 0 auto;
+  margin-left: auto;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #7b6a16;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  z-index: 5;
+  padding: 0;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.45);
+}
+
+.gastronomy-more{ display: none; margin-top: 0.6rem; }
+.gastronomy-more.active{ display: block; }
+
+.gastronomy-comment-out{
+  font-style: italic;
+  font-size: 0.85rem;
+  color: #5b5560;
+  margin: 0.7rem 0 0.25rem;
+  background: transparent;
+}
+
+.gastronomy-card{
+  background: linear-gradient(180deg, rgba(255,251,223,0.92) 0%, rgba(247,238,188,0.92) 100%);
+  border-radius: 16px;
+  padding: 1rem 1rem;
+  margin: 0 0 0.9rem 0;
+  border: 1px solid rgba(120,92,11,0.14);
+}
+
+.gastronomy-text-strong{
+  font-weight: 600;
+  line-height: 1.55;
+  font-size: 1rem;
+  color: #2b2b2b;
+}
+
+.gastronomy-card--dashed{
+  border: 2px dashed #c9b26a;
+}
+
+.gastronomy-comment-in{
+  margin-top: 0.7rem;
+  font-style: italic;
+  font-size: 0.85rem;
+  color: #5b5560;
+}
+
+.gastronomy-comment-in--right{ margin-left: 2.2rem; }
+
+.gastronomy-graybox{
+  margin-top: 0.3rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid rgba(83,83,83,0.32);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.58);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.gastronomy-graybox--right{ margin-left: 2.2rem; }
+
+/* =========================
+   CZYTELNOŚĆ W AKORDEONACH
+========================= */
+.accordion-body,
+.accordion-body p,
+.accordion-body li,
+.accordion-body strong,
+.accordion-body b,
+.accordion-body span,
+.accordion-body div{
+  color: #1f2937;
+}
+
+.accordion-body em,
+.accordion-body i{
+  color: #667085;
+}
+
+.accordion-body p,
+.accordion-body li,
+.accordion-body div{
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* =========================
+   FAB — przy krawędzi KOLUMNY
+========================= */
+.lang-fab{
+  position: fixed;
+  right: max(14px, calc((100vw - min(100vw, var(--pageWidth))) / 2 + 14px));
+  bottom: 86px;
+  z-index: 9999;
+
+  height: 52px;
+  min-width: 64px;
+  padding: 0 16px;
+
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.45);
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+  color: #fff;
+
+  font-weight: 800;
+  font-size: 1rem;
+  line-height: 1;
+
+  box-shadow: 0 14px 28px rgba(37,99,235,0.30);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lang-fab:active{ transform: scale(0.98); }
+
+.lang-fab:disabled{
+  pointer-events: none;
+  opacity: 0.72;
+}
+
+/* =========================
+   TOPBAR + LOGO
+========================= */
+.topbar{
+  position: relative;
+  top: auto;
+  z-index: 1;
+  width: min(100%, var(--pageWidth));
+  margin: 0 auto 8px;
+  background: transparent;
+  border-bottom: none;
+  box-shadow: none;
+}
+
+.topbar__inner{
+  width: 100%;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+
+.topbar__inner--logo{
+  padding: 0;
+}
+
+.topbar__logo{
+  width: 92%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  filter: none !important;
+  background: transparent !important;
+  margin: 0 auto;
+}
+
+/* =========================
+   STOPKA — JEDNA LINIA
+========================= */
+.footerbar{
+  flex: 0 0 auto;
+  width: min(100%, var(--pageWidth));
+  margin: 16px auto 18px;
+  padding: 0 8px;
+  background: transparent;
+  border-top: none;
+}
+
+.footerbar__inner{
+  width: 100%;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(241,245,251,0.92) 100%);
+  border: 1px solid rgba(36,50,74,0.08);
+  border-radius: 18px;
+  box-shadow: 0 8px 20px rgba(31,41,55,0.06);
+  backdrop-filter: blur(8px);
+}
+
+.footerbar__meta{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 7px;
+  justify-content: center;
+  align-items: center;
+  font-size: 11px;
+  color: #425066;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.footerbar__metaName{
+  color: #1f3b82;
+  font-weight: 800;
+}
+
+.footerbar__dot{
+  color: rgba(66,80,102,0.45);
+}
+
+.footerbar__counters{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+}
+
+.chip{
+  font-size: 11px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.86);
+  color: #334155;
+  border: 1px solid rgba(36,50,74,0.10);
+  white-space: nowrap;
+  line-height: 1.1;
+  box-shadow: 0 2px 8px rgba(31,41,55,0.04);
+}
+
+.chip--soft{
+  background: rgba(255,255,255,0.9);
+}
+
+.footerbar .chip{
+  color: #334155;
+  background: rgba(255,255,255,0.90);
+  border-color: rgba(36,50,74,0.10);
+}
+
+.footerbar .chip strong{
+  color: #24324a;
+}
+
+.footerbar__meta,
+.footerbar__metaName,
+.footerbar__meta span,
+.footerbar__meta strong{
+  font-weight: 600;
+}
+
+.footerbar__meta strong{
+  font-weight: inherit;
+}
+
+.footerbar .chip,
+.footerbar .chip strong{
+  font-weight: 600;
+}
+
+@media (min-width: 769px){
+  .footerbar{
+    padding: 0 10px;
+  }
+
+  .footerbar__inner{
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .footerbar__meta{
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    font-size: 10.5px;
+  }
+
+  .footerbar__counters{
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    gap: 5px;
+  }
+
+  .chip{
+    font-size: 10.5px;
+    padding: 5px 8px;
+  }
+}
+
+@media (max-width: 480px){
+  .footerbar{
+    padding: 0 6px;
+    margin: 14px auto 16px;
+  }
+
+  .footerbar__inner{
+    padding: 10px 11px;
+    border-radius: 16px;
+  }
+
+  .footerbar__meta{
+    font-size: 10.5px;
+    gap: 4px 6px;
+  }
+
+  .chip{
+    font-size: 10.5px;
+    padding: 5px 8px;
+  }
+}
+
+/* =========================
+   SUBTELNIEJSZE STANY INTERAKCJI
+========================= */
+.accordion-header:active,
+.connection-toggle:active,
+.tab:active{
+  transform: scale(0.995);
+}
+
+@media (hover: hover){
+  .accordion-header:hover,
+  .connection-toggle:hover{
+    box-shadow: 0 10px 24px rgba(31,41,55,0.09);
+  }
+}
