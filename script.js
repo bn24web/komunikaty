@@ -75,7 +75,7 @@ const langFab = document.getElementById('langFab');
 
 let langSwitchBusy = false;
 
-// Nowość: pamięć ostatniego świadomego kliknięcia użytkownika
+// Pamięć ostatniego świadomego kliknięcia użytkownika
 let lastMainAccordionState = null;
 let lastDetailsState = null;
 let lastSubPanelId = null;
@@ -254,6 +254,16 @@ function swapLangInId(id) {
     return `wypadek-pl-7-${rest}`;
   }
 
+  if (id.startsWith('k6-pl-')) {
+    const rest = id.replace('k6-pl-', '');
+    return `k6-en-${rest}`;
+  }
+
+  if (id.startsWith('k6-en-')) {
+    const rest = id.replace('k6-en-', '');
+    return `k6-pl-${rest}`;
+  }
+
   return null;
 }
 
@@ -403,6 +413,12 @@ async function waitForTargetHeader(section, key, index) {
   return null;
 }
 
+function clearLastOpenState() {
+  lastMainAccordionState = null;
+  lastDetailsState = null;
+  lastSubPanelId = null;
+}
+
 // ========================
 // GŁÓWNE AKORDEONY
 // ========================
@@ -416,10 +432,6 @@ document.addEventListener('click', function (e) {
 
   e.preventDefault();
 
-  rememberMainAccordion(btn);
-  lastDetailsState = null;
-  lastSubPanelId = null;
-
   const isOpen = body.classList.contains('active');
 
   document.querySelectorAll('.accordion-body').forEach(b => {
@@ -428,12 +440,19 @@ document.addEventListener('click', function (e) {
 
   body.classList.toggle('active', !isOpen);
 
-  if (!isOpen) {
-    body.querySelectorAll('.gastronomy-more').forEach(m => {
-      m.classList.remove('active');
-      m.style.display = 'none';
-    });
+  if (isOpen) {
+    clearLastOpenState();
+    return;
   }
+
+  rememberMainAccordion(btn);
+  lastDetailsState = null;
+  lastSubPanelId = null;
+
+  body.querySelectorAll('.gastronomy-more').forEach(m => {
+    m.classList.remove('active');
+    m.style.display = 'none';
+  });
 });
 
 // ========================
@@ -467,6 +486,10 @@ document.addEventListener('click', function (e) {
 
   btn.classList.toggle('active', !isOpen);
   body.classList.toggle('active', !isOpen);
+
+  if (isOpen) {
+    lastSubPanelId = null;
+  }
 });
 
 // ========================
@@ -490,8 +513,6 @@ document.addEventListener('click', function (e) {
   const parentHeader = findAccordionHeaderFromBody(parentBody);
   if (parentHeader) rememberMainAccordion(parentHeader);
 
-  lastSubPanelId = id;
-
   const root = plus.closest('.accordion-body') || document;
 
   root.querySelectorAll('.gastronomy-more').forEach(other => {
@@ -505,6 +526,8 @@ document.addEventListener('click', function (e) {
 
   const isActive = block.classList.contains('active');
   block.style.display = isActive ? 'block' : 'none';
+
+  lastSubPanelId = isActive ? id : null;
 });
 
 // ========================
@@ -567,6 +590,19 @@ function calculateBodyRatio(body) {
 function captureViewportState() {
   const activeSection = getActiveSection();
 
+  // WAŻNE:
+  // Jeśli jesteśmy na głównej liście i żaden komunikat nie jest otwarty,
+  // nie próbujemy niczego dopasowywać. Zachowujemy absolutny scrollY.
+  // To usuwa problem "pełzania" strony po każdym kliknięciu PL/EN.
+  const openBody = activeSection.querySelector('.accordion-body.active');
+
+  if (!openBody) {
+    return {
+      mode: 'absolute',
+      scrollY: window.scrollY
+    };
+  }
+
   let header = null;
 
   // 1. Najpierw bierzemy ostatnio kliknięty komunikat
@@ -584,7 +620,12 @@ function captureViewportState() {
     if (ref) header = findAccordionHeaderFromElement(ref.el);
   }
 
-  if (!header) return null;
+  if (!header) {
+    return {
+      mode: 'absolute',
+      scrollY: window.scrollY
+    };
+  }
 
   const body = header.nextElementSibling;
   const key = getHeaderKey(header.textContent);
@@ -606,6 +647,7 @@ function captureViewportState() {
   const refY = ref ? ref.y : window.innerHeight * 0.45;
 
   return {
+    mode: 'smart',
     key,
     index,
     wasOpen,
@@ -619,6 +661,20 @@ function captureViewportState() {
 
 async function restoreViewportState(state) {
   if (!state) return;
+
+  // Tryb absolutny: używany na głównej liście, kiedy nic nie jest otwarte.
+  // Nie otwiera żadnego akordeonu i nie zgaduje pozycji.
+  if (state.mode === 'absolute') {
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    await new Promise(resolve => requestAnimationFrame(resolve));
+
+    window.scrollTo({
+      top: Math.max(0, state.scrollY || 0),
+      behavior: 'instant'
+    });
+
+    return;
+  }
 
   const activeSection = getActiveSection();
 
@@ -770,6 +826,8 @@ document.addEventListener("click", (e) => {
 
   if (!wasOpen) {
     details.open = true;
+  } else {
+    lastDetailsState = null;
   }
 });
 
