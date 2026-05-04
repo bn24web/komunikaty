@@ -1,0 +1,180 @@
+<section class="accordion">
+  <button class="accordion-header">2. POWITALNY – ROZSZERZONY (PL)</button>
+  <div class="accordion-body">
+
+    <!-- OPIS JAK NA SCREENIE – LEKKIE WCIĘCIE -->
+    <p style="font-size:0.7rem; color:#777; margin:0.4rem 0 0.6rem 0; padding-left:0.8rem;">
+      – za miastem, w którym pociąg rozpoczął bieg<br>
+      – za miastem wojewódzkim<br>
+      – po przekroczeniu granicy państwa
+    </p>
+
+    <!-- BLOK GŁÓWNY -->
+    <div class="speech-box" style="border:2px solid #ccc; border-radius:18px; padding:1rem;">
+
+      <p><strong>Dzień dobry! / Dobry wieczór!</strong></p>
+
+      <p>
+        <strong>Witamy w pociągu</strong> …………… …………… ……………
+        <em>(podać kategorię: Express Intercity Premium / Express Intercity / Intercity / TLK,
+        numer i nazwę pociągu, jeśli jest)</em>
+        <strong>ze stacji</strong> …………… <strong>do stacji</strong> ……………,
+        <strong>przez stację</strong> ……………
+        <em>(podać jedną lub ew. dwie stacje pośrednie, definiujące trasę przejazdu)</em>.
+      </p>
+
+      <p><em>
+        Jeśli pociąg prowadzi dwie lub więcej grup wagonów,
+        to w powyższym fragmencie należy podać relację zasadniczą,
+        a następnie dodać:
+      </em></p>
+
+      <!-- GRUPY WAGONÓW -->
+      <div class="orange" style="border-radius:14px;">
+        <strong>
+          Pociąg prowadzi grupę/grupy wagonów do stacji ……………,
+          ……………
+        </strong>
+        <em>(podać stację docelową / stacje docelowe każdej grupy wagonów)</em>.
+      </div>
+
+      <p><strong>Następna stacja</strong> …………… .</p>
+
+      <!-- OPÓŹNIENIE -->
+      <p><em>Jeśli pociąg jest opóźniony, dodać:</em></p>
+      <div class="green" style="border-radius:14px;">
+        <strong>
+          Informujemy, że w związku z ……………
+          <em>(wybrać z Katalogu)</em>
+          pociąg jest opóźniony o ………
+          minut/minut.
+          Przepraszamy za opóźnienie.
+          Osoby przesiadające się do innych pociągów prosimy
+          o zgłaszanie tego zamiaru drużynie konduktorskiej.
+        </strong>
+      </div>
+
+      <!-- BLOK KOŃCOWY -->
+      <div style="border:2px solid #ccc; border-radius:18px; padding:1rem; margin-top:1rem;">
+        <p>
+          <strong>
+            W trosce o Państwa komfort i bezpieczeństwo, prosimy o zapoznanie się
+            z informacjami zamieszczonymi w wagonach.
+            Drużyna konduktorska pozostaje do Państwa dyspozycji
+            i służy pomocą w trakcie całej podróży.
+            Przedział konduktorski znajduje się w wagonie numer ……… .
+          </strong>
+        </p>
+
+        <p><em>Jeśli w pociągu przewidziany jest bezpłatny poczęstunek, dodać:</em></p>
+
+        <div class="highlighted-info" style="border-radius:12px;">
+          W trakcie podróży otrzymają Państwo poczęstunek.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- DODATKOWO ZARZĄDZONE KOMUNIKATY -->
+    <div class="accordion-subbody yellow" style="margin-top:0.5rem; border-radius:14px;">
+
+      <div class="gastronomy-header gastronomy-plus"
+           data-target="gastronomy-pl-2"
+           style="cursor:pointer; color:#000; text-decoration:none;">
+        <strong>Zapraszamy do skorzystania z oferty gastronomicznej.</strong>
+        <span class="gastronomy-plus" data-target="gastronomy-pl-2">+</span>
+      </div>
+
+      <div id="gastronomy-pl-2"
+           class="gastronomy-more"
+           style="border-left:none; padding-left:0;">
+
+        <p class="gastronomy-comment-out">
+          Jeśli w pociągu znajduje się strefa gastronomiczna, dodać:
+        </p>
+        <div class="gastronomy-card">
+          <div class="gastronomy-text-strong">
+            Zapraszamy do skorzystania z oferty gastronomicznej WARS,
+            w wagonie numer …… .
+          </div>
+
+          <div class="gastronomy-comment-in">
+            Jeśli oferta dostępna jest w skróconej relacji, dodać:
+          </div>
+          <div class="gastronomy-graybox">
+            Oferta gastronomiczna dostępna jest do stacji …………… .
+          </div>
+        </div>
+
+        <p class="gastronomy-comment-out">
+          Jeśli w pociągu nie ma strefy gastronomicznej,
+          ale znajdują się sprawne automaty vendingowe, dodać:
+        </p>
+        <div class="gastronomy-card">
+          <div class="gastronomy-text-strong">
+            Zapraszamy do zakupu napojów i przekąsek w automatach,
+            w wagonie/wagonach numer …… .
+          </div>
+        </div>
+
+        <p class="gastronomy-comment-out">
+          Jeśli w pociągu wyjątkowo nie ma strefy gastronomicznej,
+          ale znajduje się wózek mini-bar lub sprawne automaty vendingowe, dodać:
+        </p>
+        <div class="gastronomy-card gastronomy-card--dashed">
+          <div class="gastronomy-text-strong">
+            Informujemy, że w pociągu nie ma wagonu gastronomicznego,
+            za co Państwa przepraszamy. Zakup napojów i przekąsek
+            możliwy jest z wózka mini-bar / w automatach
+            w wagonie/wagonach numer …… .
+          </div>
+        </div>
+
+        <p class="gastronomy-comment-out">
+          Jeśli w pociągu znajduje się strefa gastronomiczna
+          oraz sprawne automaty vendingowe, dodać:
+        </p>
+        <div class="gastronomy-card">
+          <div class="gastronomy-text-strong">
+            Zapraszamy do skorzystania z oferty gastronomicznej WARS,
+            w wagonie numer …… oraz do zakupu napojów i przekąsek
+            w automatach, w wagonie/wagonach numer …… .
+          </div>
+        </div>
+
+        <p class="gastronomy-comment-out">
+          Jeśli w pociągu nie ma strefy gastronomicznej,
+          ale znajduje się wózek mini-bar, dodać:
+        </p>
+        <div class="gastronomy-card">
+          <div class="gastronomy-text-strong">
+            Zapraszamy do zakupu napojów i przekąsek z wózka mini-bar.
+            Oferta dostępna będzie do stacji …………… .
+          </div>
+
+          <div class="gastronomy-comment-in gastronomy-comment-in--right">
+            Jeśli nie ma możliwości przemieszczania się przez skład
+            z wózkiem mini-bar, dodać:
+          </div>
+          <div class="gastronomy-graybox gastronomy-graybox--right">
+            w wagonie numer …… .
+          </div>
+        </div>
+
+        <p class="gastronomy-comment-out">
+          Jeśli w pociągu wyjątkowo nie ma oferty gastronomicznej
+          (brak strefy gastronomicznej lub wózka mini-bar,
+          niesprawne automaty vendingowe lub ich brak), dodać:
+        </p>
+        <div class="gastronomy-card gastronomy-card--dashed">
+          <div class="gastronomy-text-strong">
+            Informujemy, że w pociągu oferta gastronomiczna
+            nie jest dostępna, za co Państwa przepraszamy.
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>

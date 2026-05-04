@@ -1,0 +1,184 @@
+<button class="accordion-header">9. POZOSTAŁE (PL)</button>
+<div class="accordion-body">
+
+  <!-- Lokalny styl tylko dla tej zakładki (nie rusza globalnego CSS) -->
+  <style>
+    .misc-wrap { padding: 0.9rem 0.8rem; }
+
+    /* Szara ramka jak w zakładkach 7 */
+    .misc-panel{
+      background:#e9eef3;
+      border-radius:18px;
+      padding:0.9rem;
+      margin-top:0.6rem;
+      border:2px solid #cfd8e3;
+    }
+
+    /* Pastylki – jasnoniebieskie (jak w treściach komunikatów) */
+    .misc-pill{
+      cursor:pointer;
+      color:#000;
+      background:#d9e8f5;        /* ten sam odcień co bluebox */
+      border:2px solid #7fb2d6;  /* ten sam obrys co bluebox */
+      border-radius:14px;
+      padding:0.7rem 0.8rem;
+      margin-top:0.7rem;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .misc-pill:first-child{ margin-top:0; }
+
+    /* Treść po rozwinięciu */
+    .misc-more{
+      display:none;
+      border-left:none;
+      padding-left:0;
+    }
+
+    .misc-inner{
+      background:#d9e8f5;        /* spójnie z bluebox */
+      border:2px solid #7fb2d6;
+      border-radius:16px;
+      padding:0.85rem;
+      margin-top:0.55rem;
+      line-height:1.25;
+      color:#000;
+    }
+
+    .misc-instruction {
+      margin: 0 0 0.6rem 0;
+      font-style: italic;
+      font-size: 0.8rem;
+      color: #444;
+    }
+
+    /* Tekst komunikatu: lekko pogrubiony + czarny */
+    .misc-inner .speech {
+      margin: 0.45rem 0;
+      font-weight: 600;
+      color: #000;
+      line-height: 1.55;
+      font-size: 0.98rem;
+    }
+
+    /* Kursywa zostaje jak jest */
+    .misc-inner em {
+      font-style: italic;
+      font-size: 0.8rem;
+      color: #444;
+      font-weight: 400;
+    }
+  </style>
+
+  <div class="misc-wrap">
+
+    <!-- SZARA RAMKA + PASTYLKI -->
+    <div class="misc-panel">
+
+      <!-- C1 -->
+      <div class="gastronomy-header gastronomy-plus misc-pill" data-target="misc-pl-c1">
+        <strong>C1. ZATRZYMANIE CZĘŚCI POCIĄGU POZA KRAWĘDZIĄ PERONU</strong>
+        <span class="gastronomy-plus" data-target="misc-pl-c1">+</span>
+      </div>
+
+      <div id="misc-pl-c1" class="gastronomy-more misc-more">
+        <div class="misc-inner">
+          <div class="misc-instruction">Komunikat ten należy wygłosić tuż po komunikacie pożegnalnym lub powitalno-pożegnalnym.</div>
+
+          <p class="speech">Prosimy o uwagę!</p>
+          <p class="speech">Informujemy, że na stacji .......... ostatnie wagony w składzie pociągu, oznaczone numerami ...., ...., zatrzymają się poza peronem.</p>
+          <p class="speech">Podróżnych wysiadających na tej stacji prosimy o przejście do wagonów numer ........ znajdujących się bliżej lokomotywy, z których możliwe będzie bezpieczne opuszczenie pociągu. Przepraszamy za niedogodności i prosimy o zachowanie ostrożności podczas wysiadania.</p>
+        </div>
+      </div>
+
+      <!-- C2 -->
+      <div class="gastronomy-header gastronomy-plus misc-pill" data-target="misc-pl-c2">
+        <strong>C2. POSTÓJ TECHNICZNY UWZGLĘDNIONY W ROZKŁADZIE JAZDY</strong>
+        <span class="gastronomy-plus" data-target="misc-pl-c2">+</span>
+      </div>
+
+      <div id="misc-pl-c2" class="gastronomy-more misc-more">
+        <div class="misc-inner">
+          <p class="speech">Informujemy, że obecny postój techniczny pociągu został uwzględniony w rozkładzie jazdy i nie powinien spowodować/zwiększyć opóźnienia.</p>
+          <p class="speech">Ze względów bezpieczeństwa, otwieranie drzwi wyjściowych oraz opuszczanie pociągu jest zabronione.</p>
+        </div>
+      </div>
+
+      <!-- C3 -->
+      <div class="gastronomy-header gastronomy-plus misc-pill" data-target="misc-pl-c3">
+        <strong>C3. SKŁAD ZASTĘPCZY ZAMIAST EZT</strong>
+        <span class="gastronomy-plus" data-target="misc-pl-c3">+</span>
+      </div>
+
+      <div id="misc-pl-c3" class="gastronomy-more misc-more">
+        <div class="misc-inner">
+          <div class="misc-instruction">Komunikat należy wygłosić po komunikatach powitalnych.</div>
+
+          <p class="speech">Informujemy, że pociąg zestawiony jest dziś z wagonów klasycznych.</p>
+          <p class="speech">Jeśli w wagonach znajdują się oznaczenia miejsc zastępczych, dodać:</p>
+          <p class="speech">Prosimy o zwrócenie uwagi na informację dotyczącą wyznaczenia miejsc zastępczych.</p>
+          <p class="speech">Dodatkowych informacji udzieli drużyna konduktorska. Przepraszamy za niedogodności.</p>
+
+          <p class="speech"><em>W przypadku jazdy pociągiem ED-250, należy dodać:</em></p>
+          <p class="speech">Równocześnie informujemy, że mogą Państwo ubiegać się o rekompensatę, w drodze reklamacji.</p>
+          <p class="speech">Szczegółowe informacje dotyczące możliwości złożenia reklamacji dostępne są w przedsionkach wagonów i na stronie: www.intercity.pl .</p>
+        </div>
+      </div>
+
+      <!-- C4 -->
+      <div class="gastronomy-header gastronomy-plus misc-pill" data-target="misc-pl-c4">
+        <strong>C4. NIEPRZESTRZEGANIE ZAKAZÓW</strong>
+        <span class="gastronomy-plus" data-target="misc-pl-c4">+</span>
+      </div>
+
+      <div id="misc-pl-c4" class="gastronomy-more misc-more">
+        <div class="misc-inner">
+          <div class="misc-instruction">Komunikat można wygłosić w sytuacji nieprzestrzegania zakazu palenia wyrobów tytoniowych lub papierosów elektronicznych.</div>
+
+          <p class="speech">Przypominamy, że w pociągu obowiązuje całkowity zakaz palenia wyrobów tytoniowych i papierosów elektronicznych.</p>
+          <p class="speech"><em>Jeśli istnieje możliwość awaryjnego zatrzymania składu, dodać:</em></p>
+          <p class="speech">Niezastosowanie się do zakazu może spowodować awaryjne zatrzymanie pociągu.</p>
+
+          <div class="misc-instruction" style="margin-top:0.9rem;">Komunikat można wygłosić w sytuacji nieprzestrzegania zakazu spożywania alkoholu.</div>
+
+          <p class="speech"><em>Jeśli jest możliwość zakupienia alkoholu w wagonie gastronomicznym:</em></p>
+          <p class="speech">Informujemy, że alkohol zakupiony w strefie gastronomicznej, można tylko tam spożywać. W pociągu poza strefą gastronomiczną obowiązuje zakaz spożycia alkoholu. Niezastosowanie się do zakazu spowoduje konieczność interwencji służb porządkowych.</p>
+
+          <p class="speech" style="margin-top:0.7rem;"><em>Jeśli w pociągu nie ma możliwości zakupu alkoholu (brak strefy gastronomicznej):</em></p>
+          <p class="speech">Przypominamy, że w pociągu obowiązuje zakaz spożywania alkoholu. Niezastosowanie się do zakazu spowoduje konieczność interwencji służb porządkowych.</p>
+        </div>
+      </div>
+
+      <!-- C5 -->
+      <div class="gastronomy-header gastronomy-plus misc-pill" data-target="misc-pl-c5">
+        <strong>C5. NIERÓWNOMIERNE ROZMIESZCZENIE PODRÓŻNYCH</strong>
+        <span class="gastronomy-plus" data-target="misc-pl-c5">+</span>
+      </div>
+
+      <div id="misc-pl-c5" class="gastronomy-more misc-more">
+        <div class="misc-inner">
+          <div class="misc-instruction">Komunikat należy wygłosić w przypadku, gdy w części wagonów frekwencja przekracza 100%, a w innych wagonach są dostępne wolne miejsca oraz w przypadku wzmocnienia pociągu wagonem nieprowodowanym do sprzedaży konduktorskiej.</div>
+
+          <p class="speech">Informujemy, że wolne miejsca siedzące są dostępne w wagonie/wagonach numer ...., ...., ...., ...., który znajduje się / które znajdują się w przedniej/środkowej/końcowej części pociągu.</p>
+        </div>
+      </div>
+
+      <!-- C6 -->
+      <div class="gastronomy-header gastronomy-plus misc-pill" data-target="misc-pl-c6">
+        <strong>C6. ZAMKNIĘCIE TOALET</strong>
+        <span class="gastronomy-plus" data-target="misc-pl-c6">+</span>
+      </div>
+
+      <div id="misc-pl-c6" class="gastronomy-more misc-more">
+        <div class="misc-inner">
+          <div class="misc-instruction">Komunikat ten należy wygłosić w przypadku konieczności zamknięcia toalet (np. przed odcinkiem Warszawa Wschodnia – Warszawa Zachodnia, przed stacją Wrocław Główny itd.).</div>
+
+          <p class="speech">Informujemy, że na odcinku .......... – .......... w pociągu / wagonach numer .... nie będzie możliwości skorzystania z toalet.</p>
+          <p class="speech">Przepraszamy za niedogodności.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
