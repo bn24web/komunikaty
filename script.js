@@ -243,6 +243,19 @@ function swapLangInId(id) {
     return `delay-cat-${rest}`;
   }
 
+  // Komunikat 8 — Wypadek / przerwa w ruchu
+  // Angielską wersję dopasujemy później, gdy przygotujesz EN.
+  if (id.startsWith('wypadek-pl-8-')) {
+    const rest = id.replace('wypadek-pl-8-', '');
+    return `acc-en8-${rest}`;
+  }
+
+  if (id.startsWith('acc-en8-')) {
+    const rest = id.replace('acc-en8-', '');
+    return `wypadek-pl-8-${rest}`;
+  }
+
+  // Zostawione awaryjnie dla starszej wersji, gdyby gdzieś zostało stare ID.
   if (id.startsWith('wypadek-pl-7-')) {
     const rest = id.replace('wypadek-pl-7-', '');
     return `acc-en7-${rest}`;
@@ -447,6 +460,10 @@ function ensureOpenSub(activeSection, targetId) {
     }
   });
 
+  rootBody.querySelectorAll('.gastronomy-plus.active').forEach(otherPlus => {
+    otherPlus.classList.remove('active');
+  });
+
   panel.classList.add('active');
   panel.style.display = 'block';
 
@@ -518,6 +535,10 @@ document.addEventListener('click', function (e) {
     m.classList.remove('active');
     m.style.display = 'none';
   });
+
+  body.querySelectorAll('.gastronomy-plus').forEach(p => {
+    p.classList.remove('active');
+  });
 });
 
 // ========================
@@ -557,6 +578,7 @@ document.addEventListener('click', function (e) {
 // ========================
 // PLUSIKI / ROZWIJANE BLOKI .gastronomy-more
 // ważne dla komunikatów 7 i 8
+// otwarta tylko jedna podsekcja naraz
 // ========================
 
 document.addEventListener('click', function (e) {
@@ -572,23 +594,39 @@ document.addEventListener('click', function (e) {
   e.preventDefault();
   e.stopPropagation();
 
-  rememberSubPanel(id, plus);
-
   const root = plus.closest('.accordion-body') || document;
-
-  root.querySelectorAll('.gastronomy-more').forEach(other => {
-    if (other !== block) {
-      other.classList.remove('active');
-      other.style.display = 'none';
-    }
-  });
-
   const isCurrentlyActive = block.classList.contains('active');
 
-  block.classList.toggle('active', !isCurrentlyActive);
-  block.style.display = !isCurrentlyActive ? 'block' : 'none';
+  // Zapamiętaj panel tylko wtedy, gdy będzie otwierany.
+  if (!isCurrentlyActive) {
+    rememberSubPanel(id, plus);
+  }
 
-  lastSubPanelId = !isCurrentlyActive ? id : null;
+  // Zamknij wszystkie inne rozwijane bloki w tym samym głównym komunikacie.
+  root.querySelectorAll('.gastronomy-more').forEach(other => {
+    other.classList.remove('active');
+    other.style.display = 'none';
+  });
+
+  // Wyczyść aktywność wszystkich nagłówków/plusów w tym samym komunikacie.
+  root.querySelectorAll('.gastronomy-plus').forEach(otherPlus => {
+    otherPlus.classList.remove('active');
+  });
+
+  // Jeżeli kliknięty blok był zamknięty — otwórz go.
+  // Jeżeli był otwarty — zostanie zamknięty.
+  if (!isCurrentlyActive) {
+    block.classList.add('active');
+    block.style.display = 'block';
+
+    root.querySelectorAll(`[data-target="${CSS.escape(id)}"]`).forEach(trigger => {
+      trigger.classList.add('active');
+    });
+
+    lastSubPanelId = id;
+  } else {
+    lastSubPanelId = null;
+  }
 });
 
 // ========================
