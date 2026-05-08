@@ -3,24 +3,37 @@
 ========================= */
 :root{
   --pageWidth: 720px;
+  --pageBg: #f3f6fa;
   scroll-padding-top: 72px;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+*{
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-html, body { height: 100%; }
+html{
+  min-height: 100%;
+  background: var(--pageBg);
+  background-image: none;
+}
 
 body{
+  min-height: 100%;
   font-family: 'Inter','Segoe UI','Roboto','Helvetica Neue',sans-serif;
   font-size: 0.95rem;
   line-height: 1.6;
-  background: linear-gradient(180deg, #f4f6fa 0%, #eef2f7 100%);
+  background: var(--pageBg);
+  background-image: none;
   color: #24324a;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-strong{ font-weight: 700; }
+strong{
+  font-weight: 700;
+}
 
 em{
   font-style: italic;
@@ -31,15 +44,31 @@ em{
    LAYOUT APLIKACJI
 ========================= */
 .app{
-  min-height: 100%;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: var(--pageBg);
+  background-image: none;
+}
+
+.app::before,
+.app::after{
+  display: none;
+  content: none;
 }
 
 .app__content{
   flex: 1 0 auto;
   width: min(100%, var(--pageWidth));
   margin: 0 auto;
+  background: transparent;
+  background-image: none;
+}
+
+.app__content::before,
+.app__content::after{
+  display: none;
+  content: none;
 }
 
 /* =========================
@@ -85,6 +114,8 @@ em{
   width: 100%;
   padding: 0 0.45rem;
   margin: 0;
+  background: transparent;
+  background-image: none;
 }
 
 /* =========================
@@ -105,7 +136,6 @@ em{
   border-radius: 18px;
   appearance: none;
   -webkit-appearance: none;
-  background-image: none !important;
   box-shadow: 0 8px 20px rgba(31,41,55,0.06);
   transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
@@ -114,13 +144,16 @@ em{
   display: none;
   padding: 0;
   background: transparent;
+  background-image: none;
   border: none;
   border-radius: 0;
   margin-bottom: 1rem;
   overflow-x: auto;
 }
 
-.accordion-body.active{ display: block; }
+.accordion-body.active{
+  display: block;
+}
 
 /* =========================
    JEDYNY PODAKORDEON – LOTNISKA
@@ -139,7 +172,6 @@ em{
   border-radius: 18px;
   appearance: none;
   -webkit-appearance: none;
-  background-image: none !important;
   box-shadow: 0 8px 20px rgba(59,130,246,0.10);
   transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
@@ -184,7 +216,10 @@ em{
    KOLOROWE BLOKI KOMUNIKATÓW
    PRZYWRÓCONE DO STAREGO STYLU
 ========================= */
-.green, .orange, .yellow, .cyan{
+.green,
+.orange,
+.yellow,
+.cyan{
   padding: 1rem 0.8rem;
   margin: 0.5rem 0;
   border-left: 5px solid;
@@ -194,10 +229,25 @@ em{
   box-shadow: none;
 }
 
-.green  { background: #e2f0d9; border-color: #a8d08d; }
-.orange { background: #fcd5b4; border-color: #f7931e; }
-.yellow { background: #fff9e5; border-color: #f4d35e; }
-.cyan   { background: #d9f0ed; border-color: #7ab8b3; }
+.green{
+  background: #e2f0d9;
+  border-color: #a8d08d;
+}
+
+.orange{
+  background: #fcd5b4;
+  border-color: #f7931e;
+}
+
+.yellow{
+  background: #fff9e5;
+  border-color: #f4d35e;
+}
+
+.cyan{
+  background: #d9f0ed;
+  border-color: #7ab8b3;
+}
 
 /* =========================
    BLOKI TEKSTOWE
@@ -258,8 +308,15 @@ em{
 /* =========================
    SEKCJE JĘZYKOWE
 ========================= */
-.section{ display: none; }
-.section.active{ display: block; }
+.section{
+  display: none;
+  background: transparent;
+  background-image: none;
+}
+
+.section.active{
+  display: block;
+}
 
 /* =========================
    RESPONSYWNOŚĆ OGÓLNA
@@ -278,13 +335,26 @@ em{
     font-size: 0.92rem;
   }
 
-  .green, .orange, .yellow, .cyan{ padding: 0.8rem 0.6rem; }
-  .speech-box{ padding: 0.6rem; }
+  .green,
+  .orange,
+  .yellow,
+  .cyan{
+    padding: 0.8rem 0.6rem;
+  }
+
+  .speech-box{
+    padding: 0.6rem;
+  }
 }
 
 @media (max-width: 480px){
-  .accordion-container{ padding: 0 0.35rem; }
-  .accordion-body{ padding: 0; }
+  .accordion-container{
+    padding: 0 0.35rem;
+  }
+
+  .accordion-body{
+    padding: 0;
+  }
 
   .accordion-header{
     padding: 0.92rem 0.95rem;
@@ -292,7 +362,10 @@ em{
     border-radius: 16px;
   }
 
-  .green, .orange, .yellow, .cyan{
+  .green,
+  .orange,
+  .yellow,
+  .cyan{
     padding: 0.6rem 0.5rem;
     border-radius: 0;
   }
@@ -342,8 +415,14 @@ em{
   background: rgba(255,255,255,0.45);
 }
 
-.gastronomy-more{ display: none; margin-top: 0.6rem; }
-.gastronomy-more.active{ display: block; }
+.gastronomy-more{
+  display: none;
+  margin-top: 0.6rem;
+}
+
+.gastronomy-more.active{
+  display: block;
+}
 
 .gastronomy-comment-out{
   font-style: italic;
@@ -379,7 +458,9 @@ em{
   color: #5b5560;
 }
 
-.gastronomy-comment-in--right{ margin-left: 2.2rem; }
+.gastronomy-comment-in--right{
+  margin-left: 2.2rem;
+}
 
 .gastronomy-graybox{
   margin-top: 0.3rem;
@@ -391,7 +472,9 @@ em{
   line-height: 1.4;
 }
 
-.gastronomy-graybox--right{ margin-left: 2.2rem; }
+.gastronomy-graybox--right{
+  margin-left: 2.2rem;
+}
 
 /* =========================
    CZYTELNOŚĆ W AKORDEONACH
@@ -445,7 +528,9 @@ em{
   -webkit-tap-highlight-color: transparent;
 }
 
-.lang-fab:active{ transform: scale(0.98); }
+.lang-fab:active{
+  transform: scale(0.98);
+}
 
 .lang-fab:disabled{
   pointer-events: none;
@@ -462,6 +547,7 @@ em{
   width: min(100%, var(--pageWidth));
   margin: 0 auto 8px;
   background: transparent;
+  background-image: none;
   border-bottom: none;
   box-shadow: none;
 }
@@ -473,6 +559,7 @@ em{
   align-items: center;
   justify-content: center;
   background: transparent;
+  background-image: none;
 }
 
 .topbar__inner--logo{
@@ -501,6 +588,7 @@ em{
   margin: 16px auto 18px;
   padding: 0 8px;
   background: transparent;
+  background-image: none;
   border-top: none;
 }
 
