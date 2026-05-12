@@ -570,8 +570,6 @@ function enhanceGastronomyPanels(slot, announcementId) {
 
     star.classList.add("favorite-star--small");
 
-    trigger.insertAdjacentElement("beforebegin", star);
-
     const row =
       trigger.closest(".gastronomy-header") ||
       trigger.closest(".k7-pill") ||
@@ -580,7 +578,18 @@ function enhanceGastronomyPanels(slot, announcementId) {
       trigger.closest(".misc-pill") ||
       trigger.parentElement;
 
-    applyInlineFavoriteRowLayout(row, star, trigger);
+    if (row) {
+      row.classList.add("subsection-fav-row");
+
+      const actions = document.createElement("span");
+      actions.className = "subsection-actions";
+
+      trigger.insertAdjacentElement("beforebegin", actions);
+      actions.appendChild(star);
+      actions.appendChild(trigger);
+    } else {
+      trigger.insertAdjacentElement("beforebegin", star);
+    }
 
     panel.dataset.favEnhanced = "true";
     panel.dataset.favId = favId;
