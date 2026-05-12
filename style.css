@@ -995,3 +995,38 @@ em{
     color: #b77900;
   }
 }
+/* =========================
+   POPRAWKA PODSEKCJI — GWIAZDKA + PLUSIK PO PRAWEJ
+========================= */
+
+.subsection-fav-row{
+  position: relative !important;
+  padding-right: 92px !important;
+}
+
+.subsection-actions{
+  position: absolute !important;
+  right: 14px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  z-index: 10 !important;
+}
+
+.subsection-actions .favorite-star{
+  margin: 0 !important;
+  float: none !important;
+  flex: 0 0 auto !important;
+}
+
+.subsection-actions .gastronomy-plus{
+  margin: 0 !important;
+  float: none !important;
+  flex: 0 0 auto !important;
+  position: relative !important;
+  right: auto !important;
+  top: auto !important;
+}
