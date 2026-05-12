@@ -1,13 +1,35 @@
 // ========================
-// ŁADOWANIE SEKCJI
-// szybsze: aktywna sekcja najpierw, pliki równolegle
+// m.komunikaty — script.js v1.3.0
+// Centralny silnik: ładowanie, PL/EN, akordeony, podsekcje, ulubione, szukanie
 // ========================
 
 const loadedUrls = new Set();
 const loadingUrls = new Set();
 
+const FAVORITES_KEY = "mkomunikaty_favorites_v1";
+
+const tabPL = document.getElementById("tabPL");
+const tabEN = document.getElementById("tabEN");
+const sectionPL = document.getElementById("sectionPL");
+const sectionEN = document.getElementById("sectionEN");
+const langFab = document.getElementById("langFab");
+const searchInput = document.getElementById("searchInput");
+const favoritesToggle = document.getElementById("favoritesToggle");
+const emptyState = document.getElementById("emptyState");
+
+let langSwitchBusy = false;
+let showFavoritesOnly = false;
+
+let lastMainAccordionState = null;
+let lastDetailsState = null;
+let lastSubPanelState = null;
+
+// ========================
+// ŁADOWANIE SEKCJI
+// ========================
+
 async function loadOne(el) {
-  const url = el.getAttribute('data-load');
+  const url = el.getAttribute("data-load");
   if (!url) return;
 
   if (el.dataset.loaded === "true") return;
@@ -26,8 +48,10 @@ async function loadOne(el) {
     el.innerHTML = await response.text();
     el.dataset.loaded = "true";
     loadedUrls.add(url);
+
+    enhanceLoadedSlot(el);
   } catch (e) {
-    el.innerHTML = `<p>Błąd ładowania: ${url}</p>`;
+    el.innerHTML = `<p class="load-error">Błąd ładowania: ${url}</p>`;
     console.warn("Błąd ładowania sekcji:", url, e);
   } finally {
     el.dataset.loading = "false";
@@ -36,86 +60,67 @@ async function loadOne(el) {
 }
 
 async function loadElements(elements) {
-  const tasks = Array.from(elements).map(el => loadOne(el));
+  const tasks = Array.from(elements).map((el) => loadOne(el));
   await Promise.allSettled(tasks);
 }
 
 async function loadSections() {
-  const activeSection = document.querySelector('.section.active');
-  const inactiveSections = Array.from(document.querySelectorAll('.section:not(.active)'));
+  const activeSection = document.querySelector(".section.active");
+  const inactiveSections = Array.from(document.querySelectorAll(".section:not(.active)"));
 
   if (activeSection) {
-    await loadElements(activeSection.querySelectorAll('[data-load]'));
+    await loadElements(activeSection.querySelectorAll("[data-load]"));
   }
 
-  if ('requestIdleCallback' in window) {
+  if ("requestIdleCallback" in window) {
     requestIdleCallback(() => {
-      inactiveSections.forEach(section => {
-        loadElements(section.querySelectorAll('[data-load]'));
+      inactiveSections.forEach((section) => {
+        loadElements(section.querySelectorAll("[data-load]"));
       });
     });
   } else {
     setTimeout(() => {
-      inactiveSections.forEach(section => {
-        loadElements(section.querySelectorAll('[data-load]'));
+      inactiveSections.forEach((section) => {
+        loadElements(section.querySelectorAll("[data-load]"));
       });
     }, 400);
   }
 }
 
 // ========================
-// ELEMENTY STAŁE
-// ========================
-
-const tabPL = document.getElementById('tabPL');
-const tabEN = document.getElementById('tabEN');
-const sectionPL = document.getElementById('sectionPL');
-const sectionEN = document.getElementById('sectionEN');
-const langFab = document.getElementById('langFab');
-
-let langSwitchBusy = false;
-
-let lastMainAccordionState = null;
-let lastDetailsState = null;
-let lastSubPanelId = null;
-
-// ========================
-// FUNKCJE POMOCNICZE
+// JĘZYK
 // ========================
 
 function getActiveLang() {
-  return sectionEN.classList.contains('active') ? 'EN' : 'PL';
+  return sectionEN && sectionEN.classList.contains("active") ? "EN" : "PL";
+}
+
+function getActiveLangLower() {
+  return getActiveLang().toLowerCase();
 }
 
 function getActiveSection() {
-  return getActiveLang() === 'PL' ? sectionPL : sectionEN;
+  return getActiveLang() === "PL" ? sectionPL : sectionEN;
 }
 
 function updateLangFabLabel() {
   if (!langFab) return;
-
-  const active = getActiveLang();
-  langFab.textContent = active === 'PL' ? 'EN' : 'PL';
+  langFab.textContent = getActiveLang() === "PL" ? "EN" : "PL";
 }
 
 function applyLangVisualState(lang) {
-  if (lang === 'PL') {
-    tabPL.classList.add('active');
-    tabEN.classList.remove('active');
+  const isPL = lang === "PL";
 
-    sectionPL.classList.add('active');
-    sectionEN.classList.remove('active');
+  tabPL.classList.toggle("active", isPL);
+  tabEN.classList.toggle("active", !isPL);
 
-    document.documentElement.lang = 'pl';
-  } else {
-    tabEN.classList.add('active');
-    tabPL.classList.remove('active');
+  tabPL.setAttribute("aria-selected", isPL ? "true" : "false");
+  tabEN.setAttribute("aria-selected", !isPL ? "true" : "false");
 
-    sectionEN.classList.add('active');
-    sectionPL.classList.remove('active');
+  sectionPL.classList.toggle("active", isPL);
+  sectionEN.classList.toggle("active", !isPL);
 
-    document.documentElement.lang = 'en';
-  }
+  document.documentElement.lang = isPL ? "pl" : "en";
 
   updateLangFabLabel();
 }
@@ -125,46 +130,139 @@ async function setLangReady(lang) {
 
   await loadSections();
 
-  const activeSection = lang === 'PL' ? sectionPL : sectionEN;
+  const activeSection = lang === "PL" ? sectionPL : sectionEN;
 
   for (let i = 0; i < 100; i++) {
-    if (activeSection.querySelector('.accordion-header')) return;
-    await new Promise(r => setTimeout(r, 50));
+    if (activeSection.querySelector(".accordion-header")) return;
+    await sleep(40);
   }
 }
 
+async function switchLanguagePreservingPosition(nextLang) {
+  if (langSwitchBusy) return;
+
+  langSwitchBusy = true;
+
+  if (langFab) {
+    langFab.disabled = true;
+    langFab.style.opacity = "0.72";
+  }
+
+  const state = captureViewportState();
+
+  await setLangReady(nextLang);
+  restoreOpenStateAfterLangSwitch(state);
+  applyFilters();
+
+  await doubleFrame();
+  restoreViewportState(state);
+
+  if (langFab) {
+    langFab.disabled = false;
+    langFab.style.opacity = "";
+  }
+
+  langSwitchBusy = false;
+}
+
+// ========================
+// POMOCNICZE
+// ========================
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function doubleFrame() {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(resolve);
+    });
+  });
+}
+
+function normalizeText(text) {
+  return (text || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[–—]/g, "-")
+    .replace(/[()]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function getHeaderKey(text) {
-  const t = (text || '').trim();
+  const t = (text || "").trim();
   const m = t.match(/^([0-9]+\.|[A-Z][0-9]+\.|B[0-9]+\.|C[0-9]+\.)/i);
   return m ? m[1].toUpperCase() : null;
 }
 
-function normalizeTextForMatch(text) {
-  return (text || "")
-    .toLowerCase()
-    .replace(/\s+/g, " ")
-    .replace(/[–—-]/g, "-")
-    .replace(/[()]/g, "")
-    .trim();
+function getHeaderTextWithoutFavorite(header) {
+  if (!header) return "";
+  const clone = header.cloneNode(true);
+  clone.querySelectorAll(".favorite-star").forEach((el) => el.remove());
+  return clone.textContent.trim();
 }
 
-function getDetailsSummaryText(details) {
-  if (!details) return "";
+function getSummaryTextWithoutFavorite(summary) {
+  if (!summary) return "";
+  const clone = summary.cloneNode(true);
+  clone.querySelectorAll(".favorite-star").forEach((el) => el.remove());
+  return clone.textContent.trim();
+}
 
-  const summary = details.querySelector("summary");
-  return summary ? summary.textContent.trim() : "";
+function getAccordionBodyFromHeader(header) {
+  if (!header) return null;
+
+  if (
+    header.nextElementSibling &&
+    header.nextElementSibling.classList.contains("accordion-body")
+  ) {
+    return header.nextElementSibling;
+  }
+
+  const row = header.closest(".accordion-title-row");
+  if (
+    row &&
+    row.nextElementSibling &&
+    row.nextElementSibling.classList.contains("accordion-body")
+  ) {
+    return row.nextElementSibling;
+  }
+
+  return null;
+}
+
+function findAccordionHeaderFromBody(body) {
+  if (!body) return null;
+
+  let prev = body.previousElementSibling;
+
+  while (prev) {
+    if (prev.classList && prev.classList.contains("accordion-header")) return prev;
+
+    if (prev.classList && prev.classList.contains("accordion-title-row")) {
+      const header = prev.querySelector(".accordion-header");
+      if (header) return header;
+    }
+
+    prev = prev.previousElementSibling;
+  }
+
+  return null;
 }
 
 function getHeaderIndex(section, header) {
-  const headers = Array.from(section.querySelectorAll('.accordion-header'));
+  const headers = Array.from(section.querySelectorAll(".accordion-header"));
   return headers.indexOf(header);
 }
 
 function findHeaderByKeyOrIndex(section, key, index) {
-  const headers = Array.from(section.querySelectorAll('.accordion-header'));
+  const headers = Array.from(section.querySelectorAll(".accordion-header"));
 
   if (key) {
-    const byKey = headers.find(h => getHeaderKey(h.textContent) === key);
+    const byKey = headers.find((h) => getHeaderKey(getHeaderTextWithoutFavorite(h)) === key);
     if (byKey) return byKey;
   }
 
@@ -175,138 +273,42 @@ function findHeaderByKeyOrIndex(section, key, index) {
   return headers[0] || null;
 }
 
-function findAccordionHeaderFromBody(body) {
-  if (!body) return null;
-
-  let prev = body.previousElementSibling;
-
-  while (prev) {
-    if (prev.classList && prev.classList.contains('accordion-header')) return prev;
-    prev = prev.previousElementSibling;
-  }
-
-  return null;
+function getLoadSlotFromElement(el) {
+  return el ? el.closest(".load-slot") : null;
 }
 
-function findAccordionHeaderFromElement(el) {
-  if (!el) return null;
-
-  const directHeader = el.closest('.accordion-header');
-  if (directHeader) return directHeader;
-
-  const body = el.closest('.accordion-body');
-  if (body) return findAccordionHeaderFromBody(body);
-
-  const wrapper = el.closest('.accordion');
-  if (wrapper) {
-    const h = wrapper.querySelector('.accordion-header');
-    if (h) return h;
-  }
-
-  return null;
-}
-
-function getVisibleReferenceElement() {
-  const points = [
-    { x: window.innerWidth * 0.50, y: window.innerHeight * 0.42 },
-    { x: window.innerWidth * 0.50, y: window.innerHeight * 0.55 },
-    { x: window.innerWidth * 0.75, y: window.innerHeight - 160 },
-    { x: window.innerWidth * 0.50, y: 120 }
-  ];
-
-  for (const p of points) {
-    const x = Math.max(1, Math.min(window.innerWidth - 2, p.x));
-    const y = Math.max(1, Math.min(window.innerHeight - 2, p.y));
-    const el = document.elementFromPoint(x, y);
-
-    if (el && el.closest('.section.active')) {
-      return { el, x, y };
-    }
-  }
-
-  return null;
-}
-
-function swapLangInId(id) {
-  if (!id) return null;
-
-  if (id.includes('-pl-')) return id.replace('-pl-', '-en-');
-  if (id.includes('-en-')) return id.replace('-en-', '-pl-');
-
-  if (id.startsWith('delay-cat-')) {
-    const rest = id.replace('delay-cat-', '');
-    return `delay-en-${rest}`;
-  }
-
-  if (id.startsWith('delay-en-')) {
-    const rest = id.replace('delay-en-', '');
-    return `delay-cat-${rest}`;
-  }
-
-  // Komunikat 8 — Wypadek / przerwa w ruchu
-  // Angielską wersję dopasujemy później, gdy przygotujesz EN.
-  if (id.startsWith('wypadek-pl-8-')) {
-    const rest = id.replace('wypadek-pl-8-', '');
-    return `acc-en8-${rest}`;
-  }
-
-  if (id.startsWith('acc-en8-')) {
-    const rest = id.replace('acc-en8-', '');
-    return `wypadek-pl-8-${rest}`;
-  }
-
-  // Zostawione awaryjnie dla starszej wersji, gdyby gdzieś zostało stare ID.
-  if (id.startsWith('wypadek-pl-7-')) {
-    const rest = id.replace('wypadek-pl-7-', '');
-    return `acc-en7-${rest}`;
-  }
-
-  if (id.startsWith('acc-en7-')) {
-    const rest = id.replace('acc-en7-', '');
-    return `wypadek-pl-7-${rest}`;
-  }
-
-  if (id.startsWith('k6-pl-')) {
-    const rest = id.replace('k6-pl-', '');
-    return `k6-en-${rest}`;
-  }
-
-  if (id.startsWith('k6-en-')) {
-    const rest = id.replace('k6-en-', '');
-    return `k6-pl-${rest}`;
-  }
-
-  return null;
+function getAnnouncementIdFromSlot(slot) {
+  if (!slot) return "unknown";
+  return slot.dataset.announcement || slot.getAttribute("data-load") || "unknown";
 }
 
 function clearLastOpenState() {
   lastMainAccordionState = null;
   lastDetailsState = null;
-  lastSubPanelId = null;
+  lastSubPanelState = null;
 }
 
 function rememberMainAccordion(header) {
   if (!header) return;
 
-  const section = getActiveSection();
+  const activeSection = getActiveSection();
+  const text = getHeaderTextWithoutFavorite(header);
 
   lastMainAccordionState = {
     lang: getActiveLang(),
-    key: getHeaderKey(header.textContent),
-    index: getHeaderIndex(section, header),
-    text: normalizeTextForMatch(header.textContent)
+    key: getHeaderKey(text),
+    index: getHeaderIndex(activeSection, header),
+    text: normalizeText(text)
   };
 }
 
 function rememberDetails(details) {
   if (!details) return;
 
-  const body = details.closest('.accordion-body');
+  const body = details.closest(".accordion-body");
   const header = findAccordionHeaderFromBody(body);
 
-  if (header) {
-    rememberMainAccordion(header);
-  }
+  if (header) rememberMainAccordion(header);
 
   const allDetails = body ? Array.from(body.querySelectorAll("details")) : [];
   const detailsIndex = allDetails.indexOf(details);
@@ -316,211 +318,320 @@ function rememberDetails(details) {
     details.closest(".k7-group") ||
     details.parentElement;
 
-  const groupDetails = group
-    ? Array.from(group.querySelectorAll("details"))
-    : allDetails;
-
+  const groupDetails = group ? Array.from(group.querySelectorAll("details")) : allDetails;
   const groupIndex = groupDetails.indexOf(details);
-  const summaryText = getDetailsSummaryText(details);
+
+  const summary = details.querySelector("summary");
+  const summaryText = getSummaryTextWithoutFavorite(summary);
 
   lastDetailsState = {
     lang: getActiveLang(),
     id: details.id || null,
-    summaryKey: getHeaderKey(summaryText),
-    summaryText: normalizeTextForMatch(summaryText),
     detailsIndex,
-    groupIndex
+    groupIndex,
+    summaryKey: getHeaderKey(summaryText),
+    summaryText: normalizeText(summaryText)
   };
+
+  lastSubPanelState = null;
 }
 
-function rememberSubPanel(panelId, triggerEl) {
-  if (!panelId) return;
+function rememberSubPanel(panel, triggerEl) {
+  if (!panel) return;
 
-  const parentBody = triggerEl ? triggerEl.closest('.accordion-body') : null;
-  const parentHeader = findAccordionHeaderFromBody(parentBody);
+  const body = panel.closest(".accordion-body") || triggerEl?.closest(".accordion-body");
+  const header = findAccordionHeaderFromBody(body);
 
-  if (parentHeader) {
-    rememberMainAccordion(parentHeader);
-  }
+  if (header) rememberMainAccordion(header);
 
-  lastSubPanelId = panelId;
+  const panels = body ? Array.from(body.querySelectorAll(".gastronomy-more, .accordion-subbody")) : [];
+  const panelIndex = panels.indexOf(panel);
+
+  lastSubPanelState = {
+    lang: getActiveLang(),
+    id: panel.id || null,
+    panelIndex
+  };
+
   lastDetailsState = null;
 }
 
-function findMatchingDetails(targetBody, detailsState) {
-  if (!targetBody || !detailsState) return null;
+// ========================
+// ULUBIONE
+// ========================
 
-  const allDetails = Array.from(targetBody.querySelectorAll("details"));
-  if (!allDetails.length) return null;
+function readFavorites() {
+  try {
+    const data = JSON.parse(localStorage.getItem(FAVORITES_KEY) || "[]");
+    return Array.isArray(data) ? new Set(data) : new Set();
+  } catch {
+    return new Set();
+  }
+}
 
-  if (detailsState.id) {
-    const mappedId = swapLangInId(detailsState.id);
+function writeFavorites(set) {
+  try {
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(Array.from(set)));
+  } catch {}
+}
 
-    if (mappedId) {
-      const byMappedId = targetBody.querySelector(`#${CSS.escape(mappedId)}`);
-      if (byMappedId && byMappedId.tagName === "DETAILS") return byMappedId;
+function isFavorite(id) {
+  return readFavorites().has(id);
+}
+
+function toggleFavorite(id) {
+  if (!id) return;
+
+  const favs = readFavorites();
+
+  if (favs.has(id)) {
+    favs.delete(id);
+  } else {
+    favs.add(id);
+  }
+
+  writeFavorites(favs);
+  updateFavoriteStars();
+  applyFilters();
+}
+
+function updateFavoriteStars() {
+  const favs = readFavorites();
+
+  document.querySelectorAll(".favorite-star[data-fav-id]").forEach((star) => {
+    const id = star.dataset.favId;
+    const active = favs.has(id);
+
+    star.classList.toggle("active", active);
+    star.textContent = active ? "★" : "☆";
+    star.setAttribute("aria-label", active ? "Usuń z ulubionych" : "Dodaj do ulubionych");
+    star.setAttribute("title", active ? "Usuń z ulubionych" : "Dodaj do ulubionych");
+  });
+}
+
+function createFavoriteStar(favId) {
+  const star = document.createElement("span");
+  star.className = "favorite-star";
+  star.dataset.favId = favId;
+  star.setAttribute("role", "button");
+  star.setAttribute("tabindex", "0");
+  star.setAttribute("aria-label", "Dodaj do ulubionych");
+  star.setAttribute("title", "Dodaj do ulubionych");
+  star.textContent = "☆";
+  return star;
+}
+
+function slotHasFavorite(slot) {
+  if (!slot) return false;
+
+  const favs = readFavorites();
+  const stars = Array.from(slot.querySelectorAll(".favorite-star[data-fav-id]"));
+
+  return stars.some((star) => favs.has(star.dataset.favId));
+}
+
+document.addEventListener("click", function (e) {
+  const star = e.target.closest(".favorite-star[data-fav-id]");
+  if (!star) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+
+  toggleFavorite(star.dataset.favId);
+});
+
+document.addEventListener("keydown", function (e) {
+  const star = e.target.closest?.(".favorite-star[data-fav-id]");
+  if (!star) return;
+
+  if (e.key !== "Enter" && e.key !== " ") return;
+
+  e.preventDefault();
+  e.stopPropagation();
+
+  toggleFavorite(star.dataset.favId);
+});
+
+// ========================
+// ULEPSZANIE ZAŁADOWANYCH KOMUNIKATÓW
+// ========================
+
+function enhanceLoadedSlot(slot) {
+  if (!slot || slot.dataset.enhanced === "true") return;
+
+  const announcementId = getAnnouncementIdFromSlot(slot);
+
+  enhanceMainHeaders(slot, announcementId);
+  enhanceDetails(slot, announcementId);
+  enhanceGastronomyPanels(slot, announcementId);
+  enhanceConnectionToggles(slot, announcementId);
+
+  slot.dataset.enhanced = "true";
+
+  updateFavoriteStars();
+  applyFilters();
+}
+
+function enhanceMainHeaders(slot, announcementId) {
+  const headers = Array.from(slot.querySelectorAll(".accordion-header"));
+
+  headers.forEach((header, index) => {
+    if (header.dataset.enhanced === "true") return;
+
+    const favId = `ann:${announcementId}:main:${index}`;
+    const star = createFavoriteStar(favId);
+
+    header.appendChild(star);
+    header.dataset.enhanced = "true";
+    header.dataset.favId = favId;
+  });
+}
+
+function enhanceDetails(slot, announcementId) {
+  const detailsList = Array.from(slot.querySelectorAll("details"));
+
+  detailsList.forEach((details, index) => {
+    const summary = details.querySelector("summary");
+    if (!summary || summary.dataset.enhanced === "true") return;
+
+    const favId = `ann:${announcementId}:details:${index}`;
+    const star = createFavoriteStar(favId);
+
+    summary.appendChild(star);
+    summary.dataset.enhanced = "true";
+    summary.dataset.favId = favId;
+  });
+}
+
+function enhanceGastronomyPanels(slot, announcementId) {
+  const panels = Array.from(slot.querySelectorAll(".gastronomy-more"));
+
+  panels.forEach((panel, index) => {
+    if (panel.dataset.favEnhanced === "true") return;
+
+    const id = panel.id;
+    if (!id) return;
+
+    const trigger = slot.querySelector(`.gastronomy-plus[data-target="${CSS.escape(id)}"]`);
+    if (!trigger) return;
+
+    const favId = `ann:${announcementId}:panel:${index}`;
+    const star = createFavoriteStar(favId);
+
+    star.classList.add("favorite-star--small");
+
+    trigger.insertAdjacentElement("beforebegin", star);
+
+    panel.dataset.favEnhanced = "true";
+    panel.dataset.favId = favId;
+    trigger.dataset.favId = favId;
+  });
+}
+
+function enhanceConnectionToggles(slot, announcementId) {
+  const toggles = Array.from(slot.querySelectorAll(".connection-toggle"));
+
+  toggles.forEach((toggle, index) => {
+    if (toggle.dataset.enhanced === "true") return;
+
+    const favId = `ann:${announcementId}:connection:${index}`;
+    const star = createFavoriteStar(favId);
+
+    toggle.appendChild(star);
+    toggle.dataset.enhanced = "true";
+    toggle.dataset.favId = favId;
+  });
+}
+
+// ========================
+// WYSZUKIWANIE I FILTRY
+// ========================
+
+function getSearchQuery() {
+  return normalizeText(searchInput ? searchInput.value : "");
+}
+
+function slotMatchesSearch(slot, query) {
+  if (!query) return true;
+
+  const text = normalizeText(slot.textContent || "");
+  return text.includes(query);
+}
+
+function applyFilters() {
+  const activeSection = getActiveSection();
+  if (!activeSection) return;
+
+  const query = getSearchQuery();
+  const slots = Array.from(activeSection.querySelectorAll(".load-slot"));
+
+  let visibleCount = 0;
+
+  slots.forEach((slot) => {
+    const loaded = slot.dataset.loaded === "true";
+
+    if (!loaded) {
+      slot.hidden = false;
+      visibleCount++;
+      return;
     }
 
-    const bySameId = targetBody.querySelector(`#${CSS.escape(detailsState.id)}`);
-    if (bySameId && bySameId.tagName === "DETAILS") return bySameId;
-  }
+    const matchesSearch = slotMatchesSearch(slot, query);
+    const matchesFavorite = !showFavoritesOnly || slotHasFavorite(slot);
 
-  if (detailsState.summaryKey) {
-    const byKey = allDetails.find(d => {
-      const txt = getDetailsSummaryText(d);
-      return getHeaderKey(txt) === detailsState.summaryKey;
-    });
+    const visible = matchesSearch && matchesFavorite;
 
-    if (byKey) return byKey;
-  }
+    slot.hidden = !visible;
 
-  if (detailsState.summaryText) {
-    const byText = allDetails.find(d => {
-      const txt = normalizeTextForMatch(getDetailsSummaryText(d));
-      return txt === detailsState.summaryText;
-    });
-
-    if (byText) return byText;
-  }
-
-  if (typeof detailsState.detailsIndex === "number" && detailsState.detailsIndex >= 0 && allDetails[detailsState.detailsIndex]) {
-    return allDetails[detailsState.detailsIndex];
-  }
-
-  return null;
-}
-
-function openOnlyThisDetails(details) {
-  if (!details) return;
-
-  const group =
-    details.closest(".k6-group") ||
-    details.closest(".k7-group") ||
-    details.parentElement;
-
-  if (group) {
-    group.querySelectorAll("details[open]").forEach(d => {
-      if (d !== details) d.open = false;
-    });
-  }
-
-  details.open = true;
-}
-
-function ensureOpenMain(header) {
-  if (!header) return;
-
-  const body = header.nextElementSibling;
-
-  if (!body || !body.classList || !body.classList.contains('accordion-body')) return;
-
-  if (!body.classList.contains('active')) {
-    header.click();
-  }
-}
-
-function getPanelByMappedId(root, id) {
-  if (!root || !id) return null;
-
-  const mappedId = swapLangInId(id) || id;
-
-  let panel = root.querySelector(`#${CSS.escape(mappedId)}`);
-  if (panel) return panel;
-
-  panel = root.querySelector(`#${CSS.escape(id)}`);
-  if (panel) return panel;
-
-  return null;
-}
-
-function ensureOpenSub(activeSection, targetId) {
-  if (!targetId) return null;
-
-  const mappedId = swapLangInId(targetId) || targetId;
-  const safeMappedId = CSS.escape(mappedId);
-  const safeOriginalId = CSS.escape(targetId);
-
-  let panel =
-    activeSection.querySelector(`#${safeMappedId}`) ||
-    activeSection.querySelector(`#${safeOriginalId}`);
-
-  if (!panel) return null;
-
-  const actualId = panel.id;
-  const safeActualId = CSS.escape(actualId);
-
-  const togglers = Array.from(activeSection.querySelectorAll(`[data-target="${safeActualId}"]`));
-
-  const rootBody = panel.closest('.accordion-body') || activeSection;
-
-  rootBody.querySelectorAll('.gastronomy-more.active').forEach(other => {
-    if (other !== panel) {
-      other.classList.remove('active');
-      other.style.display = 'none';
-    }
+    if (visible) visibleCount++;
   });
 
-  rootBody.querySelectorAll('.gastronomy-plus.active').forEach(otherPlus => {
-    otherPlus.classList.remove('active');
+  if (emptyState) {
+    emptyState.hidden = visibleCount > 0;
+  }
+}
+
+if (searchInput) {
+  searchInput.addEventListener("input", () => {
+    applyFilters();
   });
-
-  panel.classList.add('active');
-  panel.style.display = 'block';
-
-  togglers.forEach(t => t.classList.add('active'));
-
-  return panel;
 }
 
-async function waitForTargetHeader(section, key, index) {
-  for (let i = 0; i < 100; i++) {
-    const header = findHeaderByKeyOrIndex(section, key, index);
-    if (header) return header;
+if (favoritesToggle) {
+  favoritesToggle.addEventListener("click", () => {
+    showFavoritesOnly = !showFavoritesOnly;
 
-    await new Promise(r => setTimeout(r, 50));
-  }
+    favoritesToggle.classList.toggle("active", showFavoritesOnly);
+    favoritesToggle.setAttribute("aria-pressed", showFavoritesOnly ? "true" : "false");
+    favoritesToggle.textContent = showFavoritesOnly ? "★ Ulubione" : "☆ Ulubione";
 
-  return null;
-}
-
-async function waitForPanelById(section, id) {
-  if (!id) return null;
-
-  for (let i = 0; i < 80; i++) {
-    const mappedId = swapLangInId(id) || id;
-
-    const panel =
-      section.querySelector(`#${CSS.escape(mappedId)}`) ||
-      section.querySelector(`#${CSS.escape(id)}`);
-
-    if (panel) return panel;
-
-    await new Promise(r => setTimeout(r, 50));
-  }
-
-  return null;
+    applyFilters();
+  });
 }
 
 // ========================
 // GŁÓWNE AKORDEONY
 // ========================
 
-document.addEventListener('click', function (e) {
-  const btn = e.target.closest('.accordion-header');
+document.addEventListener("click", function (e) {
+  if (e.target.closest(".favorite-star")) return;
+
+  const btn = e.target.closest(".accordion-header");
   if (!btn) return;
 
-  const body = btn.nextElementSibling;
-  if (!body || !body.classList.contains('accordion-body')) return;
+  const body = getAccordionBodyFromHeader(btn);
+  if (!body || !body.classList.contains("accordion-body")) return;
 
   e.preventDefault();
 
-  const isOpen = body.classList.contains('active');
+  const activeSection = getActiveSection();
+  const isOpen = body.classList.contains("active");
 
-  document.querySelectorAll('.accordion-body').forEach(b => {
-    if (b !== body) b.classList.remove('active');
+  activeSection.querySelectorAll(".accordion-body").forEach((b) => {
+    if (b !== body) b.classList.remove("active");
   });
 
-  body.classList.toggle('active', !isOpen);
+  body.classList.toggle("active", !isOpen);
 
   if (isOpen) {
     clearLastOpenState();
@@ -528,64 +639,84 @@ document.addEventListener('click', function (e) {
   }
 
   rememberMainAccordion(btn);
+
   lastDetailsState = null;
-  lastSubPanelId = null;
+  lastSubPanelState = null;
 
-  body.querySelectorAll('.gastronomy-more').forEach(m => {
-    m.classList.remove('active');
-    m.style.display = 'none';
-  });
-
-  body.querySelectorAll('.gastronomy-plus').forEach(p => {
-    p.classList.remove('active');
-  });
+  closeInnerPanels(body);
 });
+
+function closeInnerPanels(body) {
+  if (!body) return;
+
+  body.querySelectorAll(".gastronomy-more").forEach((m) => {
+    m.classList.remove("active");
+    m.style.display = "none";
+  });
+
+  body.querySelectorAll(".gastronomy-plus").forEach((p) => {
+    p.classList.remove("active");
+  });
+
+  body.querySelectorAll(".connection-toggle").forEach((p) => {
+    p.classList.remove("active");
+  });
+
+  body.querySelectorAll(".connection-toggle + .accordion-subbody").forEach((p) => {
+    p.classList.remove("active");
+  });
+}
 
 // ========================
 // PODAKORDEON — PRZESIADKI / LOTNISKA
 // ========================
 
-document.addEventListener('click', function (e) {
-  const btn = e.target.closest('.connection-toggle');
+document.addEventListener("click", function (e) {
+  if (e.target.closest(".favorite-star")) return;
+
+  const btn = e.target.closest(".connection-toggle");
   if (!btn) return;
 
   const body = btn.nextElementSibling;
-  if (!body || !body.classList.contains('accordion-subbody')) return;
+  if (!body || !body.classList.contains("accordion-subbody")) return;
 
   e.preventDefault();
 
-  const parentBody = btn.closest('.accordion-body');
+  const parentBody = btn.closest(".accordion-body");
   const parentHeader = findAccordionHeaderFromBody(parentBody);
   if (parentHeader) rememberMainAccordion(parentHeader);
 
-  const isOpen = btn.classList.contains('active');
+  const isOpen = btn.classList.contains("active");
 
-  document.querySelectorAll('.connection-toggle').forEach(o => {
-    if (o !== btn) o.classList.remove('active');
+  parentBody.querySelectorAll(".connection-toggle").forEach((o) => {
+    if (o !== btn) o.classList.remove("active");
   });
 
-  document.querySelectorAll('.connection-toggle + .accordion-subbody').forEach(b => {
-    if (b !== body) b.classList.remove('active');
+  parentBody.querySelectorAll(".connection-toggle + .accordion-subbody").forEach((b) => {
+    if (b !== body) b.classList.remove("active");
   });
 
-  btn.classList.toggle('active', !isOpen);
-  body.classList.toggle('active', !isOpen);
+  btn.classList.toggle("active", !isOpen);
+  body.classList.toggle("active", !isOpen);
 
-  lastSubPanelId = isOpen ? null : (body.id || null);
-  lastDetailsState = null;
+  if (!isOpen) {
+    rememberSubPanel(body, btn);
+  } else {
+    lastSubPanelState = null;
+  }
 });
 
 // ========================
 // PLUSIKI / ROZWIJANE BLOKI .gastronomy-more
-// ważne dla komunikatów 7 i 8
-// otwarta tylko jedna podsekcja naraz
 // ========================
 
-document.addEventListener('click', function (e) {
-  const plus = e.target.closest('.gastronomy-plus');
+document.addEventListener("click", function (e) {
+  if (e.target.closest(".favorite-star")) return;
+
+  const plus = e.target.closest(".gastronomy-plus");
   if (!plus) return;
 
-  const id = plus.getAttribute('data-target');
+  const id = plus.getAttribute("data-target");
   if (!id) return;
 
   const block = document.getElementById(id);
@@ -594,284 +725,55 @@ document.addEventListener('click', function (e) {
   e.preventDefault();
   e.stopPropagation();
 
-  const root = plus.closest('.accordion-body') || document;
-  const isCurrentlyActive = block.classList.contains('active');
+  const root = plus.closest(".accordion-body") || document;
+  const isCurrentlyActive = block.classList.contains("active");
 
-  // Zapamiętaj panel tylko wtedy, gdy będzie otwierany.
-  if (!isCurrentlyActive) {
-    rememberSubPanel(id, plus);
-  }
-
-  // Zamknij wszystkie inne rozwijane bloki w tym samym głównym komunikacie.
-  root.querySelectorAll('.gastronomy-more').forEach(other => {
-    other.classList.remove('active');
-    other.style.display = 'none';
+  root.querySelectorAll(".gastronomy-more").forEach((other) => {
+    other.classList.remove("active");
+    other.style.display = "none";
   });
 
-  // Wyczyść aktywność wszystkich nagłówków/plusów w tym samym komunikacie.
-  root.querySelectorAll('.gastronomy-plus').forEach(otherPlus => {
-    otherPlus.classList.remove('active');
+  root.querySelectorAll(".gastronomy-plus").forEach((otherPlus) => {
+    otherPlus.classList.remove("active");
   });
 
-  // Jeżeli kliknięty blok był zamknięty — otwórz go.
-  // Jeżeli był otwarty — zostanie zamknięty.
   if (!isCurrentlyActive) {
-    block.classList.add('active');
-    block.style.display = 'block';
+    block.classList.add("active");
+    block.style.display = "block";
 
-    root.querySelectorAll(`[data-target="${CSS.escape(id)}"]`).forEach(trigger => {
-      trigger.classList.add('active');
+    root.querySelectorAll(`.gastronomy-plus[data-target="${CSS.escape(id)}"]`).forEach((trigger) => {
+      trigger.classList.add("active");
     });
 
-    lastSubPanelId = id;
+    rememberSubPanel(block, plus);
   } else {
-    lastSubPanelId = null;
+    lastSubPanelState = null;
   }
 });
 
 // ========================
-// ŚLEDZENIE DETAILS/SUMMARY
-// ważne dla komunikatu 6
+// DETAILS / SUMMARY
 // ========================
 
-document.addEventListener('click', function (e) {
-  const summary = e.target.closest('summary');
+document.addEventListener("click", function (e) {
+  if (e.target.closest(".favorite-star")) return;
+
+  const summary = e.target.closest("summary");
   if (!summary) return;
 
   const details = summary.parentElement;
   if (!details || details.tagName !== "DETAILS") return;
 
-  const body = details.closest('.accordion-body');
+  const body = details.closest(".accordion-body");
   if (!body) return;
 
   rememberDetails(details);
-  lastSubPanelId = null;
 });
 
-// ========================
-// ZAPIS I ODTWARZANIE POZYCJI
-// ========================
+// Komunikat 6 — tylko jeden wewnętrzny akordeon naraz
+document.addEventListener("click", function (e) {
+  if (e.target.closest(".favorite-star")) return;
 
-function calculateElementRatio(el) {
-  if (!el) return 0;
-
-  const ref = getVisibleReferenceElement();
-  const refY = ref ? ref.y : window.innerHeight * 0.45;
-
-  const rect = el.getBoundingClientRect();
-  const top = rect.top + window.scrollY;
-  const height = Math.max(1, rect.height);
-  const refDocY = window.scrollY + refY;
-
-  let ratio = (refDocY - top) / height;
-  ratio = Math.max(0, Math.min(1, ratio));
-
-  return ratio;
-}
-
-function captureViewportState() {
-  const activeSection = getActiveSection();
-
-  const openBody = activeSection.querySelector('.accordion-body.active');
-
-  if (!openBody) {
-    return {
-      mode: 'absolute',
-      scrollY: window.scrollY
-    };
-  }
-
-  const header = findAccordionHeaderFromBody(openBody);
-
-  if (!header) {
-    return {
-      mode: 'absolute',
-      scrollY: window.scrollY
-    };
-  }
-
-  const key = getHeaderKey(header.textContent);
-  const index = getHeaderIndex(activeSection, header);
-
-  let sourceDetails = null;
-
-  if (lastDetailsState && lastDetailsState.lang === getActiveLang()) {
-    sourceDetails = findMatchingDetails(openBody, lastDetailsState);
-  }
-
-  let sourcePanel = null;
-
-  if (lastSubPanelId) {
-    sourcePanel = getPanelByMappedId(openBody, lastSubPanelId);
-  }
-
-  const ref = getVisibleReferenceElement();
-  const refY = ref ? ref.y : window.innerHeight * 0.45;
-
-  return {
-    mode: 'smart',
-    key,
-    index,
-    wasOpen: true,
-    bodyRatio: calculateElementRatio(openBody),
-    refY,
-
-    subId: lastSubPanelId,
-    subPanelRatio: sourcePanel ? calculateElementRatio(sourcePanel) : 0,
-
-    detailsState: lastDetailsState && lastDetailsState.lang === getActiveLang() ? lastDetailsState : null,
-    detailsRatio: sourceDetails ? calculateElementRatio(sourceDetails) : 0
-  };
-}
-
-async function restoreViewportState(state) {
-  if (!state) return;
-
-  if (state.mode === 'absolute') {
-    await new Promise(resolve => requestAnimationFrame(resolve));
-    await new Promise(resolve => requestAnimationFrame(resolve));
-
-    window.scrollTo({
-      top: Math.max(0, state.scrollY || 0),
-      behavior: 'instant'
-    });
-
-    return;
-  }
-
-  const activeSection = getActiveSection();
-
-  const targetHeader = await waitForTargetHeader(
-    activeSection,
-    state.key,
-    state.index
-  );
-
-  if (!targetHeader) return;
-
-  if (state.wasOpen) {
-    ensureOpenMain(targetHeader);
-  }
-
-  const targetBody = targetHeader.nextElementSibling;
-
-  let targetPanel = null;
-
-  if (state.subId) {
-    await waitForPanelById(activeSection, state.subId);
-    targetPanel = ensureOpenSub(activeSection, state.subId);
-  }
-
-  let targetDetails = null;
-
-  if (state.detailsState && targetBody) {
-    targetDetails = findMatchingDetails(targetBody, state.detailsState);
-
-    if (targetDetails) {
-      openOnlyThisDetails(targetDetails);
-    }
-  }
-
-  await new Promise(resolve => requestAnimationFrame(resolve));
-  await new Promise(resolve => requestAnimationFrame(resolve));
-
-  const hasBody =
-    targetBody &&
-    targetBody.classList &&
-    targetBody.classList.contains('accordion-body');
-
-  let targetY;
-
-  if (targetPanel) {
-    const panelTop = targetPanel.getBoundingClientRect().top + window.scrollY;
-    const panelHeight = Math.max(1, targetPanel.getBoundingClientRect().height);
-
-    targetY =
-      panelTop +
-      state.subPanelRatio * panelHeight -
-      state.refY;
-  } else if (targetDetails) {
-    const detailsTop = targetDetails.getBoundingClientRect().top + window.scrollY;
-    const detailsHeight = Math.max(1, targetDetails.getBoundingClientRect().height);
-
-    targetY =
-      detailsTop +
-      state.detailsRatio * detailsHeight -
-      state.refY;
-  } else if (state.wasOpen && hasBody) {
-    const bodyTop = targetBody.getBoundingClientRect().top + window.scrollY;
-    const bodyHeight = Math.max(1, targetBody.getBoundingClientRect().height);
-
-    targetY =
-      bodyTop +
-      state.bodyRatio * bodyHeight -
-      state.refY;
-  } else {
-    const headerTop = targetHeader.getBoundingClientRect().top + window.scrollY;
-    targetY = headerTop - 90;
-  }
-
-  window.scrollTo({
-    top: Math.max(0, targetY),
-    behavior: 'instant'
-  });
-}
-
-async function switchLanguagePreservingPosition(nextLang) {
-  if (langSwitchBusy) return;
-
-  langSwitchBusy = true;
-
-  if (langFab) {
-    langFab.disabled = true;
-    langFab.style.opacity = '0.72';
-  }
-
-  const state = captureViewportState();
-
-  await setLangReady(nextLang);
-  await restoreViewportState(state);
-
-  if (langFab) {
-    langFab.disabled = false;
-    langFab.style.opacity = '';
-  }
-
-  langSwitchBusy = false;
-}
-
-// ========================
-// TABY
-// ========================
-
-if (tabPL) {
-  tabPL.onclick = async () => {
-    if (getActiveLang() === 'PL') return;
-    await switchLanguagePreservingPosition('PL');
-  };
-}
-
-if (tabEN) {
-  tabEN.onclick = async () => {
-    if (getActiveLang() === 'EN') return;
-    await switchLanguagePreservingPosition('EN');
-  };
-}
-
-if (langFab) {
-  langFab.addEventListener('click', async () => {
-    const nextLang = getActiveLang() === 'PL' ? 'EN' : 'PL';
-    await switchLanguagePreservingPosition(nextLang);
-  });
-}
-
-updateLangFabLabel();
-
-// ========================
-// KOMUNIKAT 6 — tylko jeden wewnętrzny akordeon naraz
-// ========================
-
-document.addEventListener("click", (e) => {
   const summary = e.target.closest("summary.k6-pill");
   if (!summary) return;
 
@@ -899,7 +801,322 @@ document.addEventListener("click", (e) => {
 });
 
 // ========================
+// ZAPIS I ODTWARZANIE POZYCJI
+// ========================
+
+function getVisibleReferenceElement() {
+  const points = [
+    { x: window.innerWidth * 0.5, y: window.innerHeight * 0.42 },
+    { x: window.innerWidth * 0.5, y: window.innerHeight * 0.55 },
+    { x: window.innerWidth * 0.75, y: window.innerHeight - 160 },
+    { x: window.innerWidth * 0.5, y: 120 }
+  ];
+
+  for (const p of points) {
+    const x = Math.max(1, Math.min(window.innerWidth - 2, p.x));
+    const y = Math.max(1, Math.min(window.innerHeight - 2, p.y));
+    const el = document.elementFromPoint(x, y);
+
+    if (el && el.closest(".section.active")) {
+      return { el, x, y };
+    }
+  }
+
+  return null;
+}
+
+function calculateElementRatio(el) {
+  if (!el) return 0;
+
+  const ref = getVisibleReferenceElement();
+  const refY = ref ? ref.y : window.innerHeight * 0.45;
+
+  const rect = el.getBoundingClientRect();
+  const top = rect.top + window.scrollY;
+  const height = Math.max(1, rect.height);
+  const refDocY = window.scrollY + refY;
+
+  let ratio = (refDocY - top) / height;
+  ratio = Math.max(0, Math.min(1, ratio));
+
+  return ratio;
+}
+
+function findMatchingDetails(targetBody, detailsState) {
+  if (!targetBody || !detailsState) return null;
+
+  const allDetails = Array.from(targetBody.querySelectorAll("details"));
+  if (!allDetails.length) return null;
+
+  if (detailsState.summaryKey) {
+    const byKey = allDetails.find((d) => {
+      const summary = d.querySelector("summary");
+      return getHeaderKey(getSummaryTextWithoutFavorite(summary)) === detailsState.summaryKey;
+    });
+
+    if (byKey) return byKey;
+  }
+
+  if (typeof detailsState.detailsIndex === "number" && allDetails[detailsState.detailsIndex]) {
+    return allDetails[detailsState.detailsIndex];
+  }
+
+  if (detailsState.summaryText) {
+    const byText = allDetails.find((d) => {
+      const summary = d.querySelector("summary");
+      return normalizeText(getSummaryTextWithoutFavorite(summary)) === detailsState.summaryText;
+    });
+
+    if (byText) return byText;
+  }
+
+  return null;
+}
+
+function findMatchingSubPanel(targetBody, subPanelState) {
+  if (!targetBody || !subPanelState) return null;
+
+  const panels = Array.from(targetBody.querySelectorAll(".gastronomy-more, .accordion-subbody"));
+  if (!panels.length) return null;
+
+  if (typeof subPanelState.panelIndex === "number" && panels[subPanelState.panelIndex]) {
+    return panels[subPanelState.panelIndex];
+  }
+
+  if (subPanelState.id) {
+    const sameId = targetBody.querySelector(`#${CSS.escape(subPanelState.id)}`);
+    if (sameId) return sameId;
+  }
+
+  return null;
+}
+
+function captureViewportState() {
+  const activeSection = getActiveSection();
+  const openBody = activeSection.querySelector(".accordion-body.active");
+
+  if (!openBody) {
+    return {
+      mode: "absolute",
+      scrollY: window.scrollY
+    };
+  }
+
+  const header = findAccordionHeaderFromBody(openBody);
+
+  if (!header) {
+    return {
+      mode: "absolute",
+      scrollY: window.scrollY
+    };
+  }
+
+  const key = getHeaderKey(getHeaderTextWithoutFavorite(header));
+  const index = getHeaderIndex(activeSection, header);
+
+  let sourceDetails = null;
+
+  if (lastDetailsState && lastDetailsState.lang === getActiveLang()) {
+    sourceDetails = findMatchingDetails(openBody, lastDetailsState);
+  }
+
+  let sourcePanel = null;
+
+  if (lastSubPanelState && lastSubPanelState.lang === getActiveLang()) {
+    sourcePanel = findMatchingSubPanel(openBody, lastSubPanelState);
+  }
+
+  const ref = getVisibleReferenceElement();
+  const refY = ref ? ref.y : window.innerHeight * 0.45;
+
+  return {
+    mode: "smart",
+    key,
+    index,
+    wasOpen: true,
+    bodyRatio: calculateElementRatio(openBody),
+    refY,
+
+    detailsState: lastDetailsState && lastDetailsState.lang === getActiveLang() ? lastDetailsState : null,
+    detailsRatio: sourceDetails ? calculateElementRatio(sourceDetails) : 0,
+
+    subPanelState: lastSubPanelState && lastSubPanelState.lang === getActiveLang() ? lastSubPanelState : null,
+    subPanelRatio: sourcePanel ? calculateElementRatio(sourcePanel) : 0
+  };
+}
+
+function restoreOpenStateAfterLangSwitch(state) {
+  if (!state || state.mode !== "smart") return;
+
+  const activeSection = getActiveSection();
+  const targetHeader = findHeaderByKeyOrIndex(activeSection, state.key, state.index);
+
+  if (!targetHeader) return;
+
+  const targetBody = getAccordionBodyFromHeader(targetHeader);
+  if (!targetBody) return;
+
+  activeSection.querySelectorAll(".accordion-body").forEach((body) => {
+    body.classList.remove("active");
+  });
+
+  targetBody.classList.add("active");
+
+  let targetDetails = null;
+  let targetPanel = null;
+
+  if (state.detailsState) {
+    targetDetails = findMatchingDetails(targetBody, state.detailsState);
+
+    if (targetDetails) {
+      const group =
+        targetDetails.closest(".k6-group") ||
+        targetDetails.closest(".k7-group") ||
+        targetDetails.parentElement;
+
+      if (group) {
+        group.querySelectorAll("details[open]").forEach((d) => {
+          if (d !== targetDetails) d.open = false;
+        });
+      }
+
+      targetDetails.open = true;
+      lastDetailsState = state.detailsState;
+      lastSubPanelState = null;
+    }
+  }
+
+  if (state.subPanelState) {
+    targetPanel = findMatchingSubPanel(targetBody, state.subPanelState);
+
+    if (targetPanel) {
+      if (targetPanel.classList.contains("accordion-subbody")) {
+        const toggle = targetPanel.previousElementSibling;
+
+        targetBody.querySelectorAll(".connection-toggle").forEach((t) => t.classList.remove("active"));
+        targetBody.querySelectorAll(".accordion-subbody").forEach((p) => p.classList.remove("active"));
+
+        if (toggle && toggle.classList.contains("connection-toggle")) {
+          toggle.classList.add("active");
+        }
+
+        targetPanel.classList.add("active");
+      }
+
+      if (targetPanel.classList.contains("gastronomy-more")) {
+        targetBody.querySelectorAll(".gastronomy-more").forEach((p) => {
+          p.classList.remove("active");
+          p.style.display = "none";
+        });
+
+        targetBody.querySelectorAll(".gastronomy-plus").forEach((p) => {
+          p.classList.remove("active");
+        });
+
+        targetPanel.classList.add("active");
+        targetPanel.style.display = "block";
+
+        if (targetPanel.id) {
+          targetBody
+            .querySelectorAll(`.gastronomy-plus[data-target="${CSS.escape(targetPanel.id)}"]`)
+            .forEach((trigger) => trigger.classList.add("active"));
+        }
+      }
+
+      lastSubPanelState = state.subPanelState;
+      lastDetailsState = null;
+    }
+  }
+
+  rememberMainAccordion(targetHeader);
+}
+
+function restoreViewportState(state) {
+  if (!state) return;
+
+  if (state.mode === "absolute") {
+    window.scrollTo({
+      top: Math.max(0, state.scrollY || 0),
+      behavior: "instant"
+    });
+
+    return;
+  }
+
+  const activeSection = getActiveSection();
+  const targetHeader = findHeaderByKeyOrIndex(activeSection, state.key, state.index);
+
+  if (!targetHeader) return;
+
+  const targetBody = getAccordionBodyFromHeader(targetHeader);
+  if (!targetBody) return;
+
+  const targetDetails = state.detailsState ? findMatchingDetails(targetBody, state.detailsState) : null;
+  const targetPanel = state.subPanelState ? findMatchingSubPanel(targetBody, state.subPanelState) : null;
+
+  let targetY;
+
+  if (targetPanel) {
+    const rect = targetPanel.getBoundingClientRect();
+    const top = rect.top + window.scrollY;
+    const height = Math.max(1, rect.height);
+
+    targetY = top + state.subPanelRatio * height - state.refY;
+  } else if (targetDetails) {
+    const rect = targetDetails.getBoundingClientRect();
+    const top = rect.top + window.scrollY;
+    const height = Math.max(1, rect.height);
+
+    targetY = top + state.detailsRatio * height - state.refY;
+  } else if (targetBody) {
+    const rect = targetBody.getBoundingClientRect();
+    const top = rect.top + window.scrollY;
+    const height = Math.max(1, rect.height);
+
+    targetY = top + state.bodyRatio * height - state.refY;
+  } else {
+    const rect = targetHeader.getBoundingClientRect();
+    targetY = rect.top + window.scrollY - 90;
+  }
+
+  window.scrollTo({
+    top: Math.max(0, targetY),
+    behavior: "instant"
+  });
+}
+
+// ========================
+// TABY I FLOATING BUTTON
+// ========================
+
+if (tabPL) {
+  tabPL.addEventListener("click", async () => {
+    if (getActiveLang() === "PL") return;
+    await switchLanguagePreservingPosition("PL");
+  });
+}
+
+if (tabEN) {
+  tabEN.addEventListener("click", async () => {
+    if (getActiveLang() === "EN") return;
+    await switchLanguagePreservingPosition("EN");
+  });
+}
+
+if (langFab) {
+  langFab.addEventListener("click", async () => {
+    const nextLang = getActiveLang() === "PL" ? "EN" : "PL";
+    await switchLanguagePreservingPosition(nextLang);
+  });
+}
+
+// ========================
 // START
 // ========================
 
-loadSections();
+updateLangFabLabel();
+
+loadSections().then(() => {
+  updateFavoriteStars();
+  applyFilters();
+});
