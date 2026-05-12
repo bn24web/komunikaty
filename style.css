@@ -547,15 +547,9 @@ em{
   overflow-wrap: anywhere;
 }
 
-.gastronomy-header .favorite-star--small{
-  flex: 0 0 auto;
-  margin-left: auto !important;
-  margin-right: 0.15rem !important;
-}
-
 .gastronomy-header > .gastronomy-plus{
   flex: 0 0 auto;
-  margin-left: 0 !important;
+  margin-left: auto;
   width: 34px;
   height: 34px;
   display: flex;
@@ -568,7 +562,7 @@ em{
   cursor: pointer;
   user-select: none;
   position: relative;
-  z-index: 5;
+  z-index: 13;
   padding: 0;
   border-radius: 999px;
   background: rgba(255,255,255,0.45);
@@ -633,6 +627,39 @@ em{
 
 .gastronomy-graybox--right{
   margin-left: 2.2rem;
+}
+
+/* =========================
+   BEZPIECZNA POPRAWKA PODSEKCJI — GWIAZDKA BEZ RUSZANIA PLUSIKA
+========================= */
+.subsection-fav-row{
+  position: relative !important;
+  padding-right: 92px !important;
+}
+
+.subsection-favorite-star{
+  position: absolute !important;
+  right: 56px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  margin: 0 !important;
+  float: none !important;
+  z-index: 12 !important;
+}
+
+.subsection-fav-row .gastronomy-plus{
+  z-index: 13 !important;
+}
+
+/* summary/details */
+.summary-fav-row{
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.65rem !important;
+}
+
+.summary-fav-row .favorite-star{
+  margin-left: auto !important;
 }
 
 /* =========================
@@ -994,39 +1021,4 @@ em{
   .favorite-star:hover{
     color: #b77900;
   }
-}
-/* =========================
-   POPRAWKA PODSEKCJI — GWIAZDKA + PLUSIK PO PRAWEJ
-========================= */
-
-.subsection-fav-row{
-  position: relative !important;
-  padding-right: 92px !important;
-}
-
-.subsection-actions{
-  position: absolute !important;
-  right: 14px !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 8px !important;
-  z-index: 10 !important;
-}
-
-.subsection-actions .favorite-star{
-  margin: 0 !important;
-  float: none !important;
-  flex: 0 0 auto !important;
-}
-
-.subsection-actions .gastronomy-plus{
-  margin: 0 !important;
-  float: none !important;
-  flex: 0 0 auto !important;
-  position: relative !important;
-  right: auto !important;
-  top: auto !important;
 }
