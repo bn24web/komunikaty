@@ -1,1402 +1,1048 @@
-// ========================
-// m.komunikaty — script.js v1.3.5
-// Centralny silnik: ładowanie, PL/EN, akordeony, podsekcje, ulubione, szukanie
-// ========================
+/* =========================
+   RESET / GLOBAL
+========================= */
+:root{
+  --pageWidth: 720px;
+  --pageBg: #f3f6fa;
+  scroll-padding-top: 72px;
+}
 
-const loadedUrls = new Set();
-const loadingUrls = new Set();
+*{
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-const FAVORITES_KEY = "mkomunikaty_favorites_v1";
+html{
+  min-height: 100%;
+  background: var(--pageBg);
+  background-image: none;
+}
 
-const tabPL = document.getElementById("tabPL");
-const tabEN = document.getElementById("tabEN");
-const sectionPL = document.getElementById("sectionPL");
-const sectionEN = document.getElementById("sectionEN");
-const langFab = document.getElementById("langFab");
-const searchInput = document.getElementById("searchInput");
-const favoritesToggle = document.getElementById("favoritesToggle");
-const emptyState = document.getElementById("emptyState");
-const topbarLogo = document.querySelector(".topbar__logo");
+body{
+  min-height: 100%;
+  font-family: 'Inter','Segoe UI','Roboto','Helvetica Neue',sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  background: var(--pageBg);
+  background-image: none;
+  color: #24324a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
-let langSwitchBusy = false;
-let showFavoritesOnly = false;
+strong{
+  font-weight: 700;
+}
 
-let lastMainAccordionState = null;
-let lastDetailsState = null;
-let lastSubPanelState = null;
+em{
+  font-style: italic;
+  font-size: 0.8rem;
+}
 
-// ========================
-// ŁADOWANIE SEKCJI
-// ========================
+[hidden]{
+  display: none !important;
+}
 
-async function loadOne(el) {
-  const url = el.getAttribute("data-load");
-  if (!url) return;
+/* =========================
+   LAYOUT APLIKACJI
+========================= */
+.app{
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--pageBg);
+  background-image: none;
+}
 
-  if (el.dataset.loaded === "true") return;
-  if (loadingUrls.has(url)) return;
+.app::before,
+.app::after{
+  display: none;
+  content: none;
+}
 
-  loadingUrls.add(url);
-  el.dataset.loading = "true";
+.app__content{
+  flex: 1 0 auto;
+  width: min(100%, var(--pageWidth));
+  margin: 0 auto;
+  background: transparent;
+  background-image: none;
+}
 
-  try {
-    const response = await fetch(url, { cache: "no-cache" });
+.app__content::before,
+.app__content::after{
+  display: none;
+  content: none;
+}
 
-    if (!response.ok) {
-      throw new Error("HTTP " + response.status);
-    }
+/* =========================
+   TABY
+========================= */
+.tabs{
+  display: flex;
+  flex-direction: row;
+  gap: 0.45rem;
+  margin: 0.45rem 0.5rem 0.55rem;
+  padding: 0.22rem;
+  background: rgba(255,255,255,0.78);
+  border: 1px solid rgba(36,50,74,0.08);
+  border-radius: 999px;
+  box-shadow: 0 8px 18px rgba(31,41,55,0.06);
+  backdrop-filter: blur(8px);
+}
 
-    el.innerHTML = await response.text();
-    el.dataset.loaded = "true";
-    loadedUrls.add(url);
+.tab{
+  flex: 1;
+  padding: 0.62rem 0.8rem;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #334155;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease;
+  user-select: none;
+  font-family: inherit;
+  line-height: 1.2;
+  -webkit-tap-highlight-color: transparent;
+}
 
-    enhanceLoadedSlot(el);
-  } catch (e) {
-    el.innerHTML = `<p class="load-error">Błąd ładowania: ${url}</p>`;
-    console.warn("Błąd ładowania sekcji:", url, e);
-  } finally {
-    el.dataset.loading = "false";
-    loadingUrls.delete(url);
+.tab.active{
+  color: #fff;
+  background: linear-gradient(90deg, #1d4ed8 0%, #2563eb 52%, #60a5fa 100%);
+  box-shadow: 0 8px 18px rgba(37,99,235,0.28);
+}
+
+/* =========================
+   PANEL NARZĘDZI — SZUKANIE / ULUBIONE
+========================= */
+.tools-panel{
+  display: flex !important;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0.45rem 0.5rem 0.75rem;
+  padding: 0.5rem;
+  background: rgba(255,255,255,0.82);
+  border: 1px solid rgba(36,50,74,0.08);
+  border-radius: 20px;
+  box-shadow: 0 8px 18px rgba(31,41,55,0.06);
+  backdrop-filter: blur(8px);
+}
+
+.search-box{
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.search-input{
+  width: 100% !important;
+  min-height: 44px;
+  padding: 0.68rem 0.9rem;
+  border-radius: 16px;
+  border: 1px solid rgba(36,50,74,0.12);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  color: #1f2937;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 650;
+  outline: none;
+  box-shadow: inset 0 1px 2px rgba(31,41,55,0.04);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.search-input::placeholder{
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.search-input:focus{
+  border-color: rgba(37,99,235,0.45);
+  box-shadow:
+    0 0 0 3px rgba(37,99,235,0.12),
+    inset 0 1px 2px rgba(31,41,55,0.04);
+}
+
+.favorites-toggle{
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0.68rem 0.9rem;
+  border-radius: 16px;
+  border: 1px solid rgba(36,50,74,0.12);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  color: #334155;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 4px 12px rgba(31,41,55,0.04);
+}
+
+.favorites-toggle.active{
+  color: #7a5300;
+  background: linear-gradient(180deg, #fff7d6 0%, #ffeaa3 100%);
+  border-color: rgba(180,126,0,0.25);
+  box-shadow: 0 6px 14px rgba(180,126,0,0.12);
+}
+
+.empty-state{
+  margin: 0 0.5rem 0.8rem;
+  padding: 0.85rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(36,50,74,0.10);
+  background: rgba(255,255,255,0.82);
+  color: #667085;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: center;
+  box-shadow: 0 8px 18px rgba(31,41,55,0.05);
+}
+
+.load-error{
+  margin: 0.5rem 0;
+  padding: 0.8rem 1rem;
+  border-radius: 14px;
+  background: #fee2e2;
+  color: #991b1b;
+  font-weight: 700;
+}
+
+/* =========================
+   GŁÓWNY KONTENER
+========================= */
+.accordion-container{
+  width: 100%;
+  padding: 0 0.45rem;
+  margin: 0;
+  background: transparent;
+  background-image: none;
+}
+
+.load-slot{
+  display: block;
+}
+
+.load-slot[hidden]{
+  display: none !important;
+}
+
+/* =========================
+   GŁÓWNE AKORDEONY
+========================= */
+.accordion-header{
+  width: 100%;
+  text-align: left;
+  padding: 1rem 1.05rem;
+  font-weight: 800;
+  font-size: 1.02rem;
+  letter-spacing: -0.02em;
+  color: #1f2937;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+  border: 1px solid rgba(36,50,74,0.08);
+  cursor: pointer;
+  margin-bottom: 0.55rem;
+  border-radius: 18px;
+  appearance: none;
+  -webkit-appearance: none;
+  box-shadow: 0 8px 20px rgba(31,41,55,0.06);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  font-family: inherit;
+  line-height: 1.25;
+
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.accordion-body{
+  display: none;
+  padding: 0;
+  background: transparent;
+  background-image: none;
+  border: none;
+  border-radius: 0;
+  margin-bottom: 1rem;
+  overflow-x: auto;
+}
+
+.accordion-body.active{
+  display: block;
+}
+
+/* =========================
+   GWIAZDKI ULUBIONYCH
+========================= */
+.favorite-star{
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  margin-left: auto !important;
+  margin-right: 0 !important;
+  margin-top: 0 !important;
+  border-radius: 999px;
+  color: #94a3b8;
+  background: rgba(255,255,255,0.72);
+  border: 1px solid rgba(36,50,74,0.10);
+  font-size: 1.15rem;
+  font-weight: 900;
+  line-height: 1;
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  flex: 0 0 auto;
+  float: none !important;
+}
+
+.favorite-star.active{
+  color: #b77900;
+  background: linear-gradient(180deg, #fff7d6 0%, #ffeaa3 100%);
+  border-color: rgba(180,126,0,0.25);
+  box-shadow: 0 4px 12px rgba(180,126,0,0.14);
+}
+
+.favorite-star--small{
+  width: 30px;
+  min-width: 30px;
+  height: 30px;
+  font-size: 1.08rem;
+}
+
+/* =========================
+   JEDYNY PODAKORDEON – LOTNISKA
+========================= */
+.connection-toggle{
+  width: 100%;
+  text-align: left;
+  padding: 0.95rem 1rem;
+  font-weight: 800;
+  font-size: 1rem;
+  color: #1e3a5f;
+  background: linear-gradient(90deg, #7cc6ff 0%, #dcedff 18%, #f8fbff 100%);
+  border: 1px solid rgba(36,50,74,0.08);
+  cursor: pointer;
+  margin-bottom: 0.55rem;
+  border-radius: 18px;
+  appearance: none;
+  -webkit-appearance: none;
+  box-shadow: 0 8px 20px rgba(59,130,246,0.10);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  font-family: inherit;
+  line-height: 1.25;
+
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.connection-toggle + .accordion-subbody{
+  display: none !important;
+  padding: 1rem;
+  background: rgba(255,255,255,0.82);
+  border: 1px solid rgba(36,50,74,0.08);
+  border-radius: 18px;
+  margin-bottom: 1rem;
+  box-shadow: 0 8px 18px rgba(31,41,55,0.06);
+}
+
+.connection-toggle.active + .accordion-subbody{
+  display: block !important;
+}
+
+/* =========================
+   WYŁĄCZENIE STARYCH PODAKORDEONÓW
+========================= */
+.accordion-subheader{
+  display: none !important;
+}
+
+.accordion-subheader + .accordion-subbody{
+  display: block !important;
+}
+
+.connection-toggle + .accordion-subbody{
+  display: none !important;
+}
+
+.connection-toggle.active + .accordion-subbody{
+  display: block !important;
+}
+
+/* =========================
+   DELIKATNE RAMKI / PODSEKCJE
+========================= */
+.soft-panel,
+.sub-panel,
+.instruction-panel{
+  background: rgba(255,255,255,0.78);
+  border: 1px solid rgba(36,50,74,0.10);
+  border-radius: 16px;
+  padding: 0.85rem 0.9rem;
+  margin: 0.6rem 0;
+  box-shadow: 0 6px 16px rgba(31,41,55,0.045);
+}
+
+.instruction-text,
+.text-instruction,
+.comment-muted{
+  font-style: italic;
+  font-size: 0.85rem;
+  color: #667085;
+  line-height: 1.45;
+}
+
+.sub-title,
+.panel-title{
+  display: block;
+  font-weight: 800;
+  color: #1f2937;
+  margin-bottom: 0.35rem;
+}
+
+.sub-paragraph,
+.panel-paragraph{
+  margin: 0.45rem 0;
+}
+
+.sub-paragraph:first-child,
+.panel-paragraph:first-child{
+  margin-top: 0;
+}
+
+.sub-paragraph:last-child,
+.panel-paragraph:last-child{
+  margin-bottom: 0;
+}
+
+/* =========================
+   KOLOROWE BLOKI KOMUNIKATÓW
+========================= */
+.green,
+.orange,
+.yellow,
+.cyan{
+  padding: 1rem 0.8rem;
+  margin: 0.5rem 0;
+  border-left: 5px solid;
+  width: 100%;
+  border-radius: 0;
+  overflow: visible;
+  box-shadow: none;
+}
+
+.green{
+  background: #e2f0d9;
+  border-color: #a8d08d;
+}
+
+.orange{
+  background: #fcd5b4;
+  border-color: #f7931e;
+}
+
+.yellow{
+  background: #fff9e5;
+  border-color: #f4d35e;
+}
+
+.cyan{
+  background: #d9f0ed;
+  border-color: #7ab8b3;
+}
+
+/* =========================
+   BLOKI TEKSTOWE
+========================= */
+.speech-box{
+  background: #fff;
+  border: none;
+  padding: 0.8rem;
+  margin: 0;
+  border-radius: 0;
+  backdrop-filter: none;
+}
+
+.highlighted-info{
+  background: #e6e6e6;
+  padding: 0.8rem;
+  margin: 0.5rem 0;
+  font-weight: 700;
+  border-left: 4px solid #999;
+  border-radius: 0;
+  color: #1f2937;
+}
+
+/* =========================
+   TABELA LOTNISK
+========================= */
+.airport-table-wrapper{
+  overflow-x: auto;
+  margin: 1rem 0;
+  width: 100%;
+}
+
+.airport-table{
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  font-size: 0.85rem;
+  overflow: visible;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: none;
+}
+
+.airport-table th,
+.airport-table td{
+  border: 1px solid #ccc;
+  padding: 0.55rem 0.8rem;
+  text-align: left;
+  white-space: normal;
+}
+
+.airport-table th{
+  background: #eef4fb;
+  font-weight: 700;
+}
+
+/* =========================
+   SEKCJE JĘZYKOWE
+========================= */
+.section{
+  display: none;
+  background: transparent;
+  background-image: none;
+}
+
+.section.active{
+  display: block;
+}
+
+/* =========================
+   GASTRONOMIA / KATALOG – ROZWIJANIE
+========================= */
+.gastronomy-header{
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  gap: 0.75rem;
+  padding: 0.7rem 0.9rem;
+}
+
+.gastronomy-header > strong{
+  flex: 1 1 auto;
+  min-width: 0;
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.gastronomy-header > .gastronomy-plus{
+  flex: 0 0 auto;
+  margin-left: auto;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #7b6a16;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  z-index: 13;
+  padding: 0;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.45);
+}
+
+.gastronomy-more{
+  display: none;
+  margin-top: 0.6rem;
+}
+
+.gastronomy-more.active{
+  display: block;
+}
+
+.gastronomy-comment-out{
+  font-style: italic;
+  font-size: 0.85rem;
+  color: #5b5560;
+  margin: 0.7rem 0 0.25rem;
+  background: transparent;
+}
+
+.gastronomy-card{
+  background: linear-gradient(180deg, rgba(255,251,223,0.92) 0%, rgba(247,238,188,0.92) 100%);
+  border-radius: 16px;
+  padding: 1rem 1rem;
+  margin: 0 0 0.9rem 0;
+  border: 1px solid rgba(120,92,11,0.14);
+}
+
+.gastronomy-text-strong{
+  font-weight: 600;
+  line-height: 1.55;
+  font-size: 1rem;
+  color: #2b2b2b;
+}
+
+.gastronomy-card--dashed{
+  border: 2px dashed #c9b26a;
+}
+
+.gastronomy-comment-in{
+  margin-top: 0.7rem;
+  font-style: italic;
+  font-size: 0.85rem;
+  color: #5b5560;
+}
+
+.gastronomy-comment-in--right{
+  margin-left: 2.2rem;
+}
+
+.gastronomy-graybox{
+  margin-top: 0.3rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid rgba(83,83,83,0.32);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.58);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.gastronomy-graybox--right{
+  margin-left: 2.2rem;
+}
+
+/* =========================
+   PODSEKCJE — GWIAZDKA + PLUSIK PO PRAWEJ
+   Bez ruszania mechaniki plusika
+========================= */
+.subsection-fav-row{
+  position: relative !important;
+  padding-right: 76px !important;
+}
+
+.subsection-favorite-star{
+  position: absolute !important;
+  right: 44px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  margin: 0 !important;
+  float: none !important;
+  z-index: 12 !important;
+}
+
+.subsection-fav-row .gastronomy-plus{
+  position: absolute !important;
+  right: 10px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  margin: 0 !important;
+  z-index: 13 !important;
+}
+
+/* summary/details */
+.summary-fav-row{
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.65rem !important;
+}
+
+.summary-fav-row .favorite-star{
+  margin-left: auto !important;
+}
+
+/* =========================
+   CZYTELNOŚĆ W AKORDEONACH
+========================= */
+.accordion-body,
+.accordion-body p,
+.accordion-body li,
+.accordion-body strong,
+.accordion-body b,
+.accordion-body span,
+.accordion-body div{
+  color: #1f2937;
+}
+
+.accordion-body em,
+.accordion-body i{
+  color: #667085;
+}
+
+.accordion-body p,
+.accordion-body li,
+.accordion-body div{
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* =========================
+   FAB
+========================= */
+.lang-fab{
+  position: fixed;
+  right: max(14px, calc((100vw - min(100vw, var(--pageWidth))) / 2 + 14px));
+  bottom: 86px;
+  z-index: 9999;
+
+  height: 52px;
+  min-width: 64px;
+  padding: 0 16px;
+
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.45);
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+  color: #fff;
+
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 1rem;
+  line-height: 1;
+
+  box-shadow: 0 14px 28px rgba(37,99,235,0.30);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lang-fab:active{
+  transform: scale(0.98);
+}
+
+.lang-fab:disabled{
+  pointer-events: none;
+  opacity: 0.72;
+}
+
+/* =========================
+   TOPBAR + LOGO
+========================= */
+.topbar{
+  position: relative;
+  top: auto;
+  z-index: 1;
+  width: min(100%, var(--pageWidth));
+  margin: 0 auto 8px;
+  background: transparent;
+  background-image: none;
+  border-bottom: none;
+  box-shadow: none;
+}
+
+.topbar__inner{
+  width: 100%;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  background-image: none;
+}
+
+.topbar__inner--logo{
+  padding: 0;
+}
+
+.topbar__logo{
+  width: 92%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  filter: none !important;
+  background: transparent !important;
+  margin: 0 auto;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.topbar__logo:active{
+  transform: scale(0.998);
+}
+
+/* =========================
+   STOPKA
+========================= */
+.footerbar{
+  flex: 0 0 auto;
+  width: min(100%, var(--pageWidth));
+  margin: 16px auto 18px;
+  padding: 0 8px;
+  background: transparent;
+  background-image: none;
+  border-top: none;
+}
+
+.footerbar__inner{
+  width: 100%;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(241,245,251,0.92) 100%);
+  border: 1px solid rgba(36,50,74,0.08);
+  border-radius: 18px;
+  box-shadow: 0 8px 20px rgba(31,41,55,0.06);
+  backdrop-filter: blur(8px);
+}
+
+.footerbar__meta{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 7px;
+  justify-content: center;
+  align-items: center;
+  font-size: 11px;
+  color: #425066;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.footerbar__metaName{
+  color: #1f3b82;
+  font-weight: 800;
+}
+
+.footerbar__dot{
+  color: rgba(66,80,102,0.45);
+}
+
+.footerbar__counters{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+}
+
+.chip{
+  font-size: 11px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.86);
+  color: #334155;
+  border: 1px solid rgba(36,50,74,0.10);
+  white-space: nowrap;
+  line-height: 1.1;
+  box-shadow: 0 2px 8px rgba(31,41,55,0.04);
+}
+
+.chip--soft{
+  background: rgba(255,255,255,0.9);
+}
+
+.footerbar .chip{
+  color: #334155;
+  background: rgba(255,255,255,0.90);
+  border-color: rgba(36,50,74,0.10);
+}
+
+.footerbar .chip strong{
+  color: #24324a;
+}
+
+.footerbar__meta,
+.footerbar__metaName,
+.footerbar__meta span,
+.footerbar__meta strong{
+  font-weight: 600;
+}
+
+.footerbar__meta strong{
+  font-weight: inherit;
+}
+
+.footerbar .chip,
+.footerbar .chip strong{
+  font-weight: 600;
+}
+
+/* =========================
+   RESPONSYWNOŚĆ
+========================= */
+@media (max-width: 768px){
+  .tabs{
+    margin: 0.45rem;
+    gap: 0.5rem;
+  }
+
+  .tab{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 46px;
+    font-size: 0.92rem;
+  }
+
+  .green,
+  .orange,
+  .yellow,
+  .cyan{
+    padding: 0.8rem 0.6rem;
+  }
+
+  .speech-box{
+    padding: 0.6rem;
   }
 }
 
-async function loadElements(elements) {
-  const tasks = Array.from(elements).map((el) => loadOne(el));
-  await Promise.allSettled(tasks);
-}
-
-async function loadSections() {
-  const activeSection = document.querySelector(".section.active");
-  const inactiveSections = Array.from(document.querySelectorAll(".section:not(.active)"));
-
-  if (activeSection) {
-    await loadElements(activeSection.querySelectorAll("[data-load]"));
+@media (max-width: 480px){
+  .accordion-container{
+    padding: 0 0.35rem;
   }
 
-  if ("requestIdleCallback" in window) {
-    requestIdleCallback(() => {
-      inactiveSections.forEach((section) => {
-        loadElements(section.querySelectorAll("[data-load]"));
-      });
-    });
-  } else {
-    setTimeout(() => {
-      inactiveSections.forEach((section) => {
-        loadElements(section.querySelectorAll("[data-load]"));
-      });
-    }, 400);
-  }
-}
-
-// ========================
-// JĘZYK
-// ========================
-
-function getActiveLang() {
-  return sectionEN && sectionEN.classList.contains("active") ? "EN" : "PL";
-}
-
-function getActiveSection() {
-  return getActiveLang() === "PL" ? sectionPL : sectionEN;
-}
-
-function updateLangFabLabel() {
-  if (!langFab) return;
-  langFab.textContent = getActiveLang() === "PL" ? "EN" : "PL";
-}
-
-function applyLangVisualState(lang) {
-  const isPL = lang === "PL";
-
-  if (tabPL) {
-    tabPL.classList.toggle("active", isPL);
-    tabPL.setAttribute("aria-selected", isPL ? "true" : "false");
+  .accordion-body{
+    padding: 0;
   }
 
-  if (tabEN) {
-    tabEN.classList.toggle("active", !isPL);
-    tabEN.setAttribute("aria-selected", !isPL ? "true" : "false");
+  .accordion-header{
+    padding: 0.92rem 0.95rem;
+    font-size: 0.98rem;
+    border-radius: 16px;
   }
 
-  if (sectionPL) sectionPL.classList.toggle("active", isPL);
-  if (sectionEN) sectionEN.classList.toggle("active", !isPL);
+  .tools-panel{
+    gap: 0.42rem;
+    padding: 0.42rem;
+    border-radius: 18px;
+  }
 
-  document.documentElement.lang = isPL ? "pl" : "en";
+  .search-input{
+    min-height: 42px;
+    padding: 0.62rem 0.75rem;
+    font-size: 0.88rem;
+    border-radius: 14px;
+  }
 
-  updateLangFabLabel();
-}
+  .favorites-toggle{
+    min-height: 42px;
+    padding: 0.62rem 0.72rem;
+    font-size: 0.84rem;
+    border-radius: 14px;
+  }
 
-async function setLangReady(lang) {
-  applyLangVisualState(lang);
+  .favorite-star{
+    width: 30px;
+    min-width: 30px;
+    height: 30px;
+    font-size: 1.08rem;
+  }
 
-  await loadSections();
+  .subsection-fav-row{
+    padding-right: 72px !important;
+  }
 
-  const activeSection = lang === "PL" ? sectionPL : sectionEN;
+  .subsection-favorite-star{
+    right: 40px !important;
+  }
 
-  for (let i = 0; i < 100; i++) {
-    if (activeSection && activeSection.querySelector(".accordion-header")) return;
-    await sleep(40);
+  .subsection-fav-row .gastronomy-plus{
+    right: 8px !important;
+  }
+
+  .green,
+  .orange,
+  .yellow,
+  .cyan{
+    padding: 0.6rem 0.5rem;
+    border-radius: 0;
+  }
+
+  .speech-box{
+    border-radius: 0;
   }
 }
 
-async function switchLanguagePreservingPosition(nextLang) {
-  if (langSwitchBusy) return;
-
-  langSwitchBusy = true;
-
-  if (langFab) {
-    langFab.disabled = true;
-    langFab.style.opacity = "0.72";
+@media (min-width: 769px){
+  .footerbar{
+    padding: 0 10px;
   }
 
-  const state = captureViewportState();
-
-  await setLangReady(nextLang);
-  restoreOpenStateAfterLangSwitch(state);
-  applyFilters();
-
-  await doubleFrame();
-  restoreViewportState(state);
-
-  if (langFab) {
-    langFab.disabled = false;
-    langFab.style.opacity = "";
+  .footerbar__inner{
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
   }
 
-  langSwitchBusy = false;
-}
-
-// ========================
-// POMOCNICZE
-// ========================
-
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function doubleFrame() {
-  return new Promise((resolve) => {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(resolve);
-    });
-  });
-}
-
-function normalizeText(text) {
-  return (text || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[–—]/g, "-")
-    .replace(/[()]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function getHeaderKey(text) {
-  const t = (text || "").trim();
-  const m = t.match(/^([0-9]+\.|[A-Z][0-9]+\.|B[0-9]+\.|C[0-9]+\.)/i);
-  return m ? m[1].toUpperCase() : null;
-}
-
-function getHeaderTextWithoutFavorite(header) {
-  if (!header) return "";
-  const clone = header.cloneNode(true);
-  clone.querySelectorAll(".favorite-star").forEach((el) => el.remove());
-  return clone.textContent.trim();
-}
-
-function getSummaryTextWithoutFavorite(summary) {
-  if (!summary) return "";
-  const clone = summary.cloneNode(true);
-  clone.querySelectorAll(".favorite-star").forEach((el) => el.remove());
-  return clone.textContent.trim();
-}
-
-function getAccordionBodyFromHeader(header) {
-  if (!header) return null;
-
-  if (
-    header.nextElementSibling &&
-    header.nextElementSibling.classList.contains("accordion-body")
-  ) {
-    return header.nextElementSibling;
+  .footerbar__meta{
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    font-size: 10.5px;
   }
 
-  const row = header.closest(".accordion-title-row");
-  if (
-    row &&
-    row.nextElementSibling &&
-    row.nextElementSibling.classList.contains("accordion-body")
-  ) {
-    return row.nextElementSibling;
+  .footerbar__counters{
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    gap: 5px;
   }
 
-  return null;
-}
-
-function findAccordionHeaderFromBody(body) {
-  if (!body) return null;
-
-  let prev = body.previousElementSibling;
-
-  while (prev) {
-    if (prev.classList && prev.classList.contains("accordion-header")) return prev;
-
-    if (prev.classList && prev.classList.contains("accordion-title-row")) {
-      const header = prev.querySelector(".accordion-header");
-      if (header) return header;
-    }
-
-    prev = prev.previousElementSibling;
-  }
-
-  return null;
-}
-
-function getHeaderIndex(section, header) {
-  if (!section || !header) return -1;
-  const headers = Array.from(section.querySelectorAll(".accordion-header"));
-  return headers.indexOf(header);
-}
-
-function findHeaderByKeyOrIndex(section, key, index) {
-  if (!section) return null;
-
-  const headers = Array.from(section.querySelectorAll(".accordion-header"));
-
-  if (key) {
-    const byKey = headers.find((h) => getHeaderKey(getHeaderTextWithoutFavorite(h)) === key);
-    if (byKey) return byKey;
-  }
-
-  if (typeof index === "number" && index >= 0 && headers[index]) {
-    return headers[index];
-  }
-
-  return headers[0] || null;
-}
-
-function getAnnouncementIdFromSlot(slot) {
-  if (!slot) return "unknown";
-  return slot.dataset.announcement || slot.getAttribute("data-load") || "unknown";
-}
-
-function clearLastOpenState() {
-  lastMainAccordionState = null;
-  lastDetailsState = null;
-  lastSubPanelState = null;
-}
-
-// ========================
-// ZAMYKANIE / HOME
-// ========================
-
-function closeAllAccordions(root = document) {
-  root.querySelectorAll(".accordion-body.active").forEach((body) => {
-    body.classList.remove("active");
-  });
-
-  root.querySelectorAll(".accordion-subbody.active").forEach((body) => {
-    body.classList.remove("active");
-  });
-
-  root.querySelectorAll(".connection-toggle.active").forEach((toggle) => {
-    toggle.classList.remove("active");
-  });
-
-  root.querySelectorAll(".gastronomy-more.active").forEach((panel) => {
-    panel.classList.remove("active");
-    panel.style.display = "none";
-  });
-
-  root.querySelectorAll(".gastronomy-plus.active").forEach((plus) => {
-    plus.classList.remove("active");
-  });
-
-  root.querySelectorAll("details[open]").forEach((details) => {
-    details.open = false;
-  });
-
-  clearLastOpenState();
-}
-
-function resetToolsToHome() {
-  if (searchInput) {
-    searchInput.value = "";
-  }
-
-  showFavoritesOnly = false;
-
-  if (favoritesToggle) {
-    favoritesToggle.classList.remove("active");
-    favoritesToggle.setAttribute("aria-pressed", "false");
-    favoritesToggle.textContent = "☆ Ulubione";
-  }
-
-  applyFilters();
-}
-
-function goHome() {
-  resetToolsToHome();
-  closeAllAccordions(document);
-
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth"
-  });
-}
-
-if (topbarLogo) {
-  topbarLogo.style.cursor = "pointer";
-  topbarLogo.setAttribute("title", "Wróć na początek");
-  topbarLogo.addEventListener("click", (e) => {
-    e.preventDefault();
-    goHome();
-  });
-}
-
-// ========================
-// ZAPAMIĘTYWANIE STANU
-// ========================
-
-function rememberMainAccordion(header) {
-  if (!header) return;
-
-  const activeSection = getActiveSection();
-  const text = getHeaderTextWithoutFavorite(header);
-
-  lastMainAccordionState = {
-    lang: getActiveLang(),
-    key: getHeaderKey(text),
-    index: getHeaderIndex(activeSection, header),
-    text: normalizeText(text)
-  };
-}
-
-function rememberDetails(details) {
-  if (!details) return;
-
-  const body = details.closest(".accordion-body");
-  const header = findAccordionHeaderFromBody(body);
-
-  if (header) rememberMainAccordion(header);
-
-  const allDetails = body ? Array.from(body.querySelectorAll("details")) : [];
-  const detailsIndex = allDetails.indexOf(details);
-
-  const group =
-    details.closest(".k6-group") ||
-    details.closest(".k7-group") ||
-    details.parentElement;
-
-  const groupDetails = group ? Array.from(group.querySelectorAll("details")) : allDetails;
-  const groupIndex = groupDetails.indexOf(details);
-
-  const summary = details.querySelector("summary");
-  const summaryText = getSummaryTextWithoutFavorite(summary);
-
-  lastDetailsState = {
-    lang: getActiveLang(),
-    id: details.id || null,
-    detailsIndex,
-    groupIndex,
-    summaryKey: getHeaderKey(summaryText),
-    summaryText: normalizeText(summaryText)
-  };
-
-  lastSubPanelState = null;
-}
-
-function rememberSubPanel(panel, triggerEl) {
-  if (!panel) return;
-
-  const body = panel.closest(".accordion-body") || triggerEl?.closest(".accordion-body");
-  const header = findAccordionHeaderFromBody(body);
-
-  if (header) rememberMainAccordion(header);
-
-  const panels = body ? Array.from(body.querySelectorAll(".gastronomy-more, .accordion-subbody")) : [];
-  const panelIndex = panels.indexOf(panel);
-
-  lastSubPanelState = {
-    lang: getActiveLang(),
-    id: panel.id || null,
-    panelIndex
-  };
-
-  lastDetailsState = null;
-}
-
-// ========================
-// ULUBIONE
-// ========================
-
-function readFavorites() {
-  try {
-    const data = JSON.parse(localStorage.getItem(FAVORITES_KEY) || "[]");
-    return Array.isArray(data) ? new Set(data) : new Set();
-  } catch {
-    return new Set();
+  .chip{
+    font-size: 10.5px;
+    padding: 5px 8px;
   }
 }
 
-function writeFavorites(set) {
-  try {
-    localStorage.setItem(FAVORITES_KEY, JSON.stringify(Array.from(set)));
-  } catch {}
-}
-
-function toggleFavorite(id) {
-  if (!id) return;
-
-  const favs = readFavorites();
-
-  if (favs.has(id)) {
-    favs.delete(id);
-  } else {
-    favs.add(id);
+@media (max-width: 480px){
+  .footerbar{
+    padding: 0 6px;
+    margin: 14px auto 16px;
   }
 
-  writeFavorites(favs);
-  updateFavoriteStars();
-  applyFilters();
-}
+  .footerbar__inner{
+    padding: 10px 11px;
+    border-radius: 16px;
+  }
 
-function updateFavoriteStars() {
-  const favs = readFavorites();
+  .footerbar__meta{
+    font-size: 10.5px;
+    gap: 4px 6px;
+  }
 
-  document.querySelectorAll(".favorite-star[data-fav-id]").forEach((star) => {
-    const id = star.dataset.favId;
-    const active = favs.has(id);
-
-    star.classList.toggle("active", active);
-    star.textContent = active ? "★" : "☆";
-    star.setAttribute("aria-label", active ? "Usuń z ulubionych" : "Dodaj do ulubionych");
-    star.setAttribute("title", active ? "Usuń z ulubionych" : "Dodaj do ulubionych");
-  });
-}
-
-function createFavoriteStar(favId) {
-  const star = document.createElement("span");
-  star.className = "favorite-star";
-  star.dataset.favId = favId;
-  star.setAttribute("role", "button");
-  star.setAttribute("tabindex", "0");
-  star.setAttribute("aria-label", "Dodaj do ulubionych");
-  star.setAttribute("title", "Dodaj do ulubionych");
-  star.textContent = "☆";
-  return star;
-}
-
-function slotHasFavorite(slot) {
-  if (!slot) return false;
-
-  const favs = readFavorites();
-  const stars = Array.from(slot.querySelectorAll(".favorite-star[data-fav-id]"));
-
-  return stars.some((star) => favs.has(star.dataset.favId));
-}
-
-document.addEventListener("click", function (e) {
-  const star = e.target.closest(".favorite-star[data-fav-id]");
-  if (!star) return;
-
-  e.preventDefault();
-  e.stopPropagation();
-
-  toggleFavorite(star.dataset.favId);
-});
-
-document.addEventListener("keydown", function (e) {
-  const star = e.target.closest?.(".favorite-star[data-fav-id]");
-  if (!star) return;
-
-  if (e.key !== "Enter" && e.key !== " ") return;
-
-  e.preventDefault();
-  e.stopPropagation();
-
-  toggleFavorite(star.dataset.favId);
-});
-
-// ========================
-// ULEPSZANIE ZAŁADOWANYCH KOMUNIKATÓW
-// ========================
-
-function enhanceLoadedSlot(slot) {
-  if (!slot || slot.dataset.enhanced === "true") return;
-
-  const announcementId = getAnnouncementIdFromSlot(slot);
-
-  enhanceMainHeaders(slot, announcementId);
-  enhanceDetails(slot, announcementId);
-  enhanceGastronomyPanels(slot, announcementId);
-  enhanceConnectionToggles(slot, announcementId);
-
-  slot.dataset.enhanced = "true";
-
-  updateFavoriteStars();
-  applyFilters();
-}
-
-function enhanceMainHeaders(slot, announcementId) {
-  const headers = Array.from(slot.querySelectorAll(".accordion-header"));
-
-  headers.forEach((header, index) => {
-    if (header.dataset.enhanced === "true") return;
-
-    const favId = `ann:${announcementId}:main:${index}`;
-    const star = createFavoriteStar(favId);
-
-    star.dataset.favType = "main";
-    star.dataset.headerIndex = String(index);
-
-    header.appendChild(star);
-    header.dataset.enhanced = "true";
-    header.dataset.favId = favId;
-  });
-}
-
-function enhanceDetails(slot, announcementId) {
-  const detailsList = Array.from(slot.querySelectorAll("details"));
-
-  detailsList.forEach((details, index) => {
-    const summary = details.querySelector("summary");
-    if (!summary || summary.dataset.enhanced === "true") return;
-
-    const favId = `ann:${announcementId}:details:${index}`;
-    const star = createFavoriteStar(favId);
-
-    star.dataset.favType = "details";
-    star.dataset.detailsIndex = String(index);
-
-    summary.appendChild(star);
-    summary.classList.add("summary-fav-row");
-
-    summary.dataset.enhanced = "true";
-    summary.dataset.favId = favId;
-  });
-}
-
-function enhanceGastronomyPanels(slot, announcementId) {
-  const panels = Array.from(slot.querySelectorAll(".gastronomy-more"));
-
-  panels.forEach((panel, index) => {
-    if (panel.dataset.favEnhanced === "true") return;
-
-    const id = panel.id;
-    if (!id) return;
-
-    const trigger = slot.querySelector(`.gastronomy-plus[data-target="${CSS.escape(id)}"]`);
-    if (!trigger) return;
-
-    const favId = `ann:${announcementId}:panel:${index}`;
-    const star = createFavoriteStar(favId);
-
-    star.classList.add("favorite-star--small");
-    star.classList.add("subsection-favorite-star");
-
-    star.dataset.favType = "panel";
-    star.dataset.panelId = id;
-    star.dataset.panelIndex = String(index);
-
-    const row =
-      trigger.closest(".gastronomy-header") ||
-      trigger.closest(".k7-pill") ||
-      trigger.closest(".k8-pill") ||
-      trigger.closest(".k9-pill") ||
-      trigger.closest(".misc-pill") ||
-      trigger.parentElement;
-
-    if (row) {
-      row.classList.add("subsection-fav-row");
-      row.appendChild(star);
-    } else {
-      trigger.insertAdjacentElement("beforebegin", star);
-    }
-
-    panel.dataset.favEnhanced = "true";
-    panel.dataset.favId = favId;
-    panel.dataset.panelIndex = String(index);
-
-    trigger.dataset.favId = favId;
-    trigger.dataset.panelIndex = String(index);
-  });
-}
-
-function enhanceConnectionToggles(slot, announcementId) {
-  const toggles = Array.from(slot.querySelectorAll(".connection-toggle"));
-
-  toggles.forEach((toggle, index) => {
-    if (toggle.dataset.enhanced === "true") return;
-
-    const favId = `ann:${announcementId}:connection:${index}`;
-    const star = createFavoriteStar(favId);
-
-    star.dataset.favType = "connection";
-    star.dataset.connectionIndex = String(index);
-
-    toggle.appendChild(star);
-    toggle.dataset.enhanced = "true";
-    toggle.dataset.favId = favId;
-  });
-}
-
-// ========================
-// WYSZUKIWANIE I FILTRY
-// ========================
-
-function getSearchQuery() {
-  return normalizeText(searchInput ? searchInput.value : "");
-}
-
-function slotMatchesSearch(slot, query) {
-  if (!query) return true;
-
-  const text = normalizeText(slot.textContent || "");
-  return text.includes(query);
-}
-
-function applyFilters() {
-  const activeSection = getActiveSection();
-  if (!activeSection) return;
-
-  const query = getSearchQuery();
-  const slots = Array.from(activeSection.querySelectorAll(".load-slot"));
-
-  let visibleCount = 0;
-
-  slots.forEach((slot) => {
-    const loaded = slot.dataset.loaded === "true";
-
-    if (!loaded) {
-      slot.hidden = false;
-      visibleCount++;
-      return;
-    }
-
-    const matchesSearch = slotMatchesSearch(slot, query);
-    const matchesFavorite = !showFavoritesOnly || slotHasFavorite(slot);
-
-    const visible = matchesSearch && matchesFavorite;
-
-    slot.hidden = !visible;
-
-    if (visible) visibleCount++;
-  });
-
-  if (emptyState) {
-    emptyState.hidden = visibleCount > 0;
+  .chip{
+    font-size: 10.5px;
+    padding: 5px 8px;
   }
 }
 
-// ========================
-// OTWIERANIE ULUBIONEGO PODKOMUNIKATU
-// ========================
-
-function openMainForSlot(slot) {
-  if (!slot) return null;
-
-  const header = slot.querySelector(".accordion-header");
-  if (!header) return null;
-
-  const body = getAccordionBodyFromHeader(header);
-  if (!body) return null;
-
-  const activeSection = getActiveSection();
-
-  activeSection.querySelectorAll(".accordion-body").forEach((b) => {
-    if (b !== body) b.classList.remove("active");
-  });
-
-  body.classList.add("active");
-  rememberMainAccordion(header);
-
-  return body;
+/* =========================
+   STANY INTERAKCJI
+========================= */
+.accordion-header:active,
+.connection-toggle:active,
+.tab:active,
+.favorites-toggle:active,
+.favorite-star:active{
+  transform: scale(0.995);
 }
 
-function openPanelByFavoriteStar(star) {
-  if (!star) return null;
-
-  const slot = star.closest(".load-slot");
-  if (!slot) return null;
-
-  const body = openMainForSlot(slot);
-  if (!body) return null;
-
-  const favType = star.dataset.favType;
-
-  if (favType === "panel") {
-    const panelId = star.dataset.panelId;
-    const panelIndex = Number(star.dataset.panelIndex);
-
-    let panel = null;
-
-    if (panelId) {
-      panel = body.querySelector(`#${CSS.escape(panelId)}`);
-    }
-
-    if (!panel && Number.isFinite(panelIndex)) {
-      panel = Array.from(body.querySelectorAll(".gastronomy-more"))[panelIndex] || null;
-    }
-
-    if (!panel) return body;
-
-    body.querySelectorAll(".gastronomy-more").forEach((p) => {
-      p.classList.remove("active");
-      p.style.display = "none";
-    });
-
-    body.querySelectorAll(".gastronomy-plus").forEach((p) => {
-      p.classList.remove("active");
-    });
-
-    panel.classList.add("active");
-    panel.style.display = "block";
-
-    if (panel.id) {
-      body
-        .querySelectorAll(`.gastronomy-plus[data-target="${CSS.escape(panel.id)}"]`)
-        .forEach((trigger) => {
-          trigger.classList.add("active");
-        });
-    }
-
-    rememberSubPanel(panel, null);
-    return panel;
+@media (hover: hover){
+  .accordion-header:hover,
+  .connection-toggle:hover{
+    box-shadow: 0 10px 24px rgba(31,41,55,0.09);
   }
 
-  if (favType === "details") {
-    const detailsIndex = Number(star.dataset.detailsIndex);
-    const details = Number.isFinite(detailsIndex)
-      ? Array.from(body.querySelectorAll("details"))[detailsIndex]
-      : star.closest("details");
-
-    if (!details) return body;
-
-    const group =
-      details.closest(".k6-group") ||
-      details.closest(".k7-group") ||
-      details.parentElement;
-
-    if (group) {
-      group.querySelectorAll("details[open]").forEach((d) => {
-        if (d !== details) d.open = false;
-      });
-    }
-
-    details.open = true;
-    rememberDetails(details);
-    return details;
-  }
-
-  if (favType === "connection") {
-    const connectionIndex = Number(star.dataset.connectionIndex);
-    const toggle = Number.isFinite(connectionIndex)
-      ? Array.from(body.querySelectorAll(".connection-toggle"))[connectionIndex]
-      : star.closest(".connection-toggle");
-
-    if (!toggle) return body;
-
-    const subbody = toggle.nextElementSibling;
-
-    body.querySelectorAll(".connection-toggle").forEach((t) => {
-      t.classList.remove("active");
-    });
-
-    body.querySelectorAll(".connection-toggle + .accordion-subbody").forEach((p) => {
-      p.classList.remove("active");
-    });
-
-    toggle.classList.add("active");
-
-    if (subbody && subbody.classList.contains("accordion-subbody")) {
-      subbody.classList.add("active");
-      rememberSubPanel(subbody, toggle);
-      return subbody;
-    }
-
-    return toggle;
-  }
-
-  return body;
-}
-
-async function revealFirstFavoriteInActiveSection() {
-  if (!showFavoritesOnly) return;
-
-  const activeSection = getActiveSection();
-  if (!activeSection) return;
-
-  await doubleFrame();
-
-  const favs = readFavorites();
-
-  const activeFavoriteStars = Array.from(
-    activeSection.querySelectorAll(".favorite-star[data-fav-id]")
-  ).filter((star) => {
-    const slot = star.closest(".load-slot");
-    return slot && !slot.hidden && favs.has(star.dataset.favId);
-  });
-
-  if (!activeFavoriteStars.length) return;
-
-  const preferred =
-    activeFavoriteStars.find((star) => star.dataset.favType === "panel") ||
-    activeFavoriteStars.find((star) => star.dataset.favType === "details") ||
-    activeFavoriteStars.find((star) => star.dataset.favType === "connection") ||
-    activeFavoriteStars[0];
-
-  const target = openPanelByFavoriteStar(preferred);
-
-  await doubleFrame();
-
-  if (target) {
-    target.scrollIntoView({
-      behavior: "smooth",
-      block: "center"
-    });
+  .favorite-star:hover{
+    color: #b77900;
   }
 }
-
-if (searchInput) {
-  searchInput.addEventListener("input", () => {
-    applyFilters();
-  });
-}
-
-if (favoritesToggle) {
-  favoritesToggle.addEventListener("click", async () => {
-    showFavoritesOnly = !showFavoritesOnly;
-
-    favoritesToggle.classList.toggle("active", showFavoritesOnly);
-    favoritesToggle.setAttribute("aria-pressed", showFavoritesOnly ? "true" : "false");
-    favoritesToggle.textContent = showFavoritesOnly ? "★ Ulubione" : "☆ Ulubione";
-
-    applyFilters();
-
-    if (showFavoritesOnly) {
-      await revealFirstFavoriteInActiveSection();
-    }
-  });
-}
-
-// ========================
-// GŁÓWNE AKORDEONY
-// ========================
-
-document.addEventListener("click", function (e) {
-  if (e.target.closest(".favorite-star")) return;
-
-  const btn = e.target.closest(".accordion-header");
-  if (!btn) return;
-
-  const body = getAccordionBodyFromHeader(btn);
-  if (!body || !body.classList.contains("accordion-body")) return;
-
-  e.preventDefault();
-
-  const activeSection = getActiveSection();
-  const isOpen = body.classList.contains("active");
-
-  activeSection.querySelectorAll(".accordion-body").forEach((b) => {
-    if (b !== body) b.classList.remove("active");
-  });
-
-  body.classList.toggle("active", !isOpen);
-
-  if (isOpen) {
-    clearLastOpenState();
-    return;
-  }
-
-  rememberMainAccordion(btn);
-
-  lastDetailsState = null;
-  lastSubPanelState = null;
-
-  closeInnerPanels(body);
-});
-
-function closeInnerPanels(body) {
-  if (!body) return;
-
-  body.querySelectorAll(".gastronomy-more").forEach((m) => {
-    m.classList.remove("active");
-    m.style.display = "none";
-  });
-
-  body.querySelectorAll(".gastronomy-plus").forEach((p) => {
-    p.classList.remove("active");
-  });
-
-  body.querySelectorAll(".connection-toggle").forEach((p) => {
-    p.classList.remove("active");
-  });
-
-  body.querySelectorAll(".connection-toggle + .accordion-subbody").forEach((p) => {
-    p.classList.remove("active");
-  });
-}
-
-// ========================
-// PODAKORDEON — PRZESIADKI / LOTNISKA
-// ========================
-
-document.addEventListener("click", function (e) {
-  if (e.target.closest(".favorite-star")) return;
-
-  const btn = e.target.closest(".connection-toggle");
-  if (!btn) return;
-
-  const body = btn.nextElementSibling;
-  if (!body || !body.classList.contains("accordion-subbody")) return;
-
-  e.preventDefault();
-
-  const parentBody = btn.closest(".accordion-body") || getActiveSection();
-  const parentHeader = findAccordionHeaderFromBody(parentBody);
-
-  if (parentHeader) rememberMainAccordion(parentHeader);
-
-  const isOpen = btn.classList.contains("active");
-
-  parentBody.querySelectorAll(".connection-toggle").forEach((o) => {
-    if (o !== btn) o.classList.remove("active");
-  });
-
-  parentBody.querySelectorAll(".connection-toggle + .accordion-subbody").forEach((b) => {
-    if (b !== body) b.classList.remove("active");
-  });
-
-  btn.classList.toggle("active", !isOpen);
-  body.classList.toggle("active", !isOpen);
-
-  if (!isOpen) {
-    rememberSubPanel(body, btn);
-  } else {
-    lastSubPanelState = null;
-  }
-});
-
-// ========================
-// PLUSIKI / ROZWIJANE BLOKI .gastronomy-more
-// ========================
-
-document.addEventListener("click", function (e) {
-  if (e.target.closest(".favorite-star")) return;
-
-  const plus = e.target.closest(".gastronomy-plus");
-  if (!plus) return;
-
-  const id = plus.getAttribute("data-target");
-  if (!id) return;
-
-  const block = document.getElementById(id);
-  if (!block) return;
-
-  e.preventDefault();
-  e.stopPropagation();
-
-  const root = plus.closest(".accordion-body") || document;
-  const isCurrentlyActive = block.classList.contains("active");
-
-  root.querySelectorAll(".gastronomy-more").forEach((other) => {
-    other.classList.remove("active");
-    other.style.display = "none";
-  });
-
-  root.querySelectorAll(".gastronomy-plus").forEach((otherPlus) => {
-    otherPlus.classList.remove("active");
-  });
-
-  if (!isCurrentlyActive) {
-    block.classList.add("active");
-    block.style.display = "block";
-
-    root.querySelectorAll(`.gastronomy-plus[data-target="${CSS.escape(id)}"]`).forEach((trigger) => {
-      trigger.classList.add("active");
-    });
-
-    rememberSubPanel(block, plus);
-  } else {
-    lastSubPanelState = null;
-  }
-});
-
-// ========================
-// DETAILS / SUMMARY
-// ========================
-
-document.addEventListener("click", function (e) {
-  if (e.target.closest(".favorite-star")) return;
-
-  const summary = e.target.closest("summary");
-  if (!summary) return;
-
-  const details = summary.parentElement;
-  if (!details || details.tagName !== "DETAILS") return;
-
-  const body = details.closest(".accordion-body");
-  if (!body) return;
-
-  rememberDetails(details);
-});
-
-// Komunikat 6 — tylko jeden wewnętrzny akordeon naraz
-document.addEventListener("click", function (e) {
-  if (e.target.closest(".favorite-star")) return;
-
-  const summary = e.target.closest("summary.k6-pill");
-  if (!summary) return;
-
-  const details = summary.parentElement;
-  if (!details || details.tagName !== "DETAILS") return;
-
-  const group = details.closest(".k6-group");
-  if (!group) return;
-
-  e.preventDefault();
-
-  rememberDetails(details);
-
-  const wasOpen = details.open;
-
-  group.querySelectorAll("details.k6-details[open]").forEach((d) => {
-    d.open = false;
-  });
-
-  if (!wasOpen) {
-    details.open = true;
-  } else {
-    lastDetailsState = null;
-  }
-});
-
-// ========================
-// ZAPIS I ODTWARZANIE POZYCJI
-// ========================
-
-function getVisibleReferenceElement() {
-  const points = [
-    { x: window.innerWidth * 0.5, y: window.innerHeight * 0.38 },
-    { x: window.innerWidth * 0.5, y: window.innerHeight * 0.50 },
-    { x: window.innerWidth * 0.5, y: window.innerHeight * 0.62 },
-    { x: window.innerWidth * 0.75, y: window.innerHeight - 160 },
-    { x: window.innerWidth * 0.5, y: 120 }
-  ];
-
-  for (const p of points) {
-    const x = Math.max(1, Math.min(window.innerWidth - 2, p.x));
-    const y = Math.max(1, Math.min(window.innerHeight - 2, p.y));
-    const el = document.elementFromPoint(x, y);
-
-    if (el && el.closest(".section.active")) {
-      return { el, x, y };
-    }
-  }
-
-  return null;
-}
-
-function calculateElementRatio(el) {
-  if (!el) return 0;
-
-  const ref = getVisibleReferenceElement();
-  const refY = ref ? ref.y : window.innerHeight * 0.45;
-
-  const rect = el.getBoundingClientRect();
-  const top = rect.top + window.scrollY;
-  const height = Math.max(1, rect.height);
-  const refDocY = window.scrollY + refY;
-
-  let ratio = (refDocY - top) / height;
-  ratio = Math.max(0, Math.min(1, ratio));
-
-  return ratio;
-}
-
-function findMatchingDetails(targetBody, detailsState) {
-  if (!targetBody || !detailsState) return null;
-
-  const allDetails = Array.from(targetBody.querySelectorAll("details"));
-  if (!allDetails.length) return null;
-
-  if (detailsState.summaryKey) {
-    const byKey = allDetails.find((d) => {
-      const summary = d.querySelector("summary");
-      return getHeaderKey(getSummaryTextWithoutFavorite(summary)) === detailsState.summaryKey;
-    });
-
-    if (byKey) return byKey;
-  }
-
-  if (typeof detailsState.detailsIndex === "number" && allDetails[detailsState.detailsIndex]) {
-    return allDetails[detailsState.detailsIndex];
-  }
-
-  if (detailsState.summaryText) {
-    const byText = allDetails.find((d) => {
-      const summary = d.querySelector("summary");
-      return normalizeText(getSummaryTextWithoutFavorite(summary)) === detailsState.summaryText;
-    });
-
-    if (byText) return byText;
-  }
-
-  return null;
-}
-
-function findMatchingSubPanel(targetBody, subPanelState) {
-  if (!targetBody || !subPanelState) return null;
-
-  const panels = Array.from(targetBody.querySelectorAll(".gastronomy-more, .accordion-subbody"));
-  if (!panels.length) return null;
-
-  if (typeof subPanelState.panelIndex === "number" && panels[subPanelState.panelIndex]) {
-    return panels[subPanelState.panelIndex];
-  }
-
-  if (subPanelState.id) {
-    const sameId = targetBody.querySelector(`#${CSS.escape(subPanelState.id)}`);
-    if (sameId) return sameId;
-  }
-
-  return null;
-}
-
-function captureViewportState() {
-  const activeSection = getActiveSection();
-
-  if (!activeSection) {
-    return {
-      mode: "absolute",
-      scrollY: window.scrollY
-    };
-  }
-
-  const openBody = activeSection.querySelector(".accordion-body.active");
-
-  if (!openBody) {
-    return {
-      mode: "absolute",
-      scrollY: window.scrollY
-    };
-  }
-
-  const header = findAccordionHeaderFromBody(openBody);
-
-  if (!header) {
-    return {
-      mode: "absolute",
-      scrollY: window.scrollY
-    };
-  }
-
-  const key = getHeaderKey(getHeaderTextWithoutFavorite(header));
-  const index = getHeaderIndex(activeSection, header);
-
-  let sourceDetails = null;
-
-  if (lastDetailsState && lastDetailsState.lang === getActiveLang()) {
-    sourceDetails = findMatchingDetails(openBody, lastDetailsState);
-  }
-
-  let sourcePanel = null;
-
-  if (lastSubPanelState && lastSubPanelState.lang === getActiveLang()) {
-    sourcePanel = findMatchingSubPanel(openBody, lastSubPanelState);
-  }
-
-  const ref = getVisibleReferenceElement();
-  const refY = ref ? ref.y : window.innerHeight * 0.45;
-
-  return {
-    mode: "smart",
-    key,
-    index,
-    wasOpen: true,
-    bodyRatio: calculateElementRatio(openBody),
-    refY,
-
-    detailsState: lastDetailsState && lastDetailsState.lang === getActiveLang() ? lastDetailsState : null,
-    detailsRatio: sourceDetails ? calculateElementRatio(sourceDetails) : 0,
-
-    subPanelState: lastSubPanelState && lastSubPanelState.lang === getActiveLang() ? lastSubPanelState : null,
-    subPanelRatio: sourcePanel ? calculateElementRatio(sourcePanel) : 0
-  };
-}
-
-function restoreOpenStateAfterLangSwitch(state) {
-  if (!state || state.mode !== "smart") return;
-
-  const activeSection = getActiveSection();
-  const targetHeader = findHeaderByKeyOrIndex(activeSection, state.key, state.index);
-
-  if (!targetHeader) return;
-
-  const targetBody = getAccordionBodyFromHeader(targetHeader);
-  if (!targetBody) return;
-
-  activeSection.querySelectorAll(".accordion-body").forEach((body) => {
-    body.classList.remove("active");
-  });
-
-  targetBody.classList.add("active");
-
-  if (state.detailsState) {
-    const targetDetails = findMatchingDetails(targetBody, state.detailsState);
-
-    if (targetDetails) {
-      const group =
-        targetDetails.closest(".k6-group") ||
-        targetDetails.closest(".k7-group") ||
-        targetDetails.parentElement;
-
-      if (group) {
-        group.querySelectorAll("details[open]").forEach((d) => {
-          if (d !== targetDetails) d.open = false;
-        });
-      }
-
-      targetDetails.open = true;
-      lastDetailsState = state.detailsState;
-      lastSubPanelState = null;
-    }
-  }
-
-  if (state.subPanelState) {
-    const targetPanel = findMatchingSubPanel(targetBody, state.subPanelState);
-
-    if (targetPanel) {
-      if (targetPanel.classList.contains("accordion-subbody")) {
-        const toggle = targetPanel.previousElementSibling;
-
-        targetBody.querySelectorAll(".connection-toggle").forEach((t) => t.classList.remove("active"));
-        targetBody.querySelectorAll(".accordion-subbody").forEach((p) => p.classList.remove("active"));
-
-        if (toggle && toggle.classList.contains("connection-toggle")) {
-          toggle.classList.add("active");
-        }
-
-        targetPanel.classList.add("active");
-      }
-
-      if (targetPanel.classList.contains("gastronomy-more")) {
-        targetBody.querySelectorAll(".gastronomy-more").forEach((p) => {
-          p.classList.remove("active");
-          p.style.display = "none";
-        });
-
-        targetBody.querySelectorAll(".gastronomy-plus").forEach((p) => {
-          p.classList.remove("active");
-        });
-
-        targetPanel.classList.add("active");
-        targetPanel.style.display = "block";
-
-        if (targetPanel.id) {
-          targetBody
-            .querySelectorAll(`.gastronomy-plus[data-target="${CSS.escape(targetPanel.id)}"]`)
-            .forEach((trigger) => trigger.classList.add("active"));
-        }
-      }
-
-      lastSubPanelState = state.subPanelState;
-      lastDetailsState = null;
-    }
-  }
-
-  rememberMainAccordion(targetHeader);
-}
-
-function restoreViewportState(state) {
-  if (!state) return;
-
-  if (state.mode === "absolute") {
-    window.scrollTo({
-      top: Math.max(0, state.scrollY || 0),
-      behavior: "instant"
-    });
-
-    return;
-  }
-
-  const activeSection = getActiveSection();
-  const targetHeader = findHeaderByKeyOrIndex(activeSection, state.key, state.index);
-
-  if (!targetHeader) return;
-
-  const targetBody = getAccordionBodyFromHeader(targetHeader);
-  if (!targetBody) return;
-
-  const targetDetails = state.detailsState ? findMatchingDetails(targetBody, state.detailsState) : null;
-  const targetPanel = state.subPanelState ? findMatchingSubPanel(targetBody, state.subPanelState) : null;
-
-  let targetY;
-
-  if (targetPanel) {
-    const rect = targetPanel.getBoundingClientRect();
-    const top = rect.top + window.scrollY;
-    const height = Math.max(1, rect.height);
-
-    targetY = top + state.subPanelRatio * height - state.refY;
-  } else if (targetDetails) {
-    const rect = targetDetails.getBoundingClientRect();
-    const top = rect.top + window.scrollY;
-    const height = Math.max(1, rect.height);
-
-    targetY = top + state.detailsRatio * height - state.refY;
-  } else if (targetBody) {
-    const rect = targetBody.getBoundingClientRect();
-    const top = rect.top + window.scrollY;
-    const height = Math.max(1, rect.height);
-
-    targetY = top + state.bodyRatio * height - state.refY;
-  } else {
-    const rect = targetHeader.getBoundingClientRect();
-    targetY = rect.top + window.scrollY - 90;
-  }
-
-  window.scrollTo({
-    top: Math.max(0, targetY),
-    behavior: "instant"
-  });
-}
-
-// ========================
-// TABY I FLOATING BUTTON
-// ========================
-
-if (tabPL) {
-  tabPL.addEventListener("click", async () => {
-    if (getActiveLang() === "PL") return;
-    await switchLanguagePreservingPosition("PL");
-  });
-}
-
-if (tabEN) {
-  tabEN.addEventListener("click", async () => {
-    if (getActiveLang() === "EN") return;
-    await switchLanguagePreservingPosition("EN");
-  });
-}
-
-if (langFab) {
-  langFab.addEventListener("click", async () => {
-    const nextLang = getActiveLang() === "PL" ? "EN" : "PL";
-    await switchLanguagePreservingPosition(nextLang);
-  });
-}
-
-// ========================
-// START
-// ========================
-
-updateLangFabLabel();
-
-loadSections().then(() => {
-  updateFavoriteStars();
-  applyFilters();
-});
