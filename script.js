@@ -1,5 +1,5 @@
 // ========================
-// m.komunikaty — script.js v1.3.4
+// m.komunikaty — script.js v1.3.5
 // Centralny silnik: ładowanie, PL/EN, akordeony, podsekcje, ulubione, szukanie
 // ========================
 
@@ -16,6 +16,7 @@ const langFab = document.getElementById("langFab");
 const searchInput = document.getElementById("searchInput");
 const favoritesToggle = document.getElementById("favoritesToggle");
 const emptyState = document.getElementById("emptyState");
+const topbarLogo = document.querySelector(".topbar__logo");
 
 let langSwitchBusy = false;
 let showFavoritesOnly = false;
@@ -287,6 +288,78 @@ function clearLastOpenState() {
   lastSubPanelState = null;
 }
 
+// ========================
+// ZAMYKANIE / HOME
+// ========================
+
+function closeAllAccordions(root = document) {
+  root.querySelectorAll(".accordion-body.active").forEach((body) => {
+    body.classList.remove("active");
+  });
+
+  root.querySelectorAll(".accordion-subbody.active").forEach((body) => {
+    body.classList.remove("active");
+  });
+
+  root.querySelectorAll(".connection-toggle.active").forEach((toggle) => {
+    toggle.classList.remove("active");
+  });
+
+  root.querySelectorAll(".gastronomy-more.active").forEach((panel) => {
+    panel.classList.remove("active");
+    panel.style.display = "none";
+  });
+
+  root.querySelectorAll(".gastronomy-plus.active").forEach((plus) => {
+    plus.classList.remove("active");
+  });
+
+  root.querySelectorAll("details[open]").forEach((details) => {
+    details.open = false;
+  });
+
+  clearLastOpenState();
+}
+
+function resetToolsToHome() {
+  if (searchInput) {
+    searchInput.value = "";
+  }
+
+  showFavoritesOnly = false;
+
+  if (favoritesToggle) {
+    favoritesToggle.classList.remove("active");
+    favoritesToggle.setAttribute("aria-pressed", "false");
+    favoritesToggle.textContent = "☆ Ulubione";
+  }
+
+  applyFilters();
+}
+
+function goHome() {
+  resetToolsToHome();
+  closeAllAccordions(document);
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+}
+
+if (topbarLogo) {
+  topbarLogo.style.cursor = "pointer";
+  topbarLogo.setAttribute("title", "Wróć na początek");
+  topbarLogo.addEventListener("click", (e) => {
+    e.preventDefault();
+    goHome();
+  });
+}
+
+// ========================
+// ZAPAMIĘTYWANIE STANU
+// ========================
+
 function rememberMainAccordion(header) {
   if (!header) return;
 
@@ -476,6 +549,9 @@ function enhanceMainHeaders(slot, announcementId) {
     const favId = `ann:${announcementId}:main:${index}`;
     const star = createFavoriteStar(favId);
 
+    star.dataset.favType = "main";
+    star.dataset.headerIndex = String(index);
+
     header.appendChild(star);
     header.dataset.enhanced = "true";
     header.dataset.favId = favId;
@@ -491,6 +567,9 @@ function enhanceDetails(slot, announcementId) {
 
     const favId = `ann:${announcementId}:details:${index}`;
     const star = createFavoriteStar(favId);
+
+    star.dataset.favType = "details";
+    star.dataset.detailsIndex = String(index);
 
     summary.appendChild(star);
     summary.classList.add("summary-fav-row");
@@ -518,6 +597,10 @@ function enhanceGastronomyPanels(slot, announcementId) {
     star.classList.add("favorite-star--small");
     star.classList.add("subsection-favorite-star");
 
+    star.dataset.favType = "panel";
+    star.dataset.panelId = id;
+    star.dataset.panelIndex = String(index);
+
     const row =
       trigger.closest(".gastronomy-header") ||
       trigger.closest(".k7-pill") ||
@@ -528,13 +611,6 @@ function enhanceGastronomyPanels(slot, announcementId) {
 
     if (row) {
       row.classList.add("subsection-fav-row");
-
-      /*
-        WAŻNE:
-        Nie przenosimy triggera / plusika.
-        Plusik zostaje w oryginalnym miejscu, bo odpowiada za rozwijanie.
-        Dokładamy tylko gwiazdkę jako osobny element w tym samym rzędzie.
-      */
       row.appendChild(star);
     } else {
       trigger.insertAdjacentElement("beforebegin", star);
@@ -542,7 +618,10 @@ function enhanceGastronomyPanels(slot, announcementId) {
 
     panel.dataset.favEnhanced = "true";
     panel.dataset.favId = favId;
+    panel.dataset.panelIndex = String(index);
+
     trigger.dataset.favId = favId;
+    trigger.dataset.panelIndex = String(index);
   });
 }
 
@@ -554,6 +633,9 @@ function enhanceConnectionToggles(slot, announcementId) {
 
     const favId = `ann:${announcementId}:connection:${index}`;
     const star = createFavoriteStar(favId);
+
+    star.dataset.favType = "connection";
+    star.dataset.connectionIndex = String(index);
 
     toggle.appendChild(star);
     toggle.dataset.enhanced = "true";
@@ -609,6 +691,175 @@ function applyFilters() {
   }
 }
 
+// ========================
+// OTWIERANIE ULUBIONEGO PODKOMUNIKATU
+// ========================
+
+function openMainForSlot(slot) {
+  if (!slot) return null;
+
+  const header = slot.querySelector(".accordion-header");
+  if (!header) return null;
+
+  const body = getAccordionBodyFromHeader(header);
+  if (!body) return null;
+
+  const activeSection = getActiveSection();
+
+  activeSection.querySelectorAll(".accordion-body").forEach((b) => {
+    if (b !== body) b.classList.remove("active");
+  });
+
+  body.classList.add("active");
+  rememberMainAccordion(header);
+
+  return body;
+}
+
+function openPanelByFavoriteStar(star) {
+  if (!star) return null;
+
+  const slot = star.closest(".load-slot");
+  if (!slot) return null;
+
+  const body = openMainForSlot(slot);
+  if (!body) return null;
+
+  const favType = star.dataset.favType;
+
+  if (favType === "panel") {
+    const panelId = star.dataset.panelId;
+    const panelIndex = Number(star.dataset.panelIndex);
+
+    let panel = null;
+
+    if (panelId) {
+      panel = body.querySelector(`#${CSS.escape(panelId)}`);
+    }
+
+    if (!panel && Number.isFinite(panelIndex)) {
+      panel = Array.from(body.querySelectorAll(".gastronomy-more"))[panelIndex] || null;
+    }
+
+    if (!panel) return body;
+
+    body.querySelectorAll(".gastronomy-more").forEach((p) => {
+      p.classList.remove("active");
+      p.style.display = "none";
+    });
+
+    body.querySelectorAll(".gastronomy-plus").forEach((p) => {
+      p.classList.remove("active");
+    });
+
+    panel.classList.add("active");
+    panel.style.display = "block";
+
+    if (panel.id) {
+      body
+        .querySelectorAll(`.gastronomy-plus[data-target="${CSS.escape(panel.id)}"]`)
+        .forEach((trigger) => {
+          trigger.classList.add("active");
+        });
+    }
+
+    rememberSubPanel(panel, null);
+    return panel;
+  }
+
+  if (favType === "details") {
+    const detailsIndex = Number(star.dataset.detailsIndex);
+    const details = Number.isFinite(detailsIndex)
+      ? Array.from(body.querySelectorAll("details"))[detailsIndex]
+      : star.closest("details");
+
+    if (!details) return body;
+
+    const group =
+      details.closest(".k6-group") ||
+      details.closest(".k7-group") ||
+      details.parentElement;
+
+    if (group) {
+      group.querySelectorAll("details[open]").forEach((d) => {
+        if (d !== details) d.open = false;
+      });
+    }
+
+    details.open = true;
+    rememberDetails(details);
+    return details;
+  }
+
+  if (favType === "connection") {
+    const connectionIndex = Number(star.dataset.connectionIndex);
+    const toggle = Number.isFinite(connectionIndex)
+      ? Array.from(body.querySelectorAll(".connection-toggle"))[connectionIndex]
+      : star.closest(".connection-toggle");
+
+    if (!toggle) return body;
+
+    const subbody = toggle.nextElementSibling;
+
+    body.querySelectorAll(".connection-toggle").forEach((t) => {
+      t.classList.remove("active");
+    });
+
+    body.querySelectorAll(".connection-toggle + .accordion-subbody").forEach((p) => {
+      p.classList.remove("active");
+    });
+
+    toggle.classList.add("active");
+
+    if (subbody && subbody.classList.contains("accordion-subbody")) {
+      subbody.classList.add("active");
+      rememberSubPanel(subbody, toggle);
+      return subbody;
+    }
+
+    return toggle;
+  }
+
+  return body;
+}
+
+async function revealFirstFavoriteInActiveSection() {
+  if (!showFavoritesOnly) return;
+
+  const activeSection = getActiveSection();
+  if (!activeSection) return;
+
+  await doubleFrame();
+
+  const favs = readFavorites();
+
+  const activeFavoriteStars = Array.from(
+    activeSection.querySelectorAll(".favorite-star[data-fav-id]")
+  ).filter((star) => {
+    const slot = star.closest(".load-slot");
+    return slot && !slot.hidden && favs.has(star.dataset.favId);
+  });
+
+  if (!activeFavoriteStars.length) return;
+
+  const preferred =
+    activeFavoriteStars.find((star) => star.dataset.favType === "panel") ||
+    activeFavoriteStars.find((star) => star.dataset.favType === "details") ||
+    activeFavoriteStars.find((star) => star.dataset.favType === "connection") ||
+    activeFavoriteStars[0];
+
+  const target = openPanelByFavoriteStar(preferred);
+
+  await doubleFrame();
+
+  if (target) {
+    target.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
+  }
+}
+
 if (searchInput) {
   searchInput.addEventListener("input", () => {
     applyFilters();
@@ -616,7 +867,7 @@ if (searchInput) {
 }
 
 if (favoritesToggle) {
-  favoritesToggle.addEventListener("click", () => {
+  favoritesToggle.addEventListener("click", async () => {
     showFavoritesOnly = !showFavoritesOnly;
 
     favoritesToggle.classList.toggle("active", showFavoritesOnly);
@@ -624,6 +875,10 @@ if (favoritesToggle) {
     favoritesToggle.textContent = showFavoritesOnly ? "★ Ulubione" : "☆ Ulubione";
 
     applyFilters();
+
+    if (showFavoritesOnly) {
+      await revealFirstFavoriteInActiveSection();
+    }
   });
 }
 
