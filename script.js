@@ -1,5 +1,5 @@
 // ========================
-// m.komunikaty — script.js v1.3.1
+// m.komunikaty — script.js v1.3.2
 // Centralny silnik: ładowanie, PL/EN, akordeony, podsekcje, ulubione, szukanie
 // ========================
 
@@ -356,6 +356,59 @@ function rememberSubPanel(panel, triggerEl) {
 }
 
 // ========================
+// UKŁAD GWIAZDKI W PODSEKCJACH
+// ========================
+
+function applyInlineFavoriteRowLayout(row, star, trigger) {
+  if (!row || !star || !trigger) return;
+
+  row.classList.add("favorite-inline-row");
+
+  row.style.display = "flex";
+  row.style.alignItems = "center";
+  row.style.justifyContent = "flex-start";
+  row.style.flexWrap = "nowrap";
+  row.style.gap = row.style.gap || "0.65rem";
+
+  const titleCandidates = Array.from(row.children).filter((child) => {
+    return child !== star && child !== trigger && !child.classList.contains("favorite-star");
+  });
+
+  titleCandidates.forEach((child, index) => {
+    if (index === 0) {
+      child.style.flex = "1 1 auto";
+      child.style.minWidth = "0";
+      child.style.overflowWrap = "anywhere";
+    }
+  });
+
+  star.style.flex = "0 0 auto";
+  star.style.marginLeft = "auto";
+  star.style.marginRight = "0";
+  star.style.marginTop = "0";
+  star.style.float = "none";
+
+  trigger.style.flex = "0 0 auto";
+  trigger.style.marginLeft = "0";
+}
+
+function applySummaryFavoriteLayout(summary, star) {
+  if (!summary || !star) return;
+
+  summary.classList.add("favorite-inline-summary");
+
+  summary.style.display = "flex";
+  summary.style.alignItems = "center";
+  summary.style.gap = "0.65rem";
+
+  star.style.flex = "0 0 auto";
+  star.style.marginLeft = "auto";
+  star.style.marginRight = "0";
+  star.style.marginTop = "0";
+  star.style.float = "none";
+}
+
+// ========================
 // ULUBIONE
 // ========================
 
@@ -493,6 +546,8 @@ function enhanceDetails(slot, announcementId) {
     const star = createFavoriteStar(favId);
 
     summary.appendChild(star);
+    applySummaryFavoriteLayout(summary, star);
+
     summary.dataset.enhanced = "true";
     summary.dataset.favId = favId;
   });
@@ -516,6 +571,16 @@ function enhanceGastronomyPanels(slot, announcementId) {
     star.classList.add("favorite-star--small");
 
     trigger.insertAdjacentElement("beforebegin", star);
+
+    const row =
+      trigger.closest(".gastronomy-header") ||
+      trigger.closest(".k7-pill") ||
+      trigger.closest(".k8-pill") ||
+      trigger.closest(".k9-pill") ||
+      trigger.closest(".misc-pill") ||
+      trigger.parentElement;
+
+    applyInlineFavoriteRowLayout(row, star, trigger);
 
     panel.dataset.favEnhanced = "true";
     panel.dataset.favId = favId;
@@ -802,8 +867,9 @@ document.addEventListener("click", function (e) {
 
 function getVisibleReferenceElement() {
   const points = [
-    { x: window.innerWidth * 0.5, y: window.innerHeight * 0.42 },
-    { x: window.innerWidth * 0.5, y: window.innerHeight * 0.55 },
+    { x: window.innerWidth * 0.5, y: window.innerHeight * 0.38 },
+    { x: window.innerWidth * 0.5, y: window.innerHeight * 0.50 },
+    { x: window.innerWidth * 0.5, y: window.innerHeight * 0.62 },
     { x: window.innerWidth * 0.75, y: window.innerHeight - 160 },
     { x: window.innerWidth * 0.5, y: 120 }
   ];
