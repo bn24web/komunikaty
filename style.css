@@ -120,15 +120,15 @@ em{
    PANEL NARZĘDZI — SZUKANIE / ULUBIONE
 ========================= */
 .tools-panel{
-  display: flex;
+  display: flex !important;
   align-items: center;
-  gap: 0.5rem;
-  margin: 0 0.5rem 0.65rem;
+  gap: 0.55rem;
+  margin: 0.45rem 0.5rem 0.75rem;
   padding: 0.5rem;
-  background: rgba(255,255,255,0.78);
+  background: rgba(255,255,255,0.82);
   border: 1px solid rgba(36,50,74,0.08);
-  border-radius: 18px;
-  box-shadow: 0 8px 18px rgba(31,41,55,0.05);
+  border-radius: 20px;
+  box-shadow: 0 8px 18px rgba(31,41,55,0.06);
   backdrop-filter: blur(8px);
 }
 
@@ -138,18 +138,20 @@ em{
 }
 
 .search-input{
-  width: 100%;
-  min-height: 42px;
-  padding: 0.65rem 0.85rem;
-  border-radius: 14px;
+  width: 100% !important;
+  min-height: 44px;
+  padding: 0.68rem 0.9rem;
+  border-radius: 16px;
   border: 1px solid rgba(36,50,74,0.12);
-  background: rgba(255,255,255,0.95);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   color: #1f2937;
   font-family: inherit;
   font-size: 0.92rem;
-  font-weight: 600;
+  font-weight: 650;
   outline: none;
   box-shadow: inset 0 1px 2px rgba(31,41,55,0.04);
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 .search-input::placeholder{
@@ -159,16 +161,18 @@ em{
 
 .search-input:focus{
   border-color: rgba(37,99,235,0.45);
-  box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+  box-shadow:
+    0 0 0 3px rgba(37,99,235,0.12),
+    inset 0 1px 2px rgba(31,41,55,0.04);
 }
 
 .favorites-toggle{
   flex: 0 0 auto;
-  min-height: 42px;
-  padding: 0.65rem 0.85rem;
-  border-radius: 14px;
+  min-height: 44px;
+  padding: 0.68rem 0.9rem;
+  border-radius: 16px;
   border: 1px solid rgba(36,50,74,0.12);
-  background: rgba(255,255,255,0.95);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   color: #334155;
   font-family: inherit;
   font-size: 0.9rem;
@@ -183,6 +187,7 @@ em{
   color: #7a5300;
   background: linear-gradient(180deg, #fff7d6 0%, #ffeaa3 100%);
   border-color: rgba(180,126,0,0.25);
+  box-shadow: 0 6px 14px rgba(180,126,0,0.12);
 }
 
 .empty-state{
@@ -248,6 +253,11 @@ em{
   transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
   font-family: inherit;
   line-height: 1.25;
+
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
 .accordion-body{
@@ -269,51 +279,42 @@ em{
    GWIAZDKI ULUBIONYCH
 ========================= */
 .favorite-star{
-  display: inline-flex;
+  display: inline-flex !important;
   align-items: center;
   justify-content: center;
   width: 32px;
   min-width: 32px;
   height: 32px;
-  margin-left: 0.55rem;
+  margin-left: auto !important;
+  margin-right: 0 !important;
+  margin-top: 0 !important;
   border-radius: 999px;
   color: #94a3b8;
-  background: rgba(255,255,255,0.65);
-  border: 1px solid rgba(36,50,74,0.08);
-  font-size: 1.18rem;
+  background: rgba(255,255,255,0.72);
+  border: 1px solid rgba(36,50,74,0.10);
+  font-size: 1.15rem;
   font-weight: 900;
   line-height: 1;
   vertical-align: middle;
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  flex: 0 0 auto;
+  float: none !important;
 }
 
 .favorite-star.active{
   color: #b77900;
   background: linear-gradient(180deg, #fff7d6 0%, #ffeaa3 100%);
-  border-color: rgba(180,126,0,0.22);
-  box-shadow: 0 4px 12px rgba(180,126,0,0.12);
+  border-color: rgba(180,126,0,0.25);
+  box-shadow: 0 4px 12px rgba(180,126,0,0.14);
 }
 
 .favorite-star--small{
   width: 30px;
   min-width: 30px;
   height: 30px;
-  margin-left: auto;
-  margin-right: 0.15rem;
   font-size: 1.08rem;
-}
-
-.accordion-header .favorite-star,
-.connection-toggle .favorite-star{
-  float: right;
-  margin-top: -0.15rem;
-}
-
-summary .favorite-star{
-  float: right;
-  margin-top: -0.15rem;
 }
 
 /* =========================
@@ -337,6 +338,11 @@ summary .favorite-star{
   transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
   font-family: inherit;
   line-height: 1.25;
+
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
 .connection-toggle + .accordion-subbody{
@@ -355,18 +361,15 @@ summary .favorite-star{
 
 /* =========================
    WYŁĄCZENIE STARYCH PODAKORDEONÓW
-   ZOSTAWIAMY ROZWIJANE TYLKO LOTNISKA
 ========================= */
 .accordion-subheader{
   display: none !important;
 }
 
-/* Zwykłe stare podsekcje mają być widoczne jako normalna treść */
 .accordion-subheader + .accordion-subbody{
   display: block !important;
 }
 
-/* Ale podsekcja po .connection-toggle ma działać jako prawdziwy podakordeon */
 .connection-toggle + .accordion-subbody{
   display: none !important;
 }
@@ -377,7 +380,6 @@ summary .favorite-star{
 
 /* =========================
    DELIKATNE RAMKI / PODSEKCJE
-   do użycia w kolejnych komunikatach
 ========================= */
 .soft-panel,
 .sub-panel,
@@ -424,7 +426,6 @@ summary .favorite-star{
 
 /* =========================
    KOLOROWE BLOKI KOMUNIKATÓW
-   PRZYWRÓCONE DO STAREGO STYLU
 ========================= */
 .green,
 .orange,
@@ -461,7 +462,6 @@ summary .favorite-star{
 
 /* =========================
    BLOKI TEKSTOWE
-   PRZYWRÓCONE DO STAREGO STYLU
 ========================= */
 .speech-box{
   background: #fff;
@@ -529,95 +529,6 @@ summary .favorite-star{
 }
 
 /* =========================
-   RESPONSYWNOŚĆ OGÓLNA
-========================= */
-@media (max-width: 768px){
-  .tabs{
-    margin: 0.45rem;
-    gap: 0.5rem;
-  }
-
-  .tab{
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 46px;
-    font-size: 0.92rem;
-  }
-
-  .tools-panel{
-    margin: 0 0.45rem 0.65rem;
-  }
-
-  .green,
-  .orange,
-  .yellow,
-  .cyan{
-    padding: 0.8rem 0.6rem;
-  }
-
-  .speech-box{
-    padding: 0.6rem;
-  }
-}
-
-@media (max-width: 480px){
-  .accordion-container{
-    padding: 0 0.35rem;
-  }
-
-  .accordion-body{
-    padding: 0;
-  }
-
-  .accordion-header{
-    padding: 0.92rem 0.95rem;
-    font-size: 0.98rem;
-    border-radius: 16px;
-  }
-
-  .tools-panel{
-    gap: 0.4rem;
-    padding: 0.42rem;
-    border-radius: 16px;
-  }
-
-  .search-input{
-    min-height: 40px;
-    font-size: 0.88rem;
-    padding: 0.6rem 0.7rem;
-    border-radius: 13px;
-  }
-
-  .favorites-toggle{
-    min-height: 40px;
-    padding: 0.6rem 0.7rem;
-    font-size: 0.84rem;
-    border-radius: 13px;
-  }
-
-  .favorite-star{
-    width: 30px;
-    min-width: 30px;
-    height: 30px;
-    font-size: 1.08rem;
-    margin-left: 0.4rem;
-  }
-
-  .green,
-  .orange,
-  .yellow,
-  .cyan{
-    padding: 0.6rem 0.5rem;
-    border-radius: 0;
-  }
-
-  .speech-box{
-    border-radius: 0;
-  }
-}
-
-/* =========================
    GASTRONOMIA / KATALOG – ROZWIJANIE
 ========================= */
 .gastronomy-header{
@@ -636,9 +547,15 @@ summary .favorite-star{
   overflow-wrap: anywhere;
 }
 
+.gastronomy-header .favorite-star--small{
+  flex: 0 0 auto;
+  margin-left: auto !important;
+  margin-right: 0.15rem !important;
+}
+
 .gastronomy-header > .gastronomy-plus{
   flex: 0 0 auto;
-  margin-left: auto;
+  margin-left: 0 !important;
   width: 34px;
   height: 34px;
   display: flex;
@@ -744,7 +661,7 @@ summary .favorite-star{
 }
 
 /* =========================
-   FAB — przy krawędzi KOLUMNY
+   FAB
 ========================= */
 .lang-fab{
   position: fixed;
@@ -823,7 +740,7 @@ summary .favorite-star{
 }
 
 /* =========================
-   STOPKA — JEDNA LINIA
+   STOPKA
 ========================= */
 .footerbar{
   flex: 0 0 auto;
@@ -919,6 +836,90 @@ summary .favorite-star{
   font-weight: 600;
 }
 
+/* =========================
+   RESPONSYWNOŚĆ
+========================= */
+@media (max-width: 768px){
+  .tabs{
+    margin: 0.45rem;
+    gap: 0.5rem;
+  }
+
+  .tab{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 46px;
+    font-size: 0.92rem;
+  }
+
+  .green,
+  .orange,
+  .yellow,
+  .cyan{
+    padding: 0.8rem 0.6rem;
+  }
+
+  .speech-box{
+    padding: 0.6rem;
+  }
+}
+
+@media (max-width: 480px){
+  .accordion-container{
+    padding: 0 0.35rem;
+  }
+
+  .accordion-body{
+    padding: 0;
+  }
+
+  .accordion-header{
+    padding: 0.92rem 0.95rem;
+    font-size: 0.98rem;
+    border-radius: 16px;
+  }
+
+  .tools-panel{
+    gap: 0.42rem;
+    padding: 0.42rem;
+    border-radius: 18px;
+  }
+
+  .search-input{
+    min-height: 42px;
+    padding: 0.62rem 0.75rem;
+    font-size: 0.88rem;
+    border-radius: 14px;
+  }
+
+  .favorites-toggle{
+    min-height: 42px;
+    padding: 0.62rem 0.72rem;
+    font-size: 0.84rem;
+    border-radius: 14px;
+  }
+
+  .favorite-star{
+    width: 30px;
+    min-width: 30px;
+    height: 30px;
+    font-size: 1.08rem;
+  }
+
+  .green,
+  .orange,
+  .yellow,
+  .cyan{
+    padding: 0.6rem 0.5rem;
+    border-radius: 0;
+  }
+
+  .speech-box{
+    border-radius: 0;
+  }
+}
+
 @media (min-width: 769px){
   .footerbar{
     padding: 0 10px;
@@ -974,7 +975,7 @@ summary .favorite-star{
 }
 
 /* =========================
-   SUBTELNIEJSZE STANY INTERAKCJI
+   STANY INTERAKCJI
 ========================= */
 .accordion-header:active,
 .connection-toggle:active,
