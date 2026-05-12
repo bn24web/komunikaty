@@ -1,5 +1,5 @@
 // ========================
-// m.komunikaty — script.js v1.3.0
+// m.komunikaty — script.js v1.3.1
 // Centralny silnik: ładowanie, PL/EN, akordeony, podsekcje, ulubione, szukanie
 // ========================
 
@@ -95,10 +95,6 @@ function getActiveLang() {
   return sectionEN && sectionEN.classList.contains("active") ? "EN" : "PL";
 }
 
-function getActiveLangLower() {
-  return getActiveLang().toLowerCase();
-}
-
 function getActiveSection() {
   return getActiveLang() === "PL" ? sectionPL : sectionEN;
 }
@@ -111,14 +107,18 @@ function updateLangFabLabel() {
 function applyLangVisualState(lang) {
   const isPL = lang === "PL";
 
-  tabPL.classList.toggle("active", isPL);
-  tabEN.classList.toggle("active", !isPL);
+  if (tabPL) {
+    tabPL.classList.toggle("active", isPL);
+    tabPL.setAttribute("aria-selected", isPL ? "true" : "false");
+  }
 
-  tabPL.setAttribute("aria-selected", isPL ? "true" : "false");
-  tabEN.setAttribute("aria-selected", !isPL ? "true" : "false");
+  if (tabEN) {
+    tabEN.classList.toggle("active", !isPL);
+    tabEN.setAttribute("aria-selected", !isPL ? "true" : "false");
+  }
 
-  sectionPL.classList.toggle("active", isPL);
-  sectionEN.classList.toggle("active", !isPL);
+  if (sectionPL) sectionPL.classList.toggle("active", isPL);
+  if (sectionEN) sectionEN.classList.toggle("active", !isPL);
 
   document.documentElement.lang = isPL ? "pl" : "en";
 
@@ -133,7 +133,7 @@ async function setLangReady(lang) {
   const activeSection = lang === "PL" ? sectionPL : sectionEN;
 
   for (let i = 0; i < 100; i++) {
-    if (activeSection.querySelector(".accordion-header")) return;
+    if (activeSection && activeSection.querySelector(".accordion-header")) return;
     await sleep(40);
   }
 }
@@ -254,11 +254,14 @@ function findAccordionHeaderFromBody(body) {
 }
 
 function getHeaderIndex(section, header) {
+  if (!section || !header) return -1;
   const headers = Array.from(section.querySelectorAll(".accordion-header"));
   return headers.indexOf(header);
 }
 
 function findHeaderByKeyOrIndex(section, key, index) {
+  if (!section) return null;
+
   const headers = Array.from(section.querySelectorAll(".accordion-header"));
 
   if (key) {
@@ -271,10 +274,6 @@ function findHeaderByKeyOrIndex(section, key, index) {
   }
 
   return headers[0] || null;
-}
-
-function getLoadSlotFromElement(el) {
-  return el ? el.closest(".load-slot") : null;
 }
 
 function getAnnouncementIdFromSlot(slot) {
@@ -373,10 +372,6 @@ function writeFavorites(set) {
   try {
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(Array.from(set)));
   } catch {}
-}
-
-function isFavorite(id) {
-  return readFavorites().has(id);
 }
 
 function toggleFavorite(id) {
@@ -682,8 +677,9 @@ document.addEventListener("click", function (e) {
 
   e.preventDefault();
 
-  const parentBody = btn.closest(".accordion-body");
+  const parentBody = btn.closest(".accordion-body") || getActiveSection();
   const parentHeader = findAccordionHeaderFromBody(parentBody);
+
   if (parentHeader) rememberMainAccordion(parentHeader);
 
   const isOpen = btn.classList.contains("active");
@@ -893,6 +889,14 @@ function findMatchingSubPanel(targetBody, subPanelState) {
 
 function captureViewportState() {
   const activeSection = getActiveSection();
+
+  if (!activeSection) {
+    return {
+      mode: "absolute",
+      scrollY: window.scrollY
+    };
+  }
+
   const openBody = activeSection.querySelector(".accordion-body.active");
 
   if (!openBody) {
@@ -962,11 +966,8 @@ function restoreOpenStateAfterLangSwitch(state) {
 
   targetBody.classList.add("active");
 
-  let targetDetails = null;
-  let targetPanel = null;
-
   if (state.detailsState) {
-    targetDetails = findMatchingDetails(targetBody, state.detailsState);
+    const targetDetails = findMatchingDetails(targetBody, state.detailsState);
 
     if (targetDetails) {
       const group =
@@ -987,7 +988,7 @@ function restoreOpenStateAfterLangSwitch(state) {
   }
 
   if (state.subPanelState) {
-    targetPanel = findMatchingSubPanel(targetBody, state.subPanelState);
+    const targetPanel = findMatchingSubPanel(targetBody, state.subPanelState);
 
     if (targetPanel) {
       if (targetPanel.classList.contains("accordion-subbody")) {
