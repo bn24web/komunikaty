@@ -1,177 +1,392 @@
-<button class="accordion-header">6. JAZDA POCIĄGIEM OPÓŹNIONYM (PL)</button>
-<div class="accordion-body">
-  <div class="speech-box">
+<section class="accordion">
 
-    <!-- styl tylko dla tego komunikatu -->
-    <style>
-      .k6-group { margin: 0.15rem 0 0.35rem; }
+  <button
+    class="accordion-header"
+    type="button"
+    aria-expanded="false">
+    6. JAZDA POCIĄGIEM OPÓŹNIONYM (PL)
+  </button>
 
-      .k6-details { margin: 0.35rem 0; }
+  <div class="accordion-body">
 
-      /* pastylka */
-      .k6-pill{
-        list-style: none;
-        cursor:pointer;
-        padding: 0.6rem 3.1rem 0.6rem 0.95rem; /* miejsce na plus po prawej */
-        background:#f2b8a8;                    /* pastylka: łosoś (intensywniejszy) */
-        border-radius: 18px;
-        user-select:none;
-        box-shadow: 0 6px 16px rgba(0,0,0,0.06);
-        font-weight: 500;                      /* NIE pogrubione */
-        position: relative;
-      }
-      .k6-details > summary::-webkit-details-marker{ display:none; }
+    <div class="speech-box">
 
-      /* plusik (szary, wtopiony, zawsze PLUS) */
-      .k6-pill::after{
-        content:"+";
-        position:absolute;
-        right: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 30px;
-        height: 30px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        font-size: 1.45rem;
-        font-weight: 800;
-        color:#888;                /* szary */
-        background: transparent;   /* bez mini-ramki/tła */
-      }
+      <style>
+        .k6-group {
+          margin: 0.15rem 0 0.35rem;
+        }
 
-      /* ciaśniej instrukcje */
-      .k6-note{ margin: 0 0 0.15rem; }
-      .k6-list p{ margin: 0.05rem 0; }
+        .k6-details {
+          margin: 0.35rem 0;
+        }
 
-      /* ramki – mniej intensywne niż pastylka + ładne zaoblenia */
-      .k6-box{
-        background:#f7ddd6;
-        border:2px solid #edc1b6;
-        border-left:7px solid #e5a292;
-        border-radius: 20px;
-        padding: 0.95rem 0.95rem;
-        margin: 0.45rem 0 0.4rem;
-        box-shadow: 0 8px 18px rgba(0,0,0,0.05);
-      }
+        .k6-pill {
+          position: relative;
+          display: block;
+          list-style: none;
+          margin: 0;
+          padding: 0.6rem 3.1rem 0.6rem 0.95rem;
 
-      /* komunikat pogrubiony, ale kursywa nigdy nie */
-      .k6-strong{ font-weight:700; }
-      .k6-strong em{ font-weight:400 !important; }
-      em{ font-weight:400; }
-    </style>
+          background: #f2b8a8;
+          border-radius: 18px;
+          box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
 
-    <div class="k6-group">
+          font-weight: 500;
+          line-height: 1.35;
+          color: #1f2937;
 
-      <!-- A1 -->
-      <details id="k6-pl-a1" class="k6-details">
-        <summary class="k6-pill">A1. JAZDA POCIĄGIEM OPÓŹNIONYM</summary>
-        <div style="padding: 0.45rem 0.05rem 0.15rem;">
-          <p class="k6-note"><em>Komunikat ten należy wygłosić:</em></p>
-          <div class="k6-list" style="padding-left:0.15rem;">
-            <p><em>a) po odjeździe z miejsca nieplanowanego postoju, w którym powstało opóźnienie;</em></p>
-            <p><em>b) jeśli opóźnienie pociągu powstało podczas jazdy;</em></p>
-            <p><em>c) jeśli opóźnienie pociągu zmieniło się o 5 lub więcej minut.</em></p>
-          </div>
+          cursor: pointer;
+          user-select: none;
+          -webkit-user-select: none;
+          -webkit-tap-highlight-color: transparent;
+        }
 
-          <div class="k6-box">
-            <div class="k6-strong">
-              Informujemy, że w związku z …… <em>(wybrać z Katalogu)</em> pociąg jest opóźniony o …… minut/minut.
-              Przepraszamy za opóźnienie. Osoby przesiadające się do innych pociągów prosimy o zgłaszanie tego zamiaru
-              drużynie konduktorskiej. Przedział konduktorski znajduje się w wagonie numer …… .
+        .k6-details > summary::-webkit-details-marker {
+          display: none;
+        }
+
+        .k6-details > summary::marker {
+          content: "";
+        }
+
+        .k6-pill::after {
+          content: "+";
+
+          position: absolute;
+          right: 12px;
+          top: 50%;
+          transform: translateY(-50%);
+
+          width: 30px;
+          height: 30px;
+
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          font-size: 1.45rem;
+          font-weight: 800;
+          line-height: 1;
+          color: #777;
+
+          background: transparent;
+        }
+
+        .k6-details[open] > .k6-pill::after {
+          content: "−";
+        }
+
+        .k6-pill:focus {
+          outline: none;
+        }
+
+        .k6-pill:focus-visible {
+          outline: 3px solid rgba(37, 99, 235, 0.32);
+          outline-offset: 2px;
+        }
+
+        .k6-content {
+          padding: 0.45rem 0.05rem 0.15rem;
+        }
+
+        .k6-note {
+          margin: 0 0 0.15rem;
+        }
+
+        .k6-list {
+          padding-left: 0.15rem;
+        }
+
+        .k6-list p {
+          margin: 0.05rem 0;
+        }
+
+        .k6-box {
+          margin: 0.45rem 0 0.4rem;
+          padding: 0.95rem;
+
+          background: #f7ddd6;
+          border: 2px solid #edc1b6;
+          border-left: 7px solid #e5a292;
+          border-radius: 20px;
+
+          box-shadow: 0 8px 18px rgba(0, 0, 0, 0.05);
+        }
+
+        .k6-box--compact {
+          margin-top: 0.35rem;
+        }
+
+        .k6-strong {
+          font-weight: 700;
+        }
+
+        .k6-group em,
+        .k6-strong em {
+          font-weight: 400 !important;
+        }
+      </style>
+
+      <div class="k6-group">
+
+        <!-- A1 -->
+        <details
+          id="k6-pl-a1"
+          class="k6-details">
+
+          <summary class="k6-pill">
+            A1. JAZDA POCIĄGIEM OPÓŹNIONYM
+          </summary>
+
+          <div class="k6-content">
+
+            <p class="k6-note">
+              <em>Komunikat ten należy wygłosić:</em>
+            </p>
+
+            <div class="k6-list">
+              <p>
+                <em>
+                  a) po odjeździe z miejsca nieplanowanego postoju,
+                  w którym powstało opóźnienie;
+                </em>
+              </p>
+
+              <p>
+                <em>
+                  b) jeśli opóźnienie pociągu powstało podczas jazdy;
+                </em>
+              </p>
+
+              <p>
+                <em>
+                  c) jeśli opóźnienie pociągu zmieniło się
+                  o 5 lub więcej minut.
+                </em>
+              </p>
             </div>
-          </div>
 
-          <p class="k6-note"><em>
-            Komunikat ten należy wygłosić w pociągu, który był opóźniony, a obecnie jedzie zgodnie z rozkładem jazdy.
-          </em></p>
+            <div class="k6-box">
+              <div class="k6-strong">
+                Informujemy, że w związku z ……
+                <em>(wybrać z Katalogu)</em>
+                pociąg jest opóźniony o …… minut/minut.
 
-          <div class="k6-box" style="margin-top:0.35rem;">
-            <div class="k6-strong">Informujemy, że pociąg jedzie zgodnie z rozkładem jazdy.</div>
-          </div>
-        </div>
-      </details>
+                Przepraszamy za opóźnienie.
 
-      <!-- A2 -->
-      <details id="k6-pl-a2" class="k6-details">
-        <summary class="k6-pill">A2. WYDŁUŻONY POSTÓJ POCIĄGU NA STACJI HANDLOWEJ</summary>
-        <div style="padding: 0.45rem 0.05rem 0.15rem;">
-          <p class="k6-note"><em>
-            Komunikat ten należy wygłosić podczas postoju pociągu niezwłocznie, gdy zostało potwierdzone przez dyżurnego ruchu
-            opóźnienie odjazdu o 5 lub więcej minut.
-          </em></p>
+                Osoby przesiadające się do innych pociągów
+                prosimy o zgłaszanie tego zamiaru drużynie konduktorskiej.
 
-          <div class="k6-box" style="margin-top:0.35rem;">
-            <div class="k6-strong">
-              Informujemy, że w związku z …… <em>(wybrać z Katalogu)</em> pociąg odjedzie z opóźnieniem około …… minut.
-              O zmianie opóźnienia będziemy informować na bieżąco. Przepraszamy za niedogodności.
-              <br><br>
-              Osoby przesiadające się do innych pociągów prosimy o zgłaszanie tego zamiaru drużynie konduktorskiej.
-              Przedział konduktorski znajduje się w wagonie numer …… .
+                Przedział konduktorski znajduje się
+                w wagonie numer …… .
+              </div>
             </div>
-          </div>
-        </div>
-      </details>
 
-      <!-- A3 -->
-      <details id="k6-pl-a3" class="k6-details">
-        <summary class="k6-pill">A3. ZATRZYMANIE PRZED SEMAFOREM WJAZDOWYM</summary>
-        <div style="padding: 0.45rem 0.05rem 0.15rem;">
-          <p class="k6-note"><em>
-            Komunikat ten należy wygłosić, jeśli po wygłoszeniu komunikatu pożegnalnego lub powitalno-pożegnalnego nastąpiło
-            zatrzymanie pociągu przed semaforem wjazdowym do stacji postoju handlowego.
-          </em></p>
+            <p class="k6-note">
+              <em>
+                Komunikat ten należy wygłosić w pociągu,
+                który był opóźniony, a obecnie jedzie
+                zgodnie z rozkładem jazdy.
+              </em>
+            </p>
 
-          <div class="k6-box" style="margin-top:0.35rem;">
-            <div class="k6-strong">
-              Informujemy, że nasz pociąg wjedzie na stację …… za około …… minut.
-              <br><br>
-              W przypadku, jeśli przy peronach danej stacji na odjazd oczekuje inny pociąg na przesiadkę, dodać:<br>
-              Pociąg …… do stacji …… , przez stacje: …… , …… , planowo odjeżdżający o godzinie …… ,
-              oczekuje przy peronie …… .
-              <br><br>
-              Ze względów bezpieczeństwa, otwieranie drzwi wyjściowych oraz opuszczanie pociągu jest zabronione.
+            <div class="k6-box k6-box--compact">
+              <div class="k6-strong">
+                Informujemy, że pociąg jedzie zgodnie
+                z rozkładem jazdy.
+              </div>
             </div>
+
           </div>
-        </div>
-      </details>
+        </details>
 
-      <!-- A4 -->
-      <details id="k6-pl-a4" class="k6-details">
-        <summary class="k6-pill">A4. INFORMACJE DOTYCZĄCE SKOMUNIKOWAŃ</summary>
-        <div style="padding: 0.45rem 0.05rem 0.15rem;">
-          <p class="k6-note"><em>
-            Odpowiedni komunikat należy wygłosić w przypadku zebrania od podróżnych informacji dotyczących potrzeby zorganizowania
-            skomunikowania, które zostały zgłoszone do Dyspozytury IC.
-          </em></p>
+        <!-- A2 -->
+        <details
+          id="k6-pl-a2"
+          class="k6-details">
 
-          <p class="k6-note" style="margin-top:0.25rem;"><em>W przypadku zgody na skomunikowanie:</em></p>
-          <div class="k6-box" style="margin-top:0.3rem;">
-            <div class="k6-strong">
-              Prosimy o uwagę!<br><br>
-              Pociąg …… <em>(kategoria, numer i nazwa pociągu, jeśli jest)</em> do stacji …… , przez stacje: …… , …… ,
-              …… , będzie oczekiwał na Państwa na stacji …… . Prosimy o zwrócenie uwagi na informacje stacyjne.
-              <br><br>
-              <em>Komunikat należy powtórzyć.</em>
+          <summary class="k6-pill">
+            A2. WYDŁUŻONY POSTÓJ POCIĄGU NA STACJI HANDLOWEJ
+          </summary>
+
+          <div class="k6-content">
+
+            <p class="k6-note">
+              <em>
+                Komunikat ten należy wygłosić podczas postoju pociągu
+                niezwłocznie, gdy zostało potwierdzone przez dyżurnego ruchu
+                opóźnienie odjazdu o 5 lub więcej minut.
+              </em>
+            </p>
+
+            <div class="k6-box k6-box--compact">
+              <div class="k6-strong">
+                Informujemy, że w związku z ……
+                <em>(wybrać z Katalogu)</em>
+                pociąg odjedzie z opóźnieniem około …… minut.
+
+                O zmianie opóźnienia będziemy informować na bieżąco.
+
+                Przepraszamy za niedogodności.
+
+                <br><br>
+
+                Osoby przesiadające się do innych pociągów
+                prosimy o zgłaszanie tego zamiaru drużynie konduktorskiej.
+
+                Przedział konduktorski znajduje się
+                w wagonie numer …… .
+              </div>
             </div>
-          </div>
 
-          <p class="k6-note" style="margin-top:0.25rem;"><em>W przypadku odmowy skomunikowania:</em></p>
-          <div class="k6-box" style="margin-top:0.3rem;">
-            <div class="k6-strong">
-              Prosimy o uwagę!<br><br>
-              Pociąg …… <em>(kategoria, numer i nazwa pociągu, jeśli jest)</em> do stacji …… , przez stacje: …… , …… ,
-              …… , nie będzie oczekiwał na przyjazd naszego pociągu. Przepraszamy za niedogodności.
-              Dodatkowych informacji udzieli Państwu drużyna konduktorska.
-              Przedział konduktorski znajduje się w wagonie numer …… .
-              <br><br>
-              <em>Komunikat należy powtórzyć.</em>
-            </div>
           </div>
-        </div>
-      </details>
+        </details>
+
+        <!-- A3 -->
+        <details
+          id="k6-pl-a3"
+          class="k6-details">
+
+          <summary class="k6-pill">
+            A3. ZATRZYMANIE PRZED SEMAFOREM WJAZDOWYM
+          </summary>
+
+          <div class="k6-content">
+
+            <p class="k6-note">
+              <em>
+                Komunikat ten należy wygłosić, jeśli po wygłoszeniu
+                komunikatu pożegnalnego lub powitalno-pożegnalnego
+                nastąpiło zatrzymanie pociągu przed semaforem wjazdowym
+                do stacji postoju handlowego.
+              </em>
+            </p>
+
+            <div class="k6-box k6-box--compact">
+              <div class="k6-strong">
+                Informujemy, że nasz pociąg wjedzie
+                na stację …… za około …… minut.
+
+                <br><br>
+
+                W przypadku, jeśli przy peronach danej stacji
+                na odjazd oczekuje inny pociąg na przesiadkę, dodać:
+
+                <br>
+
+                Pociąg …… do stacji ……,
+                przez stacje: ……, ……,
+                planowo odjeżdżający o godzinie ……,
+                oczekuje przy peronie …… .
+
+                <br><br>
+
+                Ze względów bezpieczeństwa otwieranie drzwi wyjściowych
+                oraz opuszczanie pociągu jest zabronione.
+              </div>
+            </div>
+
+          </div>
+        </details>
+
+        <!-- A4 -->
+        <details
+          id="k6-pl-a4"
+          class="k6-details">
+
+          <summary class="k6-pill">
+            A4. INFORMACJE DOTYCZĄCE SKOMUNIKOWAŃ
+          </summary>
+
+          <div class="k6-content">
+
+            <p class="k6-note">
+              <em>
+                Odpowiedni komunikat należy wygłosić w przypadku zebrania
+                od podróżnych informacji dotyczących potrzeby zorganizowania
+                skomunikowania, które zostały zgłoszone do Dyspozytury IC.
+              </em>
+            </p>
+
+            <p
+              class="k6-note"
+              style="margin-top: 0.25rem;">
+              <em>
+                W przypadku zgody na skomunikowanie:
+              </em>
+            </p>
+
+            <div
+              class="k6-box"
+              style="margin-top: 0.3rem;">
+
+              <div class="k6-strong">
+                Prosimy o uwagę!
+
+                <br><br>
+
+                Pociąg ……
+                <em>
+                  (kategoria, numer i nazwa pociągu, jeśli jest)
+                </em>
+                do stacji ……,
+                przez stacje: ……, ……, ……,
+                będzie oczekiwał na Państwa na stacji …… .
+
+                Prosimy o zwrócenie uwagi na informacje stacyjne.
+
+                <br><br>
+
+                <em>Komunikat należy powtórzyć.</em>
+              </div>
+            </div>
+
+            <p
+              class="k6-note"
+              style="margin-top: 0.25rem;">
+              <em>
+                W przypadku odmowy skomunikowania:
+              </em>
+            </p>
+
+            <div
+              class="k6-box"
+              style="margin-top: 0.3rem;">
+
+              <div class="k6-strong">
+                Prosimy o uwagę!
+
+                <br><br>
+
+                Pociąg ……
+                <em>
+                  (kategoria, numer i nazwa pociągu, jeśli jest)
+                </em>
+                do stacji ……,
+                przez stacje: ……, ……, ……,
+                nie będzie oczekiwał na przyjazd naszego pociągu.
+
+                Przepraszamy za niedogodności.
+
+                Dodatkowych informacji udzieli Państwu
+                drużyna konduktorska.
+
+                Przedział konduktorski znajduje się
+                w wagonie numer …… .
+
+                <br><br>
+
+                <em>Komunikat należy powtórzyć.</em>
+              </div>
+            </div>
+
+          </div>
+        </details>
+
+      </div>
 
     </div>
 
   </div>
-</div>
+
+</section>
