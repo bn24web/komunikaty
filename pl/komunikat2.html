@@ -98,10 +98,18 @@
           padding: 1rem;
         ">
 
-        <p style="margin: 0;">
-          <strong>
-            Informujemy, że w związku z
-          </strong>
+        <div style="
+          display: flex;
+          flex-wrap: wrap;
+          align-items: baseline;
+          gap: 0.2rem;
+        ">
+
+          <span>
+            <strong>
+              Informujemy, że w związku z
+            </strong>
+          </span>
 
           <button
             class="connection-toggle"
@@ -110,17 +118,18 @@
             style="
               display: inline-flex !important;
               width: auto;
+              min-width: 0;
               min-height: 0;
-              margin: 0 0.15rem;
-              padding: 0.08rem 0.35rem;
+              margin: 0;
+              padding: 0.08rem 0.4rem;
               vertical-align: baseline;
               font-size: 0.8rem;
               font-style: italic;
               font-weight: 500;
               line-height: 1.35;
               color: #55708d;
-              background: rgba(255, 255, 255, 0.55);
-              border: 1px solid rgba(82, 112, 141, 0.18);
+              background: rgba(255, 255, 255, 0.62);
+              border: 1px solid rgba(82, 112, 141, 0.2);
               border-radius: 8px;
               box-shadow: none;
               cursor: pointer;
@@ -128,29 +137,40 @@
             wybrać z Katalogu
           </button>
 
+          <!-- ROZWIJANY KATALOG OPÓŹNIEŃ -->
           <div
             class="accordion-subbody"
             style="
+              flex: 0 0 100%;
+              width: 100%;
               margin: 0.75rem 0 0.85rem;
-              padding: 0.9rem;
-              background: rgba(255, 255, 255, 0.82);
+              padding: 0.9rem 1rem;
+              background: rgba(255, 255, 255, 0.88);
               border: 1px solid rgba(83, 122, 74, 0.18);
               border-radius: 14px;
               box-shadow: none;
             ">
 
             <div style="
-              margin-bottom: 0.65rem;
+              margin-bottom: 0.7rem;
               font-weight: 800;
               font-size: 0.92rem;
+              line-height: 1.35;
               color: #294b2a;
             ">
               Najpopularniejsze przyczyny opóźnienia
+              <span style="
+                font-weight: 600;
+                font-size: 0.78rem;
+                color: #64748b;
+              ">
+                (reszta w sekcji 7)
+              </span>
             </div>
 
             <ul style="
               margin: 0;
-              padding-left: 1.25rem;
+              padding-left: 1.3rem;
               color: #1f2937;
             ">
 
@@ -160,6 +180,9 @@
 
               <li style="margin-bottom: 0.45rem;">
                 z powodu wydłużonego postoju pociągu na stacji
+              </li>
+
+              <li style="margin-bottom: 0.45rem;">
                 w związku z wsiadaniem dużej liczby podróżnych
               </li>
 
@@ -216,13 +239,16 @@
             </ul>
           </div>
 
-          <strong>
-            pociąg jest opóźniony o ……… minut/minut.
-            Przepraszamy za opóźnienie.
-            Osoby przesiadające się do innych pociągów prosimy
-            o zgłaszanie tego zamiaru drużynie konduktorskiej.
-          </strong>
-        </p>
+          <span>
+            <strong>
+              pociąg jest opóźniony o ……… minut/minut.
+              Przepraszamy za opóźnienie.
+              Osoby przesiadające się do innych pociągów prosimy
+              o zgłaszanie tego zamiaru drużynie konduktorskiej.
+            </strong>
+          </span>
+
+        </div>
       </div>
 
       <!-- BLOK KOŃCOWY -->
