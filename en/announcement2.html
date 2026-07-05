@@ -1,31 +1,64 @@
 <section class="accordion">
-  <button class="accordion-header">2. POWITALNY - ROZSZERZONY (EN)</button>
+
+  <button
+    class="accordion-header"
+    type="button"
+    aria-expanded="false">
+    2. POWITALNY – ROZSZERZONY (EN)
+  </button>
+
   <div class="accordion-body">
 
-    <!-- OPIS JAK W WERSJI PL – LEKKIE WCIĘCIE -->
-    <p style="font-size:0.7rem; color:#777; margin:0.4rem 0 0.6rem 0; padding-left:0.8rem;">
+    <!-- OPIS -->
+    <p style="
+      font-size: 0.7rem;
+      color: #777;
+      margin: 0.4rem 0 0.6rem 0;
+      padding-left: 0.8rem;
+    ">
       – za miastem, w którym pociąg rozpoczął bieg<br>
       – za miastem wojewódzkim<br>
       – po przekroczeniu granicy państwa
     </p>
 
     <!-- BLOK GŁÓWNY -->
-    <div class="speech-box" style="border:2px solid #ccc; border-radius:18px; padding:1rem;">
-
-      <p><strong>Good morning! / Good afternoon! / Good evening!</strong></p>
+    <div
+      class="speech-box"
+      style="
+        border: 2px solid #ccc;
+        border-radius: 18px;
+        padding: 1rem;
+      ">
 
       <p>
-        <strong>Welcome on board of our</strong> …………… …………… ……………
+        <strong>
+          Good morning! / Good afternoon! / Good evening!
+        </strong>
+      </p>
+
+      <p>
+        <strong>Welcome on board of our</strong>
+        …………… …………… ……………
+
         <em>
-          (podać kategorię: Express Intercity Premium / Express Intercity /
-          Intercity / TLK, numer i nazwę pociągu, jeśli jest)
+          (podać kategorię: Express Intercity Premium /
+          Express Intercity / Intercity / TLK,
+          numer i nazwę pociągu, jeśli jest)
         </em>
-        <strong>train from</strong> ……………
-        <strong>station to</strong> ……………
+
+        <strong>train from</strong>
+        ……………
+
+        <strong>station to</strong>
+        ……………
+
         <strong>station</strong>,
-        <strong>via</strong> ……………
+
+        <strong>via</strong>
+        ……………
+
         <em>
-          (podać jedną lub ew. dwie stacje pośrednie,
+          (podać jedną lub ewentualnie dwie stacje pośrednie,
           definiujące trasę przejazdu)
         </em>.
       </p>
@@ -39,28 +72,42 @@
       </p>
 
       <!-- GRUPY WAGONÓW -->
-      <div class="orange" style="border-radius:14px;">
+      <div
+        class="orange"
+        style="border-radius: 14px;">
+
         <strong>
           The train is running with a group/groups of direct cars to
-          …………… , …………… station/stations
+          ……………, …………… station/stations
         </strong>
+
         <em>
           (podać stację docelową / stacje docelowe każdej grupy wagonów)
         </em>.
       </div>
 
-      <p><strong>Next station</strong> …………… .</p>
+      <p>
+        <strong>Next station</strong>
+        …………… .
+      </p>
 
       <!-- OPÓŹNIENIE -->
-      <p><em>Jeśli pociąg jest opóźniony, dodać:</em></p>
+      <p>
+        <em>Jeśli pociąg jest opóźniony, dodać:</em>
+      </p>
 
-      <div class="green" style="border-radius:14px; padding:1rem;">
+      <div
+        class="green"
+        style="
+          border-radius: 14px;
+          padding: 1rem;
+        ">
 
         <div style="
-          display:flex;
-          flex-wrap:wrap;
-          align-items:baseline;
-          gap:0.2rem;
+          display: flex;
+          flex-wrap: wrap;
+          align-items: baseline;
+          gap: 0.2rem;
         ">
 
           <span>
@@ -74,192 +121,182 @@
             type="button"
             aria-expanded="false"
             style="
-              display:inline-flex !important;
-              width:auto;
-              min-width:0;
-              min-height:0;
-              margin:0;
-              padding:0.08rem 0.4rem;
-              vertical-align:baseline;
-              font-size:0.8rem;
-              font-style:italic;
-              font-weight:500;
-              line-height:1.35;
-              color:#55708d;
-              background:rgba(255,255,255,0.62);
-              border:1px solid rgba(82,112,141,0.2);
-              border-radius:8px;
-              box-shadow:none;
-              cursor:pointer;
+              display: inline-flex !important;
+              width: auto;
+              min-width: 0;
+              min-height: 0;
+              margin: 0;
+              padding: 0.08rem 0.4rem;
+              vertical-align: baseline;
+              font-size: 0.8rem;
+              font-style: italic;
+              font-weight: 500;
+              line-height: 1.35;
+              color: #55708d;
+              background: rgba(255, 255, 255, 0.62);
+              border: 1px solid rgba(82, 112, 141, 0.2);
+              border-radius: 8px;
+              box-shadow: none;
+              cursor: pointer;
             ">
             wybrać z Katalogu
           </button>
 
-          <!-- ROZWIJANY KATALOG PRZYCZYN OPÓŹNIENIA -->
+          <!-- ROZWIJANY KATALOG OPÓŹNIEŃ -->
           <div
             class="accordion-subbody"
             style="
-              flex:0 0 100%;
-              width:100%;
-              margin:0.75rem 0 0.85rem;
-              padding:0.9rem 1rem;
-              background:rgba(255,255,255,0.88);
-              border:1px solid rgba(83,122,74,0.18);
-              border-radius:14px;
-              box-shadow:none;
+              flex: 0 0 100%;
+              width: 100%;
+              margin: 0.75rem 0 0.85rem;
+              padding: 0.9rem 1rem;
+              background: rgba(255, 255, 255, 0.88);
+              border: 1px solid rgba(83, 122, 74, 0.18);
+              border-radius: 14px;
+              box-shadow: none;
             ">
 
             <div style="
-              margin-bottom:0.7rem;
-              font-weight:800;
-              font-size:0.92rem;
-              line-height:1.35;
-              color:#294b2a;
+              margin-bottom: 0.7rem;
+              font-weight: 800;
+              font-size: 0.92rem;
+              line-height: 1.35;
+              color: #294b2a;
             ">
               Najpopularniejsze przyczyny opóźnienia
 
               <span style="
-                font-weight:600;
-                font-size:0.78rem;
-                color:#64748b;
+                font-weight: 600;
+                font-size: 0.78rem;
+                color: #64748b;
               ">
                 (reszta w sekcji 7)
               </span>
             </div>
 
             <div style="
-              display:flex;
-              flex-direction:column;
-              gap:0.48rem;
-              margin:0;
-              color:#1f2937;
+              display: flex;
+              flex-direction: column;
+              gap: 0.48rem;
+              margin: 0;
+              color: #1f2937;
             ">
 
-              <!-- a -->
               <div style="
-                display:grid;
-                grid-template-columns:1.8rem minmax(0,1fr);
-                align-items:start;
-                column-gap:0.2rem;
+                display: grid;
+                grid-template-columns: 1.8rem minmax(0, 1fr);
+                align-items: start;
+                column-gap: 0.2rem;
               ">
-                <span style="font-weight:400;">a)</span>
+                <span style="font-weight: 400;">a)</span>
                 <span>
                   the malfunction of the railway traffic control device
                 </span>
               </div>
 
-              <!-- b -->
               <div style="
-                display:grid;
-                grid-template-columns:1.8rem minmax(0,1fr);
-                align-items:start;
-                column-gap:0.2rem;
+                display: grid;
+                grid-template-columns: 1.8rem minmax(0, 1fr);
+                align-items: start;
+                column-gap: 0.2rem;
               ">
-                <span style="font-weight:400;">b)</span>
+                <span style="font-weight: 400;">b)</span>
                 <span>
                   additional unscheduled stops
                 </span>
               </div>
 
-              <!-- c -->
               <div style="
-                display:grid;
-                grid-template-columns:1.8rem minmax(0,1fr);
-                align-items:start;
-                column-gap:0.2rem;
+                display: grid;
+                grid-template-columns: 1.8rem minmax(0, 1fr);
+                align-items: start;
+                column-gap: 0.2rem;
               ">
-                <span style="font-weight:400;">c)</span>
+                <span style="font-weight: 400;">c)</span>
                 <span>
                   the placement of a large number of passengers
                 </span>
               </div>
 
-              <!-- d -->
               <div style="
-                display:grid;
-                grid-template-columns:1.8rem minmax(0,1fr);
-                align-items:start;
-                column-gap:0.2rem;
+                display: grid;
+                grid-template-columns: 1.8rem minmax(0, 1fr);
+                align-items: start;
+                column-gap: 0.2rem;
               ">
-                <span style="font-weight:400;">d)</span>
+                <span style="font-weight: 400;">d)</span>
                 <span>
                   the awaiting for passengers from another train
                 </span>
               </div>
 
-              <!-- e -->
               <div style="
-                display:grid;
-                grid-template-columns:1.8rem minmax(0,1fr);
-                align-items:start;
-                column-gap:0.2rem;
+                display: grid;
+                grid-template-columns: 1.8rem minmax(0, 1fr);
+                align-items: start;
+                column-gap: 0.2rem;
               ">
-                <span style="font-weight:400;">e)</span>
+                <span style="font-weight: 400;">e)</span>
                 <span>
                   the lack of arrival/departure permission
                 </span>
               </div>
 
-              <!-- f -->
               <div style="
-                display:grid;
-                grid-template-columns:1.8rem minmax(0,1fr);
-                align-items:start;
-                column-gap:0.2rem;
+                display: grid;
+                grid-template-columns: 1.8rem minmax(0, 1fr);
+                align-items: start;
+                column-gap: 0.2rem;
               ">
-                <span style="font-weight:400;">f)</span>
+                <span style="font-weight: 400;">f)</span>
                 <span>
                   the verification of the rolling stock’s technical conditions
                 </span>
               </div>
 
-              <!-- g -->
               <div style="
-                display:grid;
-                grid-template-columns:1.8rem minmax(0,1fr);
-                align-items:start;
-                column-gap:0.2rem;
+                display: grid;
+                grid-template-columns: 1.8rem minmax(0, 1fr);
+                align-items: start;
+                column-gap: 0.2rem;
               ">
-                <span style="font-weight:400;">g)</span>
+                <span style="font-weight: 400;">g)</span>
                 <span>
                   an accident causing an interruption in trains’ running
                 </span>
               </div>
 
-              <!-- h -->
               <div style="
-                display:grid;
-                grid-template-columns:1.8rem minmax(0,1fr);
-                align-items:start;
-                column-gap:0.2rem;
+                display: grid;
+                grid-template-columns: 1.8rem minmax(0, 1fr);
+                align-items: start;
+                column-gap: 0.2rem;
               ">
-                <span style="font-weight:400;">h)</span>
+                <span style="font-weight: 400;">h)</span>
                 <span>
                   the bad weather conditions
                 </span>
               </div>
 
-              <!-- i -->
               <div style="
-                display:grid;
-                grid-template-columns:1.8rem minmax(0,1fr);
-                align-items:start;
-                column-gap:0.2rem;
+                display: grid;
+                grid-template-columns: 1.8rem minmax(0, 1fr);
+                align-items: start;
+                column-gap: 0.2rem;
               ">
-                <span style="font-weight:400;">i)</span>
+                <span style="font-weight: 400;">i)</span>
                 <span>
                   a collision with an animal
                 </span>
               </div>
 
-              <!-- j -->
               <div style="
-                display:grid;
-                grid-template-columns:1.8rem minmax(0,1fr);
-                align-items:start;
-                column-gap:0.2rem;
+                display: grid;
+                grid-template-columns: 1.8rem minmax(0, 1fr);
+                align-items: start;
+                column-gap: 0.2rem;
               ">
-                <span style="font-weight:400;">j)</span>
+                <span style="font-weight: 400;">j)</span>
                 <span>
                   an intervention by law enforcement authorities /
                   a medical intervention /
@@ -267,66 +304,61 @@
                 </span>
               </div>
 
-              <!-- k -->
               <div style="
-                display:grid;
-                grid-template-columns:1.8rem minmax(0,1fr);
-                align-items:start;
-                column-gap:0.2rem;
+                display: grid;
+                grid-template-columns: 1.8rem minmax(0, 1fr);
+                align-items: start;
+                column-gap: 0.2rem;
               ">
-                <span style="font-weight:400;">k)</span>
+                <span style="font-weight: 400;">k)</span>
                 <span>
                   the malfunction of the railway overhead wiring
                 </span>
               </div>
 
-              <!-- l -->
               <div style="
-                display:grid;
-                grid-template-columns:1.8rem minmax(0,1fr);
-                align-items:start;
-                column-gap:0.2rem;
+                display: grid;
+                grid-template-columns: 1.8rem minmax(0, 1fr);
+                align-items: start;
+                column-gap: 0.2rem;
               ">
-                <span style="font-weight:400;">l)</span>
+                <span style="font-weight: 400;">l)</span>
                 <span>
                   the malfunction of elements of the railway infrastructure
                 </span>
               </div>
 
-              <!-- m -->
               <div style="
-                display:grid;
-                grid-template-columns:1.8rem minmax(0,1fr);
-                align-items:start;
-                column-gap:0.2rem;
+                display: grid;
+                grid-template-columns: 1.8rem minmax(0, 1fr);
+                align-items: start;
+                column-gap: 0.2rem;
               ">
-                <span style="font-weight:400;">m)</span>
+                <span style="font-weight: 400;">m)</span>
                 <span>
                   the delayed arrival from abroad
                 </span>
               </div>
 
-              <!-- n -->
               <div style="
-                display:grid;
-                grid-template-columns:1.8rem minmax(0,1fr);
-                align-items:start;
-                column-gap:0.2rem;
+                display: grid;
+                grid-template-columns: 1.8rem minmax(0, 1fr);
+                align-items: start;
+                column-gap: 0.2rem;
               ">
-                <span style="font-weight:400;">n)</span>
+                <span style="font-weight: 400;">n)</span>
                 <span>
                   allowing another train to pass
                 </span>
               </div>
 
-              <!-- o -->
               <div style="
-                display:grid;
-                grid-template-columns:1.8rem minmax(0,1fr);
-                align-items:start;
-                column-gap:0.2rem;
+                display: grid;
+                grid-template-columns: 1.8rem minmax(0, 1fr);
+                align-items: start;
+                column-gap: 0.2rem;
               ">
-                <span style="font-weight:400;">o)</span>
+                <span style="font-weight: 400;">o)</span>
                 <span>
                   the reduced/limited speed of the train
                 </span>
@@ -349,27 +381,35 @@
 
       <!-- BLOK KOŃCOWY -->
       <div style="
-        border:2px solid #ccc;
-        border-radius:18px;
-        padding:1rem;
-        margin-top:1rem;
+        border: 2px solid #ccc;
+        border-radius: 18px;
+        padding: 1rem;
+        margin-top: 1rem;
       ">
+
         <p>
           <strong>
             For your comfort and safety, please read the information provided
             in the passenger cars.
-            The on-board train crew remains at your service throughout the journey.
-            The train crew’s compartment is located in the car number ……… .
+
+            The on-board train crew remains at your service
+            throughout the journey.
+
+            The train crew’s compartment is located
+            in the car number ……… .
           </strong>
         </p>
 
         <p>
           <em>
-            Jeśli w pociągu przewidziany jest bezpłatny poczęstunek, dodać:
+            Jeśli w pociągu przewidziany jest bezpłatny poczęstunek,
+            dodać:
           </em>
         </p>
 
-        <div class="highlighted-info" style="border-radius:12px;">
+        <div
+          class="highlighted-info"
+          style="border-radius: 12px;">
           You will receive snacks during the journey.
         </div>
       </div>
@@ -377,19 +417,40 @@
     </div>
 
     <!-- DODATKOWO ZARZĄDZONE KOMUNIKATY -->
-    <div class="highlighted-info" style="margin-top:1rem;">
+    <div
+      class="highlighted-info"
+      style="margin-top: 1rem;">
       Dodatkowo zarządzone komunikaty.
     </div>
 
-    <!-- GASTRONOMIA – KOSMETYKA JAK W KOMUNIKACIE 1 -->
+    <!-- GASTRONOMIA -->
     <div
       class="accordion-subbody yellow"
-      style="margin-top:0.5rem; border-radius:14px;">
+      style="
+        margin-top: 0.5rem;
+        border-radius: 14px;
+      ">
 
-      <div
-        class="gastronomy-header gastronomy-plus"
+      <!-- CAŁY NAGŁÓWEK JEST KLIKALNY -->
+      <button
+        class="gastronomy-header"
+        type="button"
         data-target="gastronomy-en-2"
-        style="cursor:pointer; color:#000; text-decoration:none;">
+        aria-expanded="false"
+        aria-controls="gastronomy-en-2"
+        style="
+          width: 100%;
+          margin: 0;
+          border: 0;
+          background: transparent;
+          text-align: left;
+          font-family: inherit;
+          color: #000;
+          cursor: pointer;
+          appearance: none;
+          -webkit-appearance: none;
+          -webkit-tap-highlight-color: transparent;
+        ">
 
         <strong>
           We would like to invite you to try the gastronomic service.
@@ -397,18 +458,23 @@
 
         <span
           class="gastronomy-plus"
-          data-target="gastronomy-en-2">
+          aria-hidden="true">
           +
         </span>
-      </div>
+
+      </button>
 
       <div
         id="gastronomy-en-2"
         class="gastronomy-more"
-        style="border-left:none; padding-left:0;">
+        style="
+          border-left: none;
+          padding-left: 0;
+        ">
 
         <p class="gastronomy-comment-out">
-          Jeśli w pociągu znajduje się strefa gastronomiczna, dodać:
+          Jeśli w pociągu znajduje się strefa gastronomiczna,
+          dodać:
         </p>
 
         <div class="gastronomy-card">
@@ -418,17 +484,20 @@
           </div>
 
           <div class="gastronomy-comment-in">
-            Jeśli oferta dostępna jest w skróconej relacji, dodać:
+            Jeśli oferta dostępna jest w skróconej relacji,
+            dodać:
           </div>
 
           <div class="gastronomy-graybox">
-            The gastronomic service will be available until …………… station.
+            The gastronomic service will be available
+            until …………… station.
           </div>
         </div>
 
         <p class="gastronomy-comment-out">
           Jeśli w pociągu nie ma strefy gastronomicznej,
-          ale znajdują się sprawne automaty vendingowe, dodać:
+          ale znajdują się sprawne automaty vendingowe,
+          dodać:
         </p>
 
         <div class="gastronomy-card">
@@ -440,14 +509,17 @@
 
         <p class="gastronomy-comment-out">
           Jeśli w pociągu wyjątkowo nie ma strefy gastronomicznej,
-          ale znajduje się wózek mini-bar lub sprawne automaty vendingowe,
-          dodać:
+          ale znajduje się wózek mini-bar lub sprawne automaty
+          vendingowe, dodać:
         </p>
 
         <div class="gastronomy-card gastronomy-card--dashed">
           <div class="gastronomy-text-strong">
-            Please be informed that there is no dining car available in the train.
+            Please be informed that there is no dining car available
+            in the train.
+
             We apologize for this inconvenience.
+
             Therefore, you may purchase drinks and snacks
             from the mini-bar cart / vending machines
             in car number …… .
@@ -476,6 +548,7 @@
           <div class="gastronomy-text-strong">
             We would like to invite you to purchase drinks and snacks
             from the mini-bar cart.
+
             The service will be available until …………… station.
           </div>
 
@@ -491,14 +564,15 @@
 
         <p class="gastronomy-comment-out">
           Jeśli w pociągu wyjątkowo nie ma oferty gastronomicznej
-          (brak strefy gastronomicznej lub wózka mini-bar,
-          niesprawne automaty vendingowe lub ich brak), dodać:
+          — brak strefy gastronomicznej lub wózka mini-bar,
+          niesprawne automaty vendingowe lub ich brak — dodać:
         </p>
 
         <div class="gastronomy-card gastronomy-card--dashed">
           <div class="gastronomy-text-strong">
             Please be informed that the gastronomic service
             is not available in the train.
+
             We would like to apologize for this inconvenience.
           </div>
         </div>
