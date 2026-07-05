@@ -1,1657 +1,384 @@
-// ========================
-// m.komunikaty — script.js v1.3.6
-// Centralny silnik: ładowanie, PL/EN, akordeony, podsekcje, ulubione, szukanie
-// Poprawka v1.3.6:
-// - Ulubione jako konkretne skróty do nagłówków/podsekcji
-// - Przewijanie do tytułu/pastylki, nie do środka treści
-// - Lista ulubionych generowana automatycznie pod panelem narzędzi
-// ========================
+"use strict";
 
-const loadedUrls = new Set();
-const loadingUrls = new Set();
+const SELECTORS = {
+  loadSlots: "[data-load]",
+  mainHeader: ".accordion-header",
+  mainBody: ".accordion-body",
+  connectionToggle: ".connection-toggle",
+  connectionBody: ".accordion-subbody",
+  gastronomyPlus: ".gastronomy-plus"
+};
 
-const FAVORITES_KEY = "mkomunikaty_favorites_v1";
+/*
+  Usuwa pozostałości po mechanizmie ulubionych,
+  gdyby stare gwiazdki nadal znajdowały się
+  w którejś podstronie HTML.
+*/
+function removeLegacyFavorites(root = document) {
+  root.querySelectorAll([
+    ".favorite-star",
+    ".subsection-favorite-star",
+    ".favorite-shortcut",
+    ".favorites-list",
+    ".favorites-toggle",
+    ".tools-panel",
+    ".search-box",
+    ".search-input",
+    "[data-favorite]",
+    "[data-fav-id]"
+  ].join(",")).forEach(element => {
+    element.remove();
+  });
 
-const tabPL = document.getElementById("tabPL");
-const tabEN = document.getElementById("tabEN");
-const sectionPL = document.getElementById("sectionPL");
-const sectionEN = document.getElementById("sectionEN");
-const langFab = document.getElementById("langFab");
-const searchInput = document.getElementById("searchInput");
-const favoritesToggle = document.getElementById("favoritesToggle");
-const emptyState = document.getElementById("emptyState");
-const topbarLogo = document.querySelector(".topbar__logo");
+  root.querySelectorAll(".subsection-fav-row, .summary-fav-row").forEach(element => {
+    element.classList.remove(
+      "subsection-fav-row",
+      "summary-fav-row"
+    );
 
-let langSwitchBusy = false;
-let showFavoritesOnly = false;
+    element.style.removeProperty("padding-right");
+  });
 
-let lastMainAccordionState = null;
-let lastDetailsState = null;
-let lastSubPanelState = null;
+  /*
+    Usuwa samodzielne znaki gwiazdek,
+    ale nie ingeruje w normalny tekst komunikatów.
+  */
+  root.querySelectorAll("button, span").forEach(element => {
+    const text = element.textContent.trim();
 
-let favoritesListPanel = null;
+    if (
+      (text === "☆" || text === "★") &&
+      element.children.length === 0
+    ) {
+      element.remove();
+    }
+  });
+}
 
-// ========================
-// ŁADOWANIE SEKCJI
-// ========================
+/*
+  Ładowanie pojedynczej podstrony.
+*/
+async function loadSection(slot) {
+  if (slot.dataset.loaded === "true") {
+    return;
+  }
 
-async function loadOne(el) {
-  const url = el.getAttribute("data-load");
-  if (!url) return;
-
-  if (el.dataset.loaded === "true") return;
-  if (loadingUrls.has(url)) return;
-
-  loadingUrls.add(url);
-  el.dataset.loading = "true";
+  const url = slot.dataset.load;
 
   try {
-    const response = await fetch(url, { cache: "no-cache" });
+    const response = await fetch(url, {
+      cache: "no-cache"
+    });
 
     if (!response.ok) {
-      throw new Error("HTTP " + response.status);
+      throw new Error(`HTTP ${response.status}`);
     }
 
-    el.innerHTML = await response.text();
-    el.dataset.loaded = "true";
-    loadedUrls.add(url);
+    slot.innerHTML = await response.text();
+    slot.dataset.loaded = "true";
 
-    enhanceLoadedSlot(el);
-  } catch (e) {
-    el.innerHTML = `<p class="load-error">Błąd ładowania: ${url}</p>`;
-    console.warn("Błąd ładowania sekcji:", url, e);
-  } finally {
-    el.dataset.loading = "false";
-    loadingUrls.delete(url);
+    removeLegacyFavorites(slot);
+  } catch (error) {
+    console.error(`Błąd ładowania ${url}:`, error);
+
+    slot.innerHTML = `
+      <p class="load-error">
+        Nie udało się wczytać komunikatu.
+      </p>
+    `;
   }
 }
 
-async function loadElements(elements) {
-  const tasks = Array.from(elements).map((el) => loadOne(el));
-  await Promise.allSettled(tasks);
-}
-
+/*
+  Równoległe ładowanie wszystkich komunikatów.
+*/
 async function loadSections() {
-  const activeSection = document.querySelector(".section.active");
-  const inactiveSections = Array.from(document.querySelectorAll(".section:not(.active)"));
+  const slots = [
+    ...document.querySelectorAll(SELECTORS.loadSlots)
+  ];
 
-  if (activeSection) {
-    await loadElements(activeSection.querySelectorAll("[data-load]"));
-  }
+  await Promise.all(
+    slots.map(loadSection)
+  );
 
-  if ("requestIdleCallback" in window) {
-    requestIdleCallback(() => {
-      inactiveSections.forEach((section) => {
-        loadElements(section.querySelectorAll("[data-load]"));
-      });
-    });
-  } else {
-    setTimeout(() => {
-      inactiveSections.forEach((section) => {
-        loadElements(section.querySelectorAll("[data-load]"));
-      });
-    }, 400);
-  }
+  removeLegacyFavorites();
 }
 
-// ========================
-// JĘZYK
-// ========================
+/*
+  Zamknięcie innych głównych akordeonów.
+*/
+function closeOtherMainAccordions(currentBody) {
+  document.querySelectorAll(SELECTORS.mainBody).forEach(body => {
+    if (body !== currentBody) {
+      body.classList.remove("active");
 
-function getActiveLang() {
-  return sectionEN && sectionEN.classList.contains("active") ? "EN" : "PL";
-}
+      const previousHeader = body.previousElementSibling;
 
-function getActiveSection() {
-  return getActiveLang() === "PL" ? sectionPL : sectionEN;
-}
-
-function updateLangFabLabel() {
-  if (!langFab) return;
-  langFab.textContent = getActiveLang() === "PL" ? "EN" : "PL";
-}
-
-function applyLangVisualState(lang) {
-  const isPL = lang === "PL";
-
-  if (tabPL) {
-    tabPL.classList.toggle("active", isPL);
-    tabPL.setAttribute("aria-selected", isPL ? "true" : "false");
-  }
-
-  if (tabEN) {
-    tabEN.classList.toggle("active", !isPL);
-    tabEN.setAttribute("aria-selected", !isPL ? "true" : "false");
-  }
-
-  if (sectionPL) sectionPL.classList.toggle("active", isPL);
-  if (sectionEN) sectionEN.classList.toggle("active", !isPL);
-
-  document.documentElement.lang = isPL ? "pl" : "en";
-
-  updateLangFabLabel();
-}
-
-async function setLangReady(lang) {
-  applyLangVisualState(lang);
-
-  await loadSections();
-
-  const activeSection = lang === "PL" ? sectionPL : sectionEN;
-
-  for (let i = 0; i < 100; i++) {
-    if (activeSection && activeSection.querySelector(".accordion-header")) return;
-    await sleep(40);
-  }
-}
-
-async function switchLanguagePreservingPosition(nextLang) {
-  if (langSwitchBusy) return;
-
-  langSwitchBusy = true;
-
-  if (langFab) {
-    langFab.disabled = true;
-    langFab.style.opacity = "0.72";
-  }
-
-  const state = captureViewportState();
-
-  await setLangReady(nextLang);
-  restoreOpenStateAfterLangSwitch(state);
-  applyFilters();
-
-  await doubleFrame();
-  restoreViewportState(state);
-
-  if (langFab) {
-    langFab.disabled = false;
-    langFab.style.opacity = "";
-  }
-
-  langSwitchBusy = false;
-}
-
-// ========================
-// POMOCNICZE
-// ========================
-
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function doubleFrame() {
-  return new Promise((resolve) => {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(resolve);
-    });
-  });
-}
-
-function normalizeText(text) {
-  return (text || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[–—]/g, "-")
-    .replace(/[()]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function getHeaderKey(text) {
-  const t = (text || "").trim();
-  const m = t.match(/^([0-9]+\.|[A-Z][0-9]+\.|B[0-9]+\.|C[0-9]+\.)/i);
-  return m ? m[1].toUpperCase() : null;
-}
-
-function cleanVisibleLabel(text) {
-  return (text || "")
-    .replace(/[★☆＋+]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function getTextWithoutControls(el) {
-  if (!el) return "";
-
-  const clone = el.cloneNode(true);
-
-  clone.querySelectorAll(
-    ".favorite-star, .gastronomy-plus, script, style"
-  ).forEach((node) => node.remove());
-
-  return cleanVisibleLabel(clone.textContent || "");
-}
-
-function getHeaderTextWithoutFavorite(header) {
-  return getTextWithoutControls(header);
-}
-
-function getSummaryTextWithoutFavorite(summary) {
-  return getTextWithoutControls(summary);
-}
-
-function getAccordionBodyFromHeader(header) {
-  if (!header) return null;
-
-  if (
-    header.nextElementSibling &&
-    header.nextElementSibling.classList.contains("accordion-body")
-  ) {
-    return header.nextElementSibling;
-  }
-
-  const row = header.closest(".accordion-title-row");
-  if (
-    row &&
-    row.nextElementSibling &&
-    row.nextElementSibling.classList.contains("accordion-body")
-  ) {
-    return row.nextElementSibling;
-  }
-
-  return null;
-}
-
-function findAccordionHeaderFromBody(body) {
-  if (!body) return null;
-
-  let prev = body.previousElementSibling;
-
-  while (prev) {
-    if (prev.classList && prev.classList.contains("accordion-header")) return prev;
-
-    if (prev.classList && prev.classList.contains("accordion-title-row")) {
-      const header = prev.querySelector(".accordion-header");
-      if (header) return header;
+      if (previousHeader) {
+        previousHeader.setAttribute(
+          "aria-expanded",
+          "false"
+        );
+      }
     }
+  });
+}
 
-    prev = prev.previousElementSibling;
+/*
+  Główny akordeon.
+*/
+function toggleMainAccordion(header) {
+  const body = header.nextElementSibling;
+
+  if (!body || !body.matches(SELECTORS.mainBody)) {
+    return;
   }
 
-  return null;
-}
+  const willOpen = !body.classList.contains("active");
 
-function getHeaderIndex(section, header) {
-  if (!section || !header) return -1;
-  const headers = Array.from(section.querySelectorAll(".accordion-header"));
-  return headers.indexOf(header);
-}
+  closeOtherMainAccordions(body);
 
-function findHeaderByKeyOrIndex(section, key, index) {
-  if (!section) return null;
+  body.classList.toggle("active", willOpen);
 
-  const headers = Array.from(section.querySelectorAll(".accordion-header"));
-
-  if (key) {
-    const byKey = headers.find((h) => getHeaderKey(getHeaderTextWithoutFavorite(h)) === key);
-    if (byKey) return byKey;
-  }
-
-  if (typeof index === "number" && index >= 0 && headers[index]) {
-    return headers[index];
-  }
-
-  return headers[0] || null;
-}
-
-function getAnnouncementIdFromSlot(slot) {
-  if (!slot) return "unknown";
-  return slot.dataset.announcement || slot.getAttribute("data-load") || "unknown";
-}
-
-function clearLastOpenState() {
-  lastMainAccordionState = null;
-  lastDetailsState = null;
-  lastSubPanelState = null;
-}
-
-function scrollToElementTitle(el, block = "center") {
-  if (!el) return;
-
-  el.scrollIntoView({
-    behavior: "smooth",
-    block
-  });
-}
-
-// ========================
-// ZAMYKANIE / HOME
-// ========================
-
-function closeAllAccordions(root = document) {
-  root.querySelectorAll(".accordion-body.active").forEach((body) => {
-    body.classList.remove("active");
-  });
-
-  root.querySelectorAll(".accordion-subbody.active").forEach((body) => {
-    body.classList.remove("active");
-  });
-
-  root.querySelectorAll(".connection-toggle.active").forEach((toggle) => {
-    toggle.classList.remove("active");
-  });
-
-  root.querySelectorAll(".gastronomy-more.active").forEach((panel) => {
-    panel.classList.remove("active");
-    panel.style.display = "none";
-  });
-
-  root.querySelectorAll(".gastronomy-plus.active").forEach((plus) => {
-    plus.classList.remove("active");
-  });
-
-  root.querySelectorAll("details[open]").forEach((details) => {
-    details.open = false;
-  });
-
-  clearLastOpenState();
-}
-
-function resetToolsToHome() {
-  if (searchInput) {
-    searchInput.value = "";
-  }
-
-  showFavoritesOnly = false;
-
-  if (favoritesToggle) {
-    favoritesToggle.classList.remove("active");
-    favoritesToggle.setAttribute("aria-pressed", "false");
-    favoritesToggle.textContent = "☆ Ulubione";
-  }
-
-  renderFavoritesList();
-  applyFilters();
-}
-
-function goHome() {
-  resetToolsToHome();
-  closeAllAccordions(document);
-
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth"
-  });
-}
-
-if (topbarLogo) {
-  topbarLogo.style.cursor = "pointer";
-  topbarLogo.setAttribute("title", "Wróć na początek");
-  topbarLogo.addEventListener("click", (e) => {
-    e.preventDefault();
-    goHome();
-  });
-}
-
-// ========================
-// ZAPAMIĘTYWANIE STANU
-// ========================
-
-function rememberMainAccordion(header) {
-  if (!header) return;
-
-  const activeSection = getActiveSection();
-  const text = getHeaderTextWithoutFavorite(header);
-
-  lastMainAccordionState = {
-    lang: getActiveLang(),
-    key: getHeaderKey(text),
-    index: getHeaderIndex(activeSection, header),
-    text: normalizeText(text)
-  };
-}
-
-function rememberDetails(details) {
-  if (!details) return;
-
-  const body = details.closest(".accordion-body");
-  const header = findAccordionHeaderFromBody(body);
-
-  if (header) rememberMainAccordion(header);
-
-  const allDetails = body ? Array.from(body.querySelectorAll("details")) : [];
-  const detailsIndex = allDetails.indexOf(details);
-
-  const group =
-    details.closest(".k6-group") ||
-    details.closest(".k7-group") ||
-    details.parentElement;
-
-  const groupDetails = group ? Array.from(group.querySelectorAll("details")) : allDetails;
-  const groupIndex = groupDetails.indexOf(details);
-
-  const summary = details.querySelector("summary");
-  const summaryText = getSummaryTextWithoutFavorite(summary);
-
-  lastDetailsState = {
-    lang: getActiveLang(),
-    id: details.id || null,
-    detailsIndex,
-    groupIndex,
-    summaryKey: getHeaderKey(summaryText),
-    summaryText: normalizeText(summaryText)
-  };
-
-  lastSubPanelState = null;
-}
-
-function rememberSubPanel(panel, triggerEl) {
-  if (!panel) return;
-
-  const body = panel.closest(".accordion-body") || triggerEl?.closest(".accordion-body");
-  const header = findAccordionHeaderFromBody(body);
-
-  if (header) rememberMainAccordion(header);
-
-  const panels = body ? Array.from(body.querySelectorAll(".gastronomy-more, .accordion-subbody")) : [];
-  const panelIndex = panels.indexOf(panel);
-
-  lastSubPanelState = {
-    lang: getActiveLang(),
-    id: panel.id || null,
-    panelIndex
-  };
-
-  lastDetailsState = null;
-}
-
-// ========================
-// ULUBIONE
-// ========================
-
-function readFavorites() {
-  try {
-    const data = JSON.parse(localStorage.getItem(FAVORITES_KEY) || "[]");
-    return Array.isArray(data) ? new Set(data) : new Set();
-  } catch {
-    return new Set();
-  }
-}
-
-function writeFavorites(set) {
-  try {
-    localStorage.setItem(FAVORITES_KEY, JSON.stringify(Array.from(set)));
-  } catch {}
-}
-
-function toggleFavorite(id) {
-  if (!id) return;
-
-  const favs = readFavorites();
-
-  if (favs.has(id)) {
-    favs.delete(id);
-  } else {
-    favs.add(id);
-  }
-
-  writeFavorites(favs);
-  updateFavoriteStars();
-  renderFavoritesList();
-  applyFilters();
-}
-
-function updateFavoriteStars() {
-  const favs = readFavorites();
-
-  document.querySelectorAll(".favorite-star[data-fav-id]").forEach((star) => {
-    const id = star.dataset.favId;
-    const active = favs.has(id);
-
-    star.classList.toggle("active", active);
-    star.textContent = active ? "★" : "☆";
-    star.setAttribute("aria-label", active ? "Usuń z ulubionych" : "Dodaj do ulubionych");
-    star.setAttribute("title", active ? "Usuń z ulubionych" : "Dodaj do ulubionych");
-  });
-}
-
-function createFavoriteStar(favId) {
-  const star = document.createElement("span");
-  star.className = "favorite-star";
-  star.dataset.favId = favId;
-  star.setAttribute("role", "button");
-  star.setAttribute("tabindex", "0");
-  star.setAttribute("aria-label", "Dodaj do ulubionych");
-  star.setAttribute("title", "Dodaj do ulubionych");
-  star.textContent = "☆";
-  return star;
-}
-
-function slotHasFavorite(slot) {
-  if (!slot) return false;
-
-  const favs = readFavorites();
-  const stars = Array.from(slot.querySelectorAll(".favorite-star[data-fav-id]"));
-
-  return stars.some((star) => favs.has(star.dataset.favId));
-}
-
-function getMainHeaderForStar(star) {
-  const slot = star?.closest(".load-slot");
-  if (!slot) return null;
-  return slot.querySelector(".accordion-header");
-}
-
-function getMainLabelForStar(star) {
-  const header = getMainHeaderForStar(star);
-  return getHeaderTextWithoutFavorite(header);
-}
-
-function getPanelTriggerFromPanel(panel, body) {
-  if (!panel || !panel.id || !body) return null;
-  return body.querySelector(`.gastronomy-plus[data-target="${CSS.escape(panel.id)}"]`);
-}
-
-function getPanelTitleElement(panel, body) {
-  const trigger = getPanelTriggerFromPanel(panel, body);
-  if (!trigger) return panel;
-
-  return (
-    trigger.closest(".subsection-fav-row") ||
-    trigger.closest(".gastronomy-header") ||
-    trigger.closest(".k7-pill") ||
-    trigger.closest(".k8-pill") ||
-    trigger.closest(".k9-pill") ||
-    trigger.closest(".misc-pill") ||
-    trigger.parentElement ||
-    trigger
+  header.setAttribute(
+    "aria-expanded",
+    String(willOpen)
   );
 }
 
-function getFavoriteTargetLabel(star) {
-  if (!star) return "";
+/*
+  Podakordeon przesiadek na lotniska.
+*/
+function toggleConnectionAccordion(toggle) {
+  const body = toggle.nextElementSibling;
 
-  const favType = star.dataset.favType;
-
-  if (favType === "main") {
-    return getMainLabelForStar(star);
+  if (!body || !body.matches(SELECTORS.connectionBody)) {
+    return;
   }
 
-  if (favType === "details") {
-    const summary = star.closest("summary");
-    return getSummaryTextWithoutFavorite(summary);
-  }
+  const willOpen = !toggle.classList.contains("active");
 
-  if (favType === "connection") {
-    const toggle = star.closest(".connection-toggle");
-    return getTextWithoutControls(toggle);
-  }
+  document.querySelectorAll(
+    SELECTORS.connectionToggle
+  ).forEach(otherToggle => {
+    if (otherToggle !== toggle) {
+      otherToggle.classList.remove("active");
 
-  if (favType === "panel") {
-    const slot = star.closest(".load-slot");
-    const body = slot?.querySelector(".accordion-body");
-    const panelId = star.dataset.panelId;
-    const panelIndex = Number(star.dataset.panelIndex);
-
-    let panel = null;
-
-    if (body && panelId) {
-      panel = body.querySelector(`#${CSS.escape(panelId)}`);
+      otherToggle.setAttribute(
+        "aria-expanded",
+        "false"
+      );
     }
+  });
 
-    if (!panel && body && Number.isFinite(panelIndex)) {
-      panel = Array.from(body.querySelectorAll(".gastronomy-more"))[panelIndex] || null;
+  document.querySelectorAll(
+    SELECTORS.connectionBody
+  ).forEach(otherBody => {
+    if (otherBody !== body) {
+      otherBody.classList.remove("active");
     }
+  });
 
-    const titleEl = panel ? getPanelTitleElement(panel, body) : star.closest(".subsection-fav-row");
-    return getTextWithoutControls(titleEl);
-  }
+  toggle.classList.toggle("active", willOpen);
+  body.classList.toggle("active", willOpen);
 
-  return "";
+  toggle.setAttribute(
+    "aria-expanded",
+    String(willOpen)
+  );
 }
 
-function getFavoriteDisplayLabel(star) {
-  const favType = star?.dataset.favType || "";
-  const mainLabel = cleanVisibleLabel(getMainLabelForStar(star));
-  const targetLabel = cleanVisibleLabel(getFavoriteTargetLabel(star));
+/*
+  Rozwijanie sekcji gastronomicznych plusikiem.
+*/
+function toggleGastronomy(plus) {
+  const targetId = plus.dataset.target;
 
-  if (!mainLabel && !targetLabel) return "Ulubiony komunikat";
-
-  if (favType === "main") {
-    return mainLabel || targetLabel;
+  if (!targetId) {
+    return;
   }
 
-  if (!mainLabel) return targetLabel;
-  if (!targetLabel) return mainLabel;
+  const block = document.getElementById(targetId);
 
-  return `${mainLabel} → ${targetLabel}`;
+  if (!block) {
+    return;
+  }
+
+  const willOpen = !block.classList.contains("active");
+
+  block.classList.toggle("active", willOpen);
+  block.style.display = willOpen ? "block" : "none";
+
+  plus.setAttribute(
+    "aria-expanded",
+    String(willOpen)
+  );
 }
 
-function ensureFavoritesListPanel() {
-  if (favoritesListPanel && document.body.contains(favoritesListPanel)) {
-    return favoritesListPanel;
-  }
+/*
+  Przełączanie języka.
+*/
+function setLanguage(
+  language,
+  { scrollToTop = false } = {}
+) {
+  const isPolish = language === "pl";
 
-  favoritesListPanel = document.getElementById("favoritesList");
+  const tabPL = document.getElementById("tabPL");
+  const tabEN = document.getElementById("tabEN");
+  const sectionPL = document.getElementById("sectionPL");
+  const sectionEN = document.getElementById("sectionEN");
+  const langFab = document.getElementById("langFab");
 
-  if (!favoritesListPanel) {
-    favoritesListPanel = document.createElement("div");
-    favoritesListPanel.id = "favoritesList";
-    favoritesListPanel.className = "favorites-list";
-    favoritesListPanel.hidden = true;
+  tabPL.classList.toggle("active", isPolish);
+  tabEN.classList.toggle("active", !isPolish);
 
-    const toolsPanel = document.querySelector(".tools-panel");
-    const accordionContainer = document.querySelector(".accordion-container");
+  tabPL.setAttribute(
+    "aria-selected",
+    String(isPolish)
+  );
 
-    if (toolsPanel && toolsPanel.parentElement) {
-      toolsPanel.insertAdjacentElement("afterend", favoritesListPanel);
-    } else if (accordionContainer && accordionContainer.parentElement) {
-      accordionContainer.insertAdjacentElement("beforebegin", favoritesListPanel);
-    } else {
-      document.body.prepend(favoritesListPanel);
-    }
-  }
+  tabEN.setAttribute(
+    "aria-selected",
+    String(!isPolish)
+  );
 
-  return favoritesListPanel;
-}
+  tabPL.tabIndex = isPolish ? 0 : -1;
+  tabEN.tabIndex = isPolish ? -1 : 0;
 
-function getActiveFavoriteStars() {
-  const activeSection = getActiveSection();
-  if (!activeSection) return [];
+  sectionPL.classList.toggle("active", isPolish);
+  sectionEN.classList.toggle("active", !isPolish);
 
-  const favs = readFavorites();
-  const seen = new Set();
+  sectionPL.hidden = !isPolish;
+  sectionEN.hidden = isPolish;
 
-  return Array.from(activeSection.querySelectorAll(".favorite-star[data-fav-id]"))
-    .filter((star) => {
-      const id = star.dataset.favId;
-      if (!id || !favs.has(id) || seen.has(id)) return false;
+  document.documentElement.lang = isPolish
+    ? "pl"
+    : "en";
 
-      const slot = star.closest(".load-slot");
-      if (!slot || slot.dataset.loaded !== "true") return false;
+  langFab.textContent = isPolish
+    ? "EN"
+    : "PL";
 
-      seen.add(id);
-      return true;
+  langFab.setAttribute(
+    "aria-label",
+    isPolish
+      ? "Switch to English"
+      : "Przełącz na język polski"
+  );
+
+  try {
+    localStorage.setItem(
+      "komunikaty-language",
+      language
+    );
+  } catch {}
+
+  if (scrollToTop) {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
     });
-}
-
-function renderFavoritesList() {
-  const panel = ensureFavoritesListPanel();
-
-  if (!showFavoritesOnly) {
-    panel.hidden = true;
-    panel.innerHTML = "";
-    return;
   }
-
-  const stars = getActiveFavoriteStars();
-
-  if (!stars.length) {
-    panel.hidden = false;
-    panel.innerHTML = `
-      <div class="favorites-list__empty">
-        Brak ulubionych w tej wersji językowej.
-      </div>
-    `;
-    return;
-  }
-
-  const items = stars.map((star) => {
-    const id = star.dataset.favId;
-    const label = getFavoriteDisplayLabel(star);
-
-    return `
-      <button class="favorite-shortcut" type="button" data-fav-id="${escapeHtml(id)}">
-        <span class="favorite-shortcut__star">★</span>
-        <span class="favorite-shortcut__label">${escapeHtml(label)}</span>
-      </button>
-    `;
-  });
-
-  panel.hidden = false;
-  panel.innerHTML = `
-    <div class="favorites-list__title">Ulubione skróty</div>
-    <div class="favorites-list__items">
-      ${items.join("")}
-    </div>
-  `;
 }
 
-function escapeHtml(text) {
-  return String(text || "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
+/*
+  Obsługa kliknięć.
+*/
+function bindInterface() {
+  document.addEventListener("click", event => {
+    const header = event.target.closest(
+      SELECTORS.mainHeader
+    );
 
-document.addEventListener("click", function (e) {
-  const star = e.target.closest(".favorite-star[data-fav-id]");
-  if (!star) return;
-
-  e.preventDefault();
-  e.stopPropagation();
-
-  toggleFavorite(star.dataset.favId);
-});
-
-document.addEventListener("keydown", function (e) {
-  const star = e.target.closest?.(".favorite-star[data-fav-id]");
-  if (!star) return;
-
-  if (e.key !== "Enter" && e.key !== " ") return;
-
-  e.preventDefault();
-  e.stopPropagation();
-
-  toggleFavorite(star.dataset.favId);
-});
-
-document.addEventListener("click", async function (e) {
-  const shortcut = e.target.closest(".favorite-shortcut[data-fav-id]");
-  if (!shortcut) return;
-
-  e.preventDefault();
-
-  await openFavoriteById(shortcut.dataset.favId);
-});
-
-// ========================
-// ULEPSZANIE ZAŁADOWANYCH KOMUNIKATÓW
-// ========================
-
-function enhanceLoadedSlot(slot) {
-  if (!slot || slot.dataset.enhanced === "true") return;
-
-  const announcementId = getAnnouncementIdFromSlot(slot);
-
-  enhanceMainHeaders(slot, announcementId);
-  enhanceDetails(slot, announcementId);
-  enhanceGastronomyPanels(slot, announcementId);
-  enhanceConnectionToggles(slot, announcementId);
-
-  slot.dataset.enhanced = "true";
-
-  updateFavoriteStars();
-  renderFavoritesList();
-  applyFilters();
-}
-
-function enhanceMainHeaders(slot, announcementId) {
-  const headers = Array.from(slot.querySelectorAll(".accordion-header"));
-
-  headers.forEach((header, index) => {
-    if (header.dataset.enhanced === "true") return;
-
-    const favId = `ann:${announcementId}:main:${index}`;
-    const star = createFavoriteStar(favId);
-
-    star.dataset.favType = "main";
-    star.dataset.headerIndex = String(index);
-
-    header.appendChild(star);
-    header.dataset.enhanced = "true";
-    header.dataset.favId = favId;
-  });
-}
-
-function enhanceDetails(slot, announcementId) {
-  const detailsList = Array.from(slot.querySelectorAll("details"));
-
-  detailsList.forEach((details, index) => {
-    const summary = details.querySelector("summary");
-    if (!summary || summary.dataset.enhanced === "true") return;
-
-    const favId = `ann:${announcementId}:details:${index}`;
-    const star = createFavoriteStar(favId);
-
-    star.dataset.favType = "details";
-    star.dataset.detailsIndex = String(index);
-
-    summary.appendChild(star);
-    summary.classList.add("summary-fav-row");
-
-    summary.dataset.enhanced = "true";
-    summary.dataset.favId = favId;
-  });
-}
-
-function enhanceGastronomyPanels(slot, announcementId) {
-  const panels = Array.from(slot.querySelectorAll(".gastronomy-more"));
-
-  panels.forEach((panel, index) => {
-    if (panel.dataset.favEnhanced === "true") return;
-
-    const id = panel.id;
-    if (!id) return;
-
-    const trigger = slot.querySelector(`.gastronomy-plus[data-target="${CSS.escape(id)}"]`);
-    if (!trigger) return;
-
-    const favId = `ann:${announcementId}:panel:${index}`;
-    const star = createFavoriteStar(favId);
-
-    star.classList.add("favorite-star--small");
-    star.classList.add("subsection-favorite-star");
-
-    star.dataset.favType = "panel";
-    star.dataset.panelId = id;
-    star.dataset.panelIndex = String(index);
-
-    const row =
-      trigger.closest(".gastronomy-header") ||
-      trigger.closest(".k7-pill") ||
-      trigger.closest(".k8-pill") ||
-      trigger.closest(".k9-pill") ||
-      trigger.closest(".misc-pill") ||
-      trigger.parentElement;
-
-    if (row) {
-      row.classList.add("subsection-fav-row");
-      row.appendChild(star);
-    } else {
-      trigger.insertAdjacentElement("beforebegin", star);
-    }
-
-    panel.dataset.favEnhanced = "true";
-    panel.dataset.favId = favId;
-    panel.dataset.panelIndex = String(index);
-
-    trigger.dataset.favId = favId;
-    trigger.dataset.panelIndex = String(index);
-  });
-}
-
-function enhanceConnectionToggles(slot, announcementId) {
-  const toggles = Array.from(slot.querySelectorAll(".connection-toggle"));
-
-  toggles.forEach((toggle, index) => {
-    if (toggle.dataset.enhanced === "true") return;
-
-    const favId = `ann:${announcementId}:connection:${index}`;
-    const star = createFavoriteStar(favId);
-
-    star.dataset.favType = "connection";
-    star.dataset.connectionIndex = String(index);
-
-    toggle.appendChild(star);
-    toggle.dataset.enhanced = "true";
-    toggle.dataset.favId = favId;
-  });
-}
-
-// ========================
-// WYSZUKIWANIE I FILTRY
-// ========================
-
-function getSearchQuery() {
-  return normalizeText(searchInput ? searchInput.value : "");
-}
-
-function slotMatchesSearch(slot, query) {
-  if (!query) return true;
-
-  const text = normalizeText(slot.textContent || "");
-  return text.includes(query);
-}
-
-function applyFilters() {
-  const activeSection = getActiveSection();
-  if (!activeSection) return;
-
-  const query = getSearchQuery();
-  const slots = Array.from(activeSection.querySelectorAll(".load-slot"));
-
-  let visibleCount = 0;
-
-  slots.forEach((slot) => {
-    const loaded = slot.dataset.loaded === "true";
-
-    if (!loaded) {
-      slot.hidden = false;
-      visibleCount++;
+    if (header) {
+      toggleMainAccordion(header);
       return;
     }
 
-    const matchesSearch = slotMatchesSearch(slot, query);
-    const matchesFavorite = !showFavoritesOnly || slotHasFavorite(slot);
+    const connection = event.target.closest(
+      SELECTORS.connectionToggle
+    );
 
-    const visible = matchesSearch && matchesFavorite;
+    if (connection) {
+      toggleConnectionAccordion(connection);
+      return;
+    }
 
-    slot.hidden = !visible;
+    const plus = event.target.closest(
+      SELECTORS.gastronomyPlus
+    );
 
-    if (visible) visibleCount++;
+    if (plus) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      toggleGastronomy(plus);
+    }
   });
 
-  if (emptyState) {
-    emptyState.hidden = visibleCount > 0;
-  }
+  document.getElementById("tabPL").addEventListener(
+    "click",
+    () => setLanguage("pl")
+  );
 
-  renderFavoritesList();
-}
+  document.getElementById("tabEN").addEventListener(
+    "click",
+    () => setLanguage("en")
+  );
 
-// ========================
-// OTWIERANIE ULUBIONEGO PODKOMUNIKATU
-// ========================
+  document.getElementById("langFab").addEventListener(
+    "click",
+    () => {
+      const polishSectionActive = document
+        .getElementById("sectionPL")
+        .classList
+        .contains("active");
 
-function openMainForSlot(slot) {
-  if (!slot) return null;
+      const nextLanguage = polishSectionActive
+        ? "en"
+        : "pl";
 
-  const header = slot.querySelector(".accordion-header");
-  if (!header) return null;
-
-  const body = getAccordionBodyFromHeader(header);
-  if (!body) return null;
-
-  const activeSection = getActiveSection();
-
-  activeSection.querySelectorAll(".accordion-body").forEach((b) => {
-    if (b !== body) b.classList.remove("active");
-  });
-
-  body.classList.add("active");
-  rememberMainAccordion(header);
-
-  return body;
-}
-
-function openPanelByFavoriteStar(star) {
-  if (!star) return null;
-
-  const slot = star.closest(".load-slot");
-  if (!slot) return null;
-
-  const body = openMainForSlot(slot);
-  if (!body) return null;
-
-  const favType = star.dataset.favType;
-
-  if (favType === "panel") {
-    const panelId = star.dataset.panelId;
-    const panelIndex = Number(star.dataset.panelIndex);
-
-    let panel = null;
-
-    if (panelId) {
-      panel = body.querySelector(`#${CSS.escape(panelId)}`);
-    }
-
-    if (!panel && Number.isFinite(panelIndex)) {
-      panel = Array.from(body.querySelectorAll(".gastronomy-more"))[panelIndex] || null;
-    }
-
-    if (!panel) return body;
-
-    body.querySelectorAll(".gastronomy-more").forEach((p) => {
-      p.classList.remove("active");
-      p.style.display = "none";
-    });
-
-    body.querySelectorAll(".gastronomy-plus").forEach((p) => {
-      p.classList.remove("active");
-    });
-
-    panel.classList.add("active");
-    panel.style.display = "block";
-
-    if (panel.id) {
-      body
-        .querySelectorAll(`.gastronomy-plus[data-target="${CSS.escape(panel.id)}"]`)
-        .forEach((trigger) => {
-          trigger.classList.add("active");
-        });
-    }
-
-    rememberSubPanel(panel, null);
-
-    return getPanelTitleElement(panel, body);
-  }
-
-  if (favType === "details") {
-    const detailsIndex = Number(star.dataset.detailsIndex);
-    const details = Number.isFinite(detailsIndex)
-      ? Array.from(body.querySelectorAll("details"))[detailsIndex]
-      : star.closest("details");
-
-    if (!details) return body;
-
-    const group =
-      details.closest(".k6-group") ||
-      details.closest(".k7-group") ||
-      details.parentElement;
-
-    if (group) {
-      group.querySelectorAll("details[open]").forEach((d) => {
-        if (d !== details) d.open = false;
+      setLanguage(nextLanguage, {
+        scrollToTop: true
       });
     }
+  );
 
-    details.open = true;
-    rememberDetails(details);
-
-    return details.querySelector("summary") || details;
-  }
-
-  if (favType === "connection") {
-    const connectionIndex = Number(star.dataset.connectionIndex);
-    const toggle = Number.isFinite(connectionIndex)
-      ? Array.from(body.querySelectorAll(".connection-toggle"))[connectionIndex]
-      : star.closest(".connection-toggle");
-
-    if (!toggle) return body;
-
-    const subbody = toggle.nextElementSibling;
-
-    body.querySelectorAll(".connection-toggle").forEach((t) => {
-      t.classList.remove("active");
+  document
+    .querySelector(".topbar__logo")
+    ?.addEventListener("click", () => {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
     });
-
-    body.querySelectorAll(".connection-toggle + .accordion-subbody").forEach((p) => {
-      p.classList.remove("active");
-    });
-
-    toggle.classList.add("active");
-
-    if (subbody && subbody.classList.contains("accordion-subbody")) {
-      subbody.classList.add("active");
-      rememberSubPanel(subbody, toggle);
-    }
-
-    return toggle;
-  }
-
-  return slot.querySelector(".accordion-header") || body;
 }
 
-async function openFavoriteById(favId) {
-  if (!favId) return;
+/*
+  Start aplikacji.
+*/
+async function init() {
+  bindInterface();
 
-  const activeSection = getActiveSection();
-  if (!activeSection) return;
+  let savedLanguage = "pl";
+
+  try {
+    const stored = localStorage.getItem(
+      "komunikaty-language"
+    );
+
+    if (stored === "pl" || stored === "en") {
+      savedLanguage = stored;
+    }
+  } catch {}
+
+  setLanguage(savedLanguage);
 
   await loadSections();
-  await doubleFrame();
-
-  const star = activeSection.querySelector(`.favorite-star[data-fav-id="${CSS.escape(favId)}"]`);
-  if (!star) return;
-
-  const target = openPanelByFavoriteStar(star);
-
-  await doubleFrame();
-
-  if (target) {
-    scrollToElementTitle(target, "center");
-  }
 }
 
-async function revealFirstFavoriteInActiveSection() {
-  if (!showFavoritesOnly) return;
-
-  const activeSection = getActiveSection();
-  if (!activeSection) return;
-
-  await doubleFrame();
-
-  const favs = readFavorites();
-
-  const activeFavoriteStars = Array.from(
-    activeSection.querySelectorAll(".favorite-star[data-fav-id]")
-  ).filter((star) => {
-    const slot = star.closest(".load-slot");
-    return slot && !slot.hidden && favs.has(star.dataset.favId);
-  });
-
-  if (!activeFavoriteStars.length) return;
-
-  const preferred =
-    activeFavoriteStars.find((star) => star.dataset.favType === "panel") ||
-    activeFavoriteStars.find((star) => star.dataset.favType === "details") ||
-    activeFavoriteStars.find((star) => star.dataset.favType === "connection") ||
-    activeFavoriteStars[0];
-
-  const target = openPanelByFavoriteStar(preferred);
-
-  await doubleFrame();
-
-  if (target) {
-    scrollToElementTitle(target, "center");
-  }
-}
-
-if (searchInput) {
-  searchInput.addEventListener("input", () => {
-    applyFilters();
-  });
-}
-
-if (favoritesToggle) {
-  favoritesToggle.addEventListener("click", async () => {
-    showFavoritesOnly = !showFavoritesOnly;
-
-    favoritesToggle.classList.toggle("active", showFavoritesOnly);
-    favoritesToggle.setAttribute("aria-pressed", showFavoritesOnly ? "true" : "false");
-    favoritesToggle.textContent = showFavoritesOnly ? "★ Ulubione" : "☆ Ulubione";
-
-    applyFilters();
-
-    if (showFavoritesOnly) {
-      await revealFirstFavoriteInActiveSection();
-    } else {
-      renderFavoritesList();
-    }
-  });
-}
-
-// ========================
-// GŁÓWNE AKORDEONY
-// ========================
-
-document.addEventListener("click", function (e) {
-  if (e.target.closest(".favorite-star")) return;
-
-  const btn = e.target.closest(".accordion-header");
-  if (!btn) return;
-
-  const body = getAccordionBodyFromHeader(btn);
-  if (!body || !body.classList.contains("accordion-body")) return;
-
-  e.preventDefault();
-
-  const activeSection = getActiveSection();
-  const isOpen = body.classList.contains("active");
-
-  activeSection.querySelectorAll(".accordion-body").forEach((b) => {
-    if (b !== body) b.classList.remove("active");
-  });
-
-  body.classList.toggle("active", !isOpen);
-
-  if (isOpen) {
-    clearLastOpenState();
-    return;
-  }
-
-  rememberMainAccordion(btn);
-
-  lastDetailsState = null;
-  lastSubPanelState = null;
-
-  closeInnerPanels(body);
-});
-
-function closeInnerPanels(body) {
-  if (!body) return;
-
-  body.querySelectorAll(".gastronomy-more").forEach((m) => {
-    m.classList.remove("active");
-    m.style.display = "none";
-  });
-
-  body.querySelectorAll(".gastronomy-plus").forEach((p) => {
-    p.classList.remove("active");
-  });
-
-  body.querySelectorAll(".connection-toggle").forEach((p) => {
-    p.classList.remove("active");
-  });
-
-  body.querySelectorAll(".connection-toggle + .accordion-subbody").forEach((p) => {
-    p.classList.remove("active");
-  });
-}
-
-// ========================
-// PODAKORDEON — PRZESIADKI / LOTNISKA
-// ========================
-
-document.addEventListener("click", function (e) {
-  if (e.target.closest(".favorite-star")) return;
-
-  const btn = e.target.closest(".connection-toggle");
-  if (!btn) return;
-
-  const body = btn.nextElementSibling;
-  if (!body || !body.classList.contains("accordion-subbody")) return;
-
-  e.preventDefault();
-
-  const parentBody = btn.closest(".accordion-body") || getActiveSection();
-  const parentHeader = findAccordionHeaderFromBody(parentBody);
-
-  if (parentHeader) rememberMainAccordion(parentHeader);
-
-  const isOpen = btn.classList.contains("active");
-
-  parentBody.querySelectorAll(".connection-toggle").forEach((o) => {
-    if (o !== btn) o.classList.remove("active");
-  });
-
-  parentBody.querySelectorAll(".connection-toggle + .accordion-subbody").forEach((b) => {
-    if (b !== body) b.classList.remove("active");
-  });
-
-  btn.classList.toggle("active", !isOpen);
-  body.classList.toggle("active", !isOpen);
-
-  if (!isOpen) {
-    rememberSubPanel(body, btn);
-  } else {
-    lastSubPanelState = null;
-  }
-});
-
-// ========================
-// PLUSIKI / ROZWIJANE BLOKI .gastronomy-more
-// ========================
-
-document.addEventListener("click", function (e) {
-  if (e.target.closest(".favorite-star")) return;
-
-  const plus = e.target.closest(".gastronomy-plus");
-  if (!plus) return;
-
-  const id = plus.getAttribute("data-target");
-  if (!id) return;
-
-  const block = document.getElementById(id);
-  if (!block) return;
-
-  e.preventDefault();
-  e.stopPropagation();
-
-  const root = plus.closest(".accordion-body") || document;
-  const isCurrentlyActive = block.classList.contains("active");
-
-  root.querySelectorAll(".gastronomy-more").forEach((other) => {
-    other.classList.remove("active");
-    other.style.display = "none";
-  });
-
-  root.querySelectorAll(".gastronomy-plus").forEach((otherPlus) => {
-    otherPlus.classList.remove("active");
-  });
-
-  if (!isCurrentlyActive) {
-    block.classList.add("active");
-    block.style.display = "block";
-
-    root.querySelectorAll(`.gastronomy-plus[data-target="${CSS.escape(id)}"]`).forEach((trigger) => {
-      trigger.classList.add("active");
-    });
-
-    rememberSubPanel(block, plus);
-  } else {
-    lastSubPanelState = null;
-  }
-});
-
-// ========================
-// DETAILS / SUMMARY
-// ========================
-
-document.addEventListener("click", function (e) {
-  if (e.target.closest(".favorite-star")) return;
-
-  const summary = e.target.closest("summary");
-  if (!summary) return;
-
-  const details = summary.parentElement;
-  if (!details || details.tagName !== "DETAILS") return;
-
-  const body = details.closest(".accordion-body");
-  if (!body) return;
-
-  rememberDetails(details);
-});
-
-// Komunikat 6 — tylko jeden wewnętrzny akordeon naraz
-document.addEventListener("click", function (e) {
-  if (e.target.closest(".favorite-star")) return;
-
-  const summary = e.target.closest("summary.k6-pill");
-  if (!summary) return;
-
-  const details = summary.parentElement;
-  if (!details || details.tagName !== "DETAILS") return;
-
-  const group = details.closest(".k6-group");
-  if (!group) return;
-
-  e.preventDefault();
-
-  rememberDetails(details);
-
-  const wasOpen = details.open;
-
-  group.querySelectorAll("details.k6-details[open]").forEach((d) => {
-    d.open = false;
-  });
-
-  if (!wasOpen) {
-    details.open = true;
-  } else {
-    lastDetailsState = null;
-  }
-});
-
-// ========================
-// ZAPIS I ODTWARZANIE POZYCJI
-// ========================
-
-function getVisibleReferenceElement() {
-  const points = [
-    { x: window.innerWidth * 0.5, y: window.innerHeight * 0.38 },
-    { x: window.innerWidth * 0.5, y: window.innerHeight * 0.50 },
-    { x: window.innerWidth * 0.5, y: window.innerHeight * 0.62 },
-    { x: window.innerWidth * 0.75, y: window.innerHeight - 160 },
-    { x: window.innerWidth * 0.5, y: 120 }
-  ];
-
-  for (const p of points) {
-    const x = Math.max(1, Math.min(window.innerWidth - 2, p.x));
-    const y = Math.max(1, Math.min(window.innerHeight - 2, p.y));
-    const el = document.elementFromPoint(x, y);
-
-    if (el && el.closest(".section.active")) {
-      return { el, x, y };
-    }
-  }
-
-  return null;
-}
-
-function calculateElementRatio(el) {
-  if (!el) return 0;
-
-  const ref = getVisibleReferenceElement();
-  const refY = ref ? ref.y : window.innerHeight * 0.45;
-
-  const rect = el.getBoundingClientRect();
-  const top = rect.top + window.scrollY;
-  const height = Math.max(1, rect.height);
-  const refDocY = window.scrollY + refY;
-
-  let ratio = (refDocY - top) / height;
-  ratio = Math.max(0, Math.min(1, ratio));
-
-  return ratio;
-}
-
-function findMatchingDetails(targetBody, detailsState) {
-  if (!targetBody || !detailsState) return null;
-
-  const allDetails = Array.from(targetBody.querySelectorAll("details"));
-  if (!allDetails.length) return null;
-
-  if (detailsState.summaryKey) {
-    const byKey = allDetails.find((d) => {
-      const summary = d.querySelector("summary");
-      return getHeaderKey(getSummaryTextWithoutFavorite(summary)) === detailsState.summaryKey;
-    });
-
-    if (byKey) return byKey;
-  }
-
-  if (typeof detailsState.detailsIndex === "number" && allDetails[detailsState.detailsIndex]) {
-    return allDetails[detailsState.detailsIndex];
-  }
-
-  if (detailsState.summaryText) {
-    const byText = allDetails.find((d) => {
-      const summary = d.querySelector("summary");
-      return normalizeText(getSummaryTextWithoutFavorite(summary)) === detailsState.summaryText;
-    });
-
-    if (byText) return byText;
-  }
-
-  return null;
-}
-
-function findMatchingSubPanel(targetBody, subPanelState) {
-  if (!targetBody || !subPanelState) return null;
-
-  const panels = Array.from(targetBody.querySelectorAll(".gastronomy-more, .accordion-subbody"));
-  if (!panels.length) return null;
-
-  if (typeof subPanelState.panelIndex === "number" && panels[subPanelState.panelIndex]) {
-    return panels[subPanelState.panelIndex];
-  }
-
-  if (subPanelState.id) {
-    const sameId = targetBody.querySelector(`#${CSS.escape(subPanelState.id)}`);
-    if (sameId) return sameId;
-  }
-
-  return null;
-}
-
-function captureViewportState() {
-  const activeSection = getActiveSection();
-
-  if (!activeSection) {
-    return {
-      mode: "absolute",
-      scrollY: window.scrollY
-    };
-  }
-
-  const openBody = activeSection.querySelector(".accordion-body.active");
-
-  if (!openBody) {
-    return {
-      mode: "absolute",
-      scrollY: window.scrollY
-    };
-  }
-
-  const header = findAccordionHeaderFromBody(openBody);
-
-  if (!header) {
-    return {
-      mode: "absolute",
-      scrollY: window.scrollY
-    };
-  }
-
-  const key = getHeaderKey(getHeaderTextWithoutFavorite(header));
-  const index = getHeaderIndex(activeSection, header);
-
-  let sourceDetails = null;
-
-  if (lastDetailsState && lastDetailsState.lang === getActiveLang()) {
-    sourceDetails = findMatchingDetails(openBody, lastDetailsState);
-  }
-
-  let sourcePanel = null;
-
-  if (lastSubPanelState && lastSubPanelState.lang === getActiveLang()) {
-    sourcePanel = findMatchingSubPanel(openBody, lastSubPanelState);
-  }
-
-  const ref = getVisibleReferenceElement();
-  const refY = ref ? ref.y : window.innerHeight * 0.45;
-
-  return {
-    mode: "smart",
-    key,
-    index,
-    wasOpen: true,
-    bodyRatio: calculateElementRatio(openBody),
-    refY,
-
-    detailsState: lastDetailsState && lastDetailsState.lang === getActiveLang() ? lastDetailsState : null,
-    detailsRatio: sourceDetails ? calculateElementRatio(sourceDetails) : 0,
-
-    subPanelState: lastSubPanelState && lastSubPanelState.lang === getActiveLang() ? lastSubPanelState : null,
-    subPanelRatio: sourcePanel ? calculateElementRatio(sourcePanel) : 0
-  };
-}
-
-function restoreOpenStateAfterLangSwitch(state) {
-  if (!state || state.mode !== "smart") return;
-
-  const activeSection = getActiveSection();
-  const targetHeader = findHeaderByKeyOrIndex(activeSection, state.key, state.index);
-
-  if (!targetHeader) return;
-
-  const targetBody = getAccordionBodyFromHeader(targetHeader);
-  if (!targetBody) return;
-
-  activeSection.querySelectorAll(".accordion-body").forEach((body) => {
-    body.classList.remove("active");
-  });
-
-  targetBody.classList.add("active");
-
-  if (state.detailsState) {
-    const targetDetails = findMatchingDetails(targetBody, state.detailsState);
-
-    if (targetDetails) {
-      const group =
-        targetDetails.closest(".k6-group") ||
-        targetDetails.closest(".k7-group") ||
-        targetDetails.parentElement;
-
-      if (group) {
-        group.querySelectorAll("details[open]").forEach((d) => {
-          if (d !== targetDetails) d.open = false;
-        });
-      }
-
-      targetDetails.open = true;
-      lastDetailsState = state.detailsState;
-      lastSubPanelState = null;
-    }
-  }
-
-  if (state.subPanelState) {
-    const targetPanel = findMatchingSubPanel(targetBody, state.subPanelState);
-
-    if (targetPanel) {
-      if (targetPanel.classList.contains("accordion-subbody")) {
-        const toggle = targetPanel.previousElementSibling;
-
-        targetBody.querySelectorAll(".connection-toggle").forEach((t) => t.classList.remove("active"));
-        targetBody.querySelectorAll(".accordion-subbody").forEach((p) => p.classList.remove("active"));
-
-        if (toggle && toggle.classList.contains("connection-toggle")) {
-          toggle.classList.add("active");
-        }
-
-        targetPanel.classList.add("active");
-      }
-
-      if (targetPanel.classList.contains("gastronomy-more")) {
-        targetBody.querySelectorAll(".gastronomy-more").forEach((p) => {
-          p.classList.remove("active");
-          p.style.display = "none";
-        });
-
-        targetBody.querySelectorAll(".gastronomy-plus").forEach((p) => {
-          p.classList.remove("active");
-        });
-
-        targetPanel.classList.add("active");
-        targetPanel.style.display = "block";
-
-        if (targetPanel.id) {
-          targetBody
-            .querySelectorAll(`.gastronomy-plus[data-target="${CSS.escape(targetPanel.id)}"]`)
-            .forEach((trigger) => trigger.classList.add("active"));
-        }
-      }
-
-      lastSubPanelState = state.subPanelState;
-      lastDetailsState = null;
-    }
-  }
-
-  rememberMainAccordion(targetHeader);
-}
-
-function restoreViewportState(state) {
-  if (!state) return;
-
-  if (state.mode === "absolute") {
-    window.scrollTo({
-      top: Math.max(0, state.scrollY || 0),
-      behavior: "instant"
-    });
-
-    return;
-  }
-
-  const activeSection = getActiveSection();
-  const targetHeader = findHeaderByKeyOrIndex(activeSection, state.key, state.index);
-
-  if (!targetHeader) return;
-
-  const targetBody = getAccordionBodyFromHeader(targetHeader);
-  if (!targetBody) return;
-
-  const targetDetails = state.detailsState ? findMatchingDetails(targetBody, state.detailsState) : null;
-  const targetPanel = state.subPanelState ? findMatchingSubPanel(targetBody, state.subPanelState) : null;
-
-  let targetY;
-
-  if (targetPanel) {
-    const rect = targetPanel.getBoundingClientRect();
-    const top = rect.top + window.scrollY;
-    const height = Math.max(1, rect.height);
-
-    targetY = top + state.subPanelRatio * height - state.refY;
-  } else if (targetDetails) {
-    const rect = targetDetails.getBoundingClientRect();
-    const top = rect.top + window.scrollY;
-    const height = Math.max(1, rect.height);
-
-    targetY = top + state.detailsRatio * height - state.refY;
-  } else if (targetBody) {
-    const rect = targetBody.getBoundingClientRect();
-    const top = rect.top + window.scrollY;
-    const height = Math.max(1, rect.height);
-
-    targetY = top + state.bodyRatio * height - state.refY;
-  } else {
-    const rect = targetHeader.getBoundingClientRect();
-    targetY = rect.top + window.scrollY - 90;
-  }
-
-  window.scrollTo({
-    top: Math.max(0, targetY),
-    behavior: "instant"
-  });
-}
-
-// ========================
-// TABY I FLOATING BUTTON
-// ========================
-
-if (tabPL) {
-  tabPL.addEventListener("click", async () => {
-    if (getActiveLang() === "PL") return;
-    await switchLanguagePreservingPosition("PL");
-  });
-}
-
-if (tabEN) {
-  tabEN.addEventListener("click", async () => {
-    if (getActiveLang() === "EN") return;
-    await switchLanguagePreservingPosition("EN");
-  });
-}
-
-if (langFab) {
-  langFab.addEventListener("click", async () => {
-    const nextLang = getActiveLang() === "PL" ? "EN" : "PL";
-    await switchLanguagePreservingPosition(nextLang);
-  });
-}
-
-// ========================
-// START
-// ========================
-
-updateLangFabLabel();
-ensureFavoritesListPanel();
-
-loadSections().then(() => {
-  updateFavoriteStars();
-  renderFavoritesList();
-  applyFilters();
-});
+document.addEventListener(
+  "DOMContentLoaded",
+  init
+);
