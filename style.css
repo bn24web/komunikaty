@@ -445,27 +445,63 @@ em{
   overflow-wrap: anywhere;
 }
 
-.gastronomy-header > .gastronomy-plus{
+/*
+  STATYCZNY GROT SKIEROWANY W DÓŁ
+
+  Tekstowy znak „+” pozostaje w HTML, ale zostaje ukryty.
+  Widoczny symbol jest rysowany przez CSS.
+*/
+.gastronomy-header > .gastronomy-plus,
+.gastronomy-header > .misc-plus,
+.gastronomy-header > span[aria-hidden="true"]{
   position: relative;
   z-index: 13;
   flex: 0 0 auto;
-  width: 34px;
-  height: 34px;
-  display: flex;
+
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+
   margin-left: auto;
   padding: 0;
 
-  font-size: 1.5rem;
-  font-weight: 800;
-  line-height: 1;
-  color: #7b6a16;
+  font-size: 0;
+  line-height: 0;
+  color: #1f2937;
 
-  background: rgba(255,255,255,0.45);
-  border-radius: 999px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+
   cursor: pointer;
   user-select: none;
+}
+
+.gastronomy-header > .gastronomy-plus::before,
+.gastronomy-header > .misc-plus::before,
+.gastronomy-header > span[aria-hidden="true"]::before{
+  content: "";
+  display: block;
+
+  width: 9px;
+  height: 9px;
+
+  border-right: 2.5px solid currentColor;
+  border-bottom: 2.5px solid currentColor;
+
+  transform: rotate(45deg) translate(-1px, -1px);
+  transform-origin: center;
+}
+
+/*
+  Grot pozostaje statyczny niezależnie od stanu rozwinięcia.
+*/
+.gastronomy-header[aria-expanded="true"] > .gastronomy-plus::before,
+.gastronomy-header[aria-expanded="true"] > .misc-plus::before,
+.gastronomy-header[aria-expanded="true"] > span[aria-hidden="true"]::before{
+  transform: rotate(45deg) translate(-1px, -1px);
 }
 
 .gastronomy-more{
