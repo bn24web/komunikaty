@@ -430,12 +430,31 @@ em{
    GASTRONOMIA / KATALOG
 ========================= */
 .gastronomy-header{
+  width: 100%;
+  min-height: 52px;
+
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-between;
   flex-wrap: nowrap;
   gap: 0.75rem;
+
+  margin: 0;
   padding: 0.7rem 0.9rem;
+
+  text-align: left;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: 1.25;
+  color: inherit;
+
+  border: 0;
+  outline: 0;
+
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
 }
 
 .gastronomy-header > strong{
