@@ -7,7 +7,16 @@ const SELECTORS = {
   mainBody: ".accordion-body",
   connectionToggle: ".connection-toggle",
   connectionBody: ".accordion-subbody",
-  expandableTrigger: "[data-target]",
+
+  /*
+    Zwykłe podsekcje rozwijane.
+
+    Nie używamy już ogólnego [data-target], ponieważ takie pole
+    może mieć również connection-toggle albo inny element strony.
+  */
+  expandableTrigger:
+    ".gastronomy-header[data-target], .gastronomy-plus[data-target]",
+
   expandableBody: ".gastronomy-more",
   details: "details",
   detailsSummary: "summary"
@@ -43,7 +52,11 @@ function getOtherLanguage(language = getActiveLanguage()) {
 }
 
 function getSlot(element) {
-  return element?.closest(".load-slot") || null;
+  return (
+    element?.closest(".load-slot") ||
+    element?.closest("[data-load]") ||
+    null
+  );
 }
 
 function getMainBody(element) {
@@ -55,7 +68,10 @@ function getAnnouncementKey(slot) {
 }
 
 function escapeSelector(value) {
-  if (window.CSS && typeof window.CSS.escape === "function") {
+  if (
+    window.CSS &&
+    typeof window.CSS.escape === "function"
+  ) {
     return CSS.escape(value);
   }
 
@@ -66,7 +82,10 @@ function escapeSelector(value) {
 }
 
 function clamp(value, minimum, maximum) {
-  return Math.min(maximum, Math.max(minimum, value));
+  return Math.min(
+    maximum,
+    Math.max(minimum, value)
+  );
 }
 
 function waitForNextPaint() {
@@ -83,12 +102,27 @@ function prefersReducedMotion() {
   ).matches;
 }
 
+function getControlledId(control) {
+  if (!control) {
+    return "";
+  }
+
+  return (
+    control.dataset.target ||
+    control.getAttribute("aria-controls") ||
+    ""
+  );
+}
+
 /* =========================================================
    PRZEWIJANIE OTWARTEJ ZAKŁADKI DO GÓRY
 ========================================================= */
 
 async function scrollOpenedControlToTop(control) {
-  if (!control || !control.isConnected) {
+  if (
+    !control ||
+    !control.isConnected
+  ) {
     return;
   }
 
@@ -131,11 +165,16 @@ function removeLegacyFavorites(root = document) {
       "summary-fav-row"
     );
 
-    element.style.removeProperty("padding-right");
+    element.style.removeProperty(
+      "padding-right"
+    );
   });
 
-  root.querySelectorAll("button, span").forEach(element => {
-    const text = element.textContent.trim();
+  root.querySelectorAll(
+    "button, span"
+  ).forEach(element => {
+    const text =
+      element.textContent.trim();
 
     if (
       (text === "☆" || text === "★") &&
@@ -151,11 +190,18 @@ function removeLegacyFavorites(root = document) {
 ========================================================= */
 
 async function loadSection(slot) {
-  if (slot.dataset.loaded === "true") {
+  if (
+    slot.dataset.loaded === "true"
+  ) {
     return;
   }
 
-  const url = slot.dataset.load;
+  const url =
+    slot.dataset.load;
+
+  if (!url) {
+    return;
+  }
 
   try {
     const response = await fetch(url, {
@@ -163,15 +209,22 @@ async function loadSection(slot) {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
+      throw new Error(
+        `HTTP ${response.status}`
+      );
     }
 
-    slot.innerHTML = await response.text();
+    slot.innerHTML =
+      await response.text();
+
     slot.dataset.loaded = "true";
 
     removeLegacyFavorites(slot);
   } catch (error) {
-    console.error(`Błąd ładowania ${url}:`, error);
+    console.error(
+      `Błąd ładowania ${url}:`,
+      error
+    );
 
     slot.innerHTML = `
       <p class="load-error">
@@ -183,7 +236,9 @@ async function loadSection(slot) {
 
 async function loadSections() {
   const slots = [
-    ...document.querySelectorAll(SELECTORS.loadSlots)
+    ...document.querySelectorAll(
+      SELECTORS.loadSlots
+    )
   ];
 
   await Promise.all(
@@ -197,29 +252,53 @@ async function loadSections() {
    AUTOMATYCZNE KLUCZE SYNCHRONIZACJI PL / EN
 ========================================================= */
 
-function prepareMainAccordion(slot, announcementKey) {
+function prepareMainAccordion(
+  slot,
+  announcementKey
+) {
   const header = slot.querySelector(
     SELECTORS.mainHeader
   );
 
-  const body = header?.nextElementSibling;
+  const body =
+    header?.nextElementSibling;
 
-  if (!header || !body?.matches(SELECTORS.mainBody)) {
+  if (
+    !header ||
+    !body?.matches(SELECTORS.mainBody)
+  ) {
     return;
   }
 
-  const baseKey = `announcement-${announcementKey}`;
+  const baseKey =
+    `announcement-${announcementKey}`;
 
-  header.dataset.syncKey = `${baseKey}-header`;
-  header.dataset.syncAnchor = `${baseKey}-header`;
+  header.dataset.syncKey =
+    `${baseKey}-header`;
 
-  body.dataset.syncKey = `${baseKey}-body`;
+  header.dataset.syncAnchor =
+    `${baseKey}-header`;
 
-  header.setAttribute("type", "button");
+  body.dataset.syncKey =
+    `${baseKey}-body`;
+
+  header.setAttribute(
+    "type",
+    "button"
+  );
+
+  if (body.id) {
+    header.setAttribute(
+      "aria-controls",
+      body.id
+    );
+  }
 
   header.setAttribute(
     "aria-expanded",
-    String(body.classList.contains("active"))
+    String(
+      body.classList.contains("active")
+    )
   );
 }
 
@@ -234,25 +313,46 @@ function prepareConnectionAccordions(
   ];
 
   toggles.forEach((toggle, index) => {
-    const body = toggle.nextElementSibling;
+    const body =
+      toggle.nextElementSibling;
 
-    if (!body?.matches(SELECTORS.connectionBody)) {
+    if (
+      !body?.matches(
+        SELECTORS.connectionBody
+      )
+    ) {
       return;
     }
 
     const baseKey =
       `announcement-${announcementKey}-connection-${index}`;
 
-    toggle.dataset.syncKey = `${baseKey}-toggle`;
-    toggle.dataset.syncAnchor = `${baseKey}-toggle`;
+    toggle.dataset.syncKey =
+      `${baseKey}-toggle`;
 
-    body.dataset.syncKey = `${baseKey}-body`;
+    toggle.dataset.syncAnchor =
+      `${baseKey}-toggle`;
 
-    toggle.setAttribute("type", "button");
+    body.dataset.syncKey =
+      `${baseKey}-body`;
+
+    toggle.setAttribute(
+      "type",
+      "button"
+    );
+
+    if (body.id) {
+      toggle.setAttribute(
+        "aria-controls",
+        body.id
+      );
+    }
 
     toggle.setAttribute(
       "aria-expanded",
-      String(body.classList.contains("active"))
+      String(
+        body.classList.contains("active")
+      )
     );
   });
 }
@@ -267,9 +367,25 @@ function prepareExpandableBlocks(
   slot.querySelectorAll(
     SELECTORS.expandableTrigger
   ).forEach(trigger => {
-    const targetId = trigger.dataset.target;
+    /*
+      connection-toggle ma osobny mechanizm.
+      Nie może zostać przygotowany jako zwykła gastronomy-more.
+    */
+    if (
+      trigger.matches(
+        SELECTORS.connectionToggle
+      )
+    ) {
+      return;
+    }
 
-    if (!targetId || usedTargets.has(targetId)) {
+    const targetId =
+      getControlledId(trigger);
+
+    if (
+      !targetId ||
+      usedTargets.has(targetId)
+    ) {
       return;
     }
 
@@ -277,7 +393,12 @@ function prepareExpandableBlocks(
       `#${escapeSelector(targetId)}`
     );
 
-    if (!body) {
+    if (
+      !body ||
+      !body.matches(
+        SELECTORS.expandableBody
+      )
+    ) {
       return;
     }
 
@@ -293,11 +414,19 @@ function prepareExpandableBlocks(
     const baseKey =
       `announcement-${announcementKey}-expand-${index}`;
 
+    const escapedTarget =
+      escapeSelector(item.targetId);
+
     const triggers = [
       ...slot.querySelectorAll(
-        `[data-target="${escapeSelector(item.targetId)}"]`
+        `[data-target="${escapedTarget}"], ` +
+        `[aria-controls="${escapedTarget}"]`
       )
-    ];
+    ].filter(trigger => {
+      return !trigger.matches(
+        SELECTORS.connectionToggle
+      );
+    });
 
     triggers.forEach(trigger => {
       trigger.dataset.syncKey =
@@ -307,9 +436,27 @@ function prepareExpandableBlocks(
         `${baseKey}-trigger`;
 
       trigger.setAttribute(
-        "aria-expanded",
-        String(item.body.classList.contains("active"))
+        "aria-controls",
+        item.targetId
       );
+
+      trigger.setAttribute(
+        "aria-expanded",
+        String(
+          item.body.classList.contains(
+            "active"
+          )
+        )
+      );
+
+      if (
+        trigger.tagName === "BUTTON"
+      ) {
+        trigger.setAttribute(
+          "type",
+          "button"
+        );
+      }
     });
 
     item.body.dataset.syncKey =
@@ -317,30 +464,38 @@ function prepareExpandableBlocks(
   });
 }
 
-function prepareDetails(slot, announcementKey) {
+function prepareDetails(
+  slot,
+  announcementKey
+) {
   const detailsElements = [
-    ...slot.querySelectorAll(SELECTORS.details)
+    ...slot.querySelectorAll(
+      SELECTORS.details
+    )
   ];
 
-  detailsElements.forEach((detailsElement, index) => {
-    const summary = detailsElement.querySelector(
-      ":scope > summary"
-    );
+  detailsElements.forEach(
+    (detailsElement, index) => {
+      const summary =
+        detailsElement.querySelector(
+          ":scope > summary"
+        );
 
-    const baseKey =
-      `announcement-${announcementKey}-details-${index}`;
+      const baseKey =
+        `announcement-${announcementKey}-details-${index}`;
 
-    detailsElement.dataset.syncKey =
-      `${baseKey}-body`;
+      detailsElement.dataset.syncKey =
+        `${baseKey}-body`;
 
-    if (summary) {
-      summary.dataset.syncKey =
-        `${baseKey}-summary`;
+      if (summary) {
+        summary.dataset.syncKey =
+          `${baseKey}-summary`;
 
-      summary.dataset.syncAnchor =
-        `${baseKey}-summary`;
+        summary.dataset.syncAnchor =
+          `${baseKey}-summary`;
+      }
     }
-  });
+  );
 }
 
 function prepareLoadedContent() {
@@ -382,16 +537,24 @@ function prepareLoadedContent() {
    ODPOWIEDNIKI W DRUGIM JĘZYKU
 ========================================================= */
 
-function findMatchingElement(element, targetLanguage) {
-  const syncKey = element?.dataset.syncKey;
+function findMatchingElement(
+  element,
+  targetLanguage
+) {
+  const syncKey =
+    element?.dataset.syncKey;
 
   if (!syncKey) {
     return null;
   }
 
-  return getSection(targetLanguage)?.querySelector(
-    `[data-sync-key="${escapeSelector(syncKey)}"]`
-  ) || null;
+  return (
+    getSection(targetLanguage)
+      ?.querySelector(
+        `[data-sync-key="${escapeSelector(syncKey)}"]`
+      ) ||
+    null
+  );
 }
 
 /* =========================================================
@@ -399,7 +562,8 @@ function findMatchingElement(element, targetLanguage) {
 ========================================================= */
 
 function captureViewportAnchor() {
-  const section = getActiveSection();
+  const section =
+    getActiveSection();
 
   if (!section) {
     return null;
@@ -422,7 +586,9 @@ function captureViewportAnchor() {
     );
   });
 
-  if (candidates.length === 0) {
+  if (
+    candidates.length === 0
+  ) {
     return null;
   }
 
@@ -442,11 +608,17 @@ function captureViewportAnchor() {
     }
 
     const distance = Math.min(
-      Math.abs(rect.top - referenceY),
-      Math.abs(rect.bottom - referenceY)
+      Math.abs(
+        rect.top - referenceY
+      ),
+      Math.abs(
+        rect.bottom - referenceY
+      )
     );
 
-    if (distance < bestDistance) {
+    if (
+      distance < bestDistance
+    ) {
       bestDistance = distance;
       chosen = element;
     }
@@ -459,16 +631,21 @@ function captureViewportAnchor() {
   const rect =
     chosen.getBoundingClientRect();
 
-  const ratio = rect.height > 0
-    ? clamp(
-        (referenceY - rect.top) / rect.height,
-        0,
-        1
-      )
-    : 0;
+  const ratio =
+    rect.height > 0
+      ? clamp(
+          (
+            referenceY -
+            rect.top
+          ) / rect.height,
+          0,
+          1
+        )
+      : 0;
 
   return {
-    syncKey: chosen.dataset.syncKey,
+    syncKey:
+      chosen.dataset.syncKey,
     ratio,
     referenceY
   };
@@ -484,9 +661,11 @@ async function restoreViewportAnchor(
 
   await waitForNextPaint();
 
-  const target = getSection(targetLanguage)?.querySelector(
-    `[data-sync-key="${escapeSelector(anchor.syncKey)}"]`
-  );
+  const target =
+    getSection(targetLanguage)
+      ?.querySelector(
+        `[data-sync-key="${escapeSelector(anchor.syncKey)}"]`
+      );
 
   if (!target) {
     return;
@@ -500,12 +679,16 @@ async function restoreViewportAnchor(
   }
 
   const targetPoint =
-    rect.top + rect.height * anchor.ratio;
+    rect.top +
+    rect.height * anchor.ratio;
 
   const difference =
-    targetPoint - anchor.referenceY;
+    targetPoint -
+    anchor.referenceY;
 
-  if (Math.abs(difference) < 1) {
+  if (
+    Math.abs(difference) < 1
+  ) {
     return;
   }
 
@@ -520,7 +703,10 @@ async function restoreViewportAnchor(
    USTAWIANIE STANÓW
 ========================================================= */
 
-function setMainBodyState(body, isOpen) {
+function setMainBodyState(
+  body,
+  isOpen
+) {
   if (!body) {
     return;
   }
@@ -560,7 +746,10 @@ function setConnectionState(
   );
 }
 
-function setExpandableState(body, isOpen) {
+function setExpandableState(
+  body,
+  isOpen
+) {
   if (!body) {
     return;
   }
@@ -570,19 +759,44 @@ function setExpandableState(body, isOpen) {
     isOpen
   );
 
+  /*
+    W części starszych podstron treść ma inline:
+    style="display:none".
+
+    Dlatego samą klasą active nie zawsze da się
+    nadpisać stan elementu.
+  */
   body.style.display =
     isOpen ? "block" : "none";
 
-  const bodyId = body.id;
-  const slot = getSlot(body);
+  const bodyId =
+    body.id;
 
-  if (!bodyId || !slot) {
+  const slot =
+    getSlot(body);
+
+  if (
+    !bodyId ||
+    !slot
+  ) {
     return;
   }
 
+  const escapedId =
+    escapeSelector(bodyId);
+
   slot.querySelectorAll(
-    `[data-target="${escapeSelector(bodyId)}"]`
+    `[data-target="${escapedId}"], ` +
+    `[aria-controls="${escapedId}"]`
   ).forEach(trigger => {
+    if (
+      trigger.matches(
+        SELECTORS.connectionToggle
+      )
+    ) {
+      return;
+    }
+
     trigger.setAttribute(
       "aria-expanded",
       String(isOpen)
@@ -590,20 +804,29 @@ function setExpandableState(body, isOpen) {
   });
 }
 
-function setDetailsState(detailsElement, isOpen) {
+function setDetailsState(
+  detailsElement,
+  isOpen
+) {
   if (!detailsElement) {
     return;
   }
 
-  if (detailsElement.open === isOpen) {
+  if (
+    detailsElement.open === isOpen
+  ) {
     return;
   }
 
-  detailsElement.dataset.internalToggle = "true";
-  detailsElement.open = isOpen;
+  detailsElement.dataset.internalToggle =
+    "true";
+
+  detailsElement.open =
+    isOpen;
 
   setTimeout(() => {
-    delete detailsElement.dataset.internalToggle;
+    delete detailsElement.dataset
+      .internalToggle;
   }, 0);
 }
 
@@ -611,13 +834,20 @@ function setDetailsState(detailsElement, isOpen) {
    SYNCHRONIZACJA Z DRUGIM JĘZYKIEM
 ========================================================= */
 
-function mirrorMainBodyState(body, isOpen) {
-  const target = findMatchingElement(
-    body,
-    getOtherLanguage()
-  );
+function mirrorMainBodyState(
+  body,
+  isOpen
+) {
+  const target =
+    findMatchingElement(
+      body,
+      getOtherLanguage()
+    );
 
-  setMainBodyState(target, isOpen);
+  setMainBodyState(
+    target,
+    isOpen
+  );
 }
 
 function mirrorConnectionState(
@@ -647,11 +877,15 @@ function mirrorConnectionState(
   );
 }
 
-function mirrorExpandableState(body, isOpen) {
-  const target = findMatchingElement(
-    body,
-    getOtherLanguage()
-  );
+function mirrorExpandableState(
+  body,
+  isOpen
+) {
+  const target =
+    findMatchingElement(
+      body,
+      getOtherLanguage()
+    );
 
   setExpandableState(
     target,
@@ -663,10 +897,11 @@ function mirrorDetailsState(
   detailsElement,
   isOpen
 ) {
-  const target = findMatchingElement(
-    detailsElement,
-    getOtherLanguage()
-  );
+  const target =
+    findMatchingElement(
+      detailsElement,
+      getOtherLanguage()
+    );
 
   setDetailsState(
     target,
@@ -726,7 +961,20 @@ function closeOtherSubsections(
     }
 
     if (
-      !body?.matches(SELECTORS.connectionBody)
+      !body?.matches(
+        SELECTORS.connectionBody
+      )
+    ) {
+      return;
+    }
+
+    if (
+      !toggle.classList.contains(
+        "active"
+      ) &&
+      !body.classList.contains(
+        "active"
+      )
     ) {
       return;
     }
@@ -747,12 +995,16 @@ function closeOtherSubsections(
   mainBody.querySelectorAll(
     SELECTORS.expandableBody
   ).forEach(body => {
-    if (body === exceptElement) {
+    if (
+      body === exceptElement
+    ) {
       return;
     }
 
     if (
-      !body.classList.contains("active") &&
+      !body.classList.contains(
+        "active"
+      ) &&
       body.style.display !== "block"
     ) {
       return;
@@ -774,24 +1026,36 @@ function closeOtherSubsections(
    GŁÓWNE AKORDEONY
 ========================================================= */
 
-async function toggleMainAccordion(header) {
+async function toggleMainAccordion(
+  header
+) {
   const body =
     header.nextElementSibling;
 
-  if (!body?.matches(SELECTORS.mainBody)) {
+  if (
+    !body?.matches(
+      SELECTORS.mainBody
+    )
+  ) {
     return;
   }
 
   const section =
-    header.closest(SELECTORS.section);
+    header.closest(
+      SELECTORS.section
+    );
 
   const willOpen =
-    !body.classList.contains("active");
+    !body.classList.contains(
+      "active"
+    );
 
   section?.querySelectorAll(
     SELECTORS.mainBody
   ).forEach(otherBody => {
-    if (otherBody === body) {
+    if (
+      otherBody === body
+    ) {
       return;
     }
 
@@ -817,7 +1081,9 @@ async function toggleMainAccordion(header) {
   );
 
   if (willOpen) {
-    await scrollOpenedControlToTop(header);
+    await scrollOpenedControlToTop(
+      header
+    );
   }
 }
 
@@ -825,16 +1091,24 @@ async function toggleMainAccordion(header) {
    CONNECTION-TOGGLE
 ========================================================= */
 
-async function toggleConnectionAccordion(toggle) {
+async function toggleConnectionAccordion(
+  toggle
+) {
   const body =
     toggle.nextElementSibling;
 
-  if (!body?.matches(SELECTORS.connectionBody)) {
+  if (
+    !body?.matches(
+      SELECTORS.connectionBody
+    )
+  ) {
     return;
   }
 
   const willOpen =
-    !toggle.classList.contains("active");
+    !toggle.classList.contains(
+      "active"
+    );
 
   if (willOpen) {
     closeOtherSubsections(
@@ -856,7 +1130,9 @@ async function toggleConnectionAccordion(toggle) {
   );
 
   if (willOpen) {
-    await scrollOpenedControlToTop(toggle);
+    await scrollOpenedControlToTop(
+      toggle
+    );
   }
 }
 
@@ -864,20 +1140,42 @@ async function toggleConnectionAccordion(toggle) {
    BLOKI DATA-TARGET
 ========================================================= */
 
-function resolveExpandableBody(trigger) {
+function resolveExpandableBody(
+  trigger
+) {
   const targetId =
-    trigger?.dataset.target;
+    getControlledId(trigger);
 
   if (!targetId) {
     return null;
   }
 
-  return getSlot(trigger)?.querySelector(
+  const slot =
+    getSlot(trigger);
+
+  if (!slot) {
+    return null;
+  }
+
+  const body = slot.querySelector(
     `#${escapeSelector(targetId)}`
-  ) || null;
+  );
+
+  if (
+    !body ||
+    !body.matches(
+      SELECTORS.expandableBody
+    )
+  ) {
+    return null;
+  }
+
+  return body;
 }
 
-async function toggleExpandable(trigger) {
+async function toggleExpandable(
+  trigger
+) {
   const body =
     resolveExpandableBody(trigger);
 
@@ -886,11 +1184,14 @@ async function toggleExpandable(trigger) {
   }
 
   const control =
-    trigger.closest(".gastronomy-header") ||
-    trigger;
+    trigger.closest(
+      ".gastronomy-header"
+    ) || trigger;
 
   const willOpen =
-    !body.classList.contains("active");
+    !body.classList.contains(
+      "active"
+    );
 
   if (willOpen) {
     closeOtherSubsections(
@@ -910,7 +1211,9 @@ async function toggleExpandable(trigger) {
   );
 
   if (willOpen) {
-    await scrollOpenedControlToTop(control);
+    await scrollOpenedControlToTop(
+      control
+    );
   }
 }
 
@@ -918,9 +1221,12 @@ async function toggleExpandable(trigger) {
    ELEMENTY DETAILS — KOMUNIKAT 6
 ========================================================= */
 
-async function handleDetailsToggle(detailsElement) {
+async function handleDetailsToggle(
+  detailsElement
+) {
   if (
-    detailsElement.dataset.internalToggle === "true"
+    detailsElement.dataset
+      .internalToggle === "true"
   ) {
     return;
   }
@@ -946,7 +1252,9 @@ async function handleDetailsToggle(detailsElement) {
         ":scope > summary"
       );
 
-    await scrollOpenedControlToTop(summary);
+    await scrollOpenedControlToTop(
+      summary
+    );
   }
 }
 
@@ -954,18 +1262,26 @@ async function handleDetailsToggle(detailsElement) {
    JĘZYK
 ========================================================= */
 
-function updateLanguageControls(language) {
+function updateLanguageControls(
+  language
+) {
   const isPolish =
     language === "pl";
 
   const tabPL =
-    document.getElementById("tabPL");
+    document.getElementById(
+      "tabPL"
+    );
 
   const tabEN =
-    document.getElementById("tabEN");
+    document.getElementById(
+      "tabEN"
+    );
 
   const langFab =
-    document.getElementById("langFab");
+    document.getElementById(
+      "langFab"
+    );
 
   tabPL?.classList.toggle(
     "active",
@@ -1010,7 +1326,9 @@ function updateLanguageControls(language) {
   }
 }
 
-function showLanguageSection(language) {
+function showLanguageSection(
+  language
+) {
   const isPolish =
     language === "pl";
 
@@ -1031,11 +1349,13 @@ function showLanguageSection(language) {
   );
 
   if (sectionPL) {
-    sectionPL.hidden = !isPolish;
+    sectionPL.hidden =
+      !isPolish;
   }
 
   if (sectionEN) {
-    sectionEN.hidden = isPolish;
+    sectionEN.hidden =
+      isPolish;
   }
 
   document.documentElement.lang =
@@ -1053,7 +1373,8 @@ async function setLanguage(
     languageSwitchInProgress ||
     (
       interfaceReady &&
-      language === getActiveLanguage()
+      language ===
+        getActiveLanguage()
     )
   ) {
     return;
@@ -1062,28 +1383,52 @@ async function setLanguage(
   languageSwitchInProgress = true;
 
   const tabPL =
-    document.getElementById("tabPL");
+    document.getElementById(
+      "tabPL"
+    );
 
   const tabEN =
-    document.getElementById("tabEN");
+    document.getElementById(
+      "tabEN"
+    );
 
   const langFab =
-    document.getElementById("langFab");
+    document.getElementById(
+      "langFab"
+    );
 
-  tabPL?.setAttribute("disabled", "");
-  tabEN?.setAttribute("disabled", "");
-  langFab?.setAttribute("disabled", "");
-
-  const anchor = preservePosition
-    ? captureViewportAnchor()
-    : null;
-
-  document.documentElement.classList.add(
-    "is-language-switching"
+  tabPL?.setAttribute(
+    "disabled",
+    ""
   );
 
-  updateLanguageControls(language);
-  showLanguageSection(language);
+  tabEN?.setAttribute(
+    "disabled",
+    ""
+  );
+
+  langFab?.setAttribute(
+    "disabled",
+    ""
+  );
+
+  const anchor =
+    preservePosition
+      ? captureViewportAnchor()
+      : null;
+
+  document.documentElement
+    .classList.add(
+      "is-language-switching"
+    );
+
+  updateLanguageControls(
+    language
+  );
+
+  showLanguageSection(
+    language
+  );
 
   if (savePreference) {
     try {
@@ -1103,15 +1448,25 @@ async function setLanguage(
     await waitForNextPaint();
   }
 
-  document.documentElement.classList.remove(
-    "is-language-switching"
+  document.documentElement
+    .classList.remove(
+      "is-language-switching"
+    );
+
+  tabPL?.removeAttribute(
+    "disabled"
   );
 
-  tabPL?.removeAttribute("disabled");
-  tabEN?.removeAttribute("disabled");
-  langFab?.removeAttribute("disabled");
+  tabEN?.removeAttribute(
+    "disabled"
+  );
 
-  languageSwitchInProgress = false;
+  langFab?.removeAttribute(
+    "disabled"
+  );
+
+  languageSwitchInProgress =
+    false;
 }
 
 /* =========================================================
@@ -1126,19 +1481,13 @@ function bindInterface() {
         return;
       }
 
-      const expandable =
-        event.target.closest(
-          SELECTORS.expandableTrigger
-        );
+      /*
+        Najpierw sprawdzamy connection-toggle.
 
-      if (expandable) {
-        event.preventDefault();
-        event.stopPropagation();
-
-        toggleExpandable(expandable);
-        return;
-      }
-
+        Jest to ważne, ponieważ taki przycisk może również
+        posiadać data-target i nie może zostać przechwycony
+        przez zwykły mechanizm gastronomy-more.
+      */
       const connection =
         event.target.closest(
           SELECTORS.connectionToggle
@@ -1155,6 +1504,27 @@ function bindInterface() {
         return;
       }
 
+      const expandable =
+        event.target.closest(
+          SELECTORS.expandableTrigger
+        );
+
+      if (
+        expandable &&
+        !expandable.matches(
+          SELECTORS.connectionToggle
+        )
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        toggleExpandable(
+          expandable
+        );
+
+        return;
+      }
+
       const header =
         event.target.closest(
           SELECTORS.mainHeader
@@ -1163,7 +1533,9 @@ function bindInterface() {
       if (header) {
         event.preventDefault();
 
-        toggleMainAccordion(header);
+        toggleMainAccordion(
+          header
+        );
       }
     }
   );
@@ -1215,16 +1587,19 @@ function bindInterface() {
     );
 
   document
-    .querySelector(".topbar__logo")
+    .querySelector(
+      ".topbar__logo"
+    )
     ?.addEventListener(
       "click",
       () => {
         window.scrollTo({
           top: 0,
           left: 0,
-          behavior: prefersReducedMotion()
-            ? "auto"
-            : "smooth"
+          behavior:
+            prefersReducedMotion()
+              ? "auto"
+              : "smooth"
         });
       }
     );
@@ -1272,20 +1647,33 @@ async function waitForImages() {
   );
 }
 
-function setInterfaceDisabled(disabled) {
+function setInterfaceDisabled(
+  disabled
+) {
   [
-    document.getElementById("tabPL"),
-    document.getElementById("tabEN"),
-    document.getElementById("langFab")
+    document.getElementById(
+      "tabPL"
+    ),
+    document.getElementById(
+      "tabEN"
+    ),
+    document.getElementById(
+      "langFab"
+    )
   ].forEach(element => {
     if (!element) {
       return;
     }
 
     if (disabled) {
-      element.setAttribute("disabled", "");
+      element.setAttribute(
+        "disabled",
+        ""
+      );
     } else {
-      element.removeAttribute("disabled");
+      element.removeAttribute(
+        "disabled"
+      );
     }
   });
 }
@@ -1311,7 +1699,8 @@ async function init() {
       storedLanguage === "pl" ||
       storedLanguage === "en"
     ) {
-      savedLanguage = storedLanguage;
+      savedLanguage =
+        storedLanguage;
     }
   } catch {}
 
