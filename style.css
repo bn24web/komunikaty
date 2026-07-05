@@ -948,3 +948,43 @@ html.is-language-switching *::after{
 details > summary{
   -webkit-tap-highlight-color: transparent;
 }
+
+/* =========================================================
+   WSPÓLNA STRUKTURA KOMUNIKATÓW
+========================================================= */
+
+.announcement-content{
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.announcement-content > p{
+  margin: 0;
+}
+
+.announcement-instruction{
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  font-style: italic;
+  font-weight: 400;
+  color: #667085;
+}
+
+.announcement-instruction--intro{
+  font-size: 0.7rem;
+  font-style: normal;
+  color: #777;
+}
+
+.announcement-option{
+  margin: 0;
+  padding: 1rem;
+  border-radius: 14px;
+}
+
+.announcement-option strong{
+  font-weight: 700;
+  color: #1f2937;
+}
