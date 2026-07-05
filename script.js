@@ -1,10 +1,5 @@
 "use strict";
 
-/* =========================================================
-   KOMUNIKATY PKP — SYNCHRONIZACJA PL / EN
-   Wariant dobry
-========================================================= */
-
 const SELECTORS = {
   loadSlots: "[data-load]",
   section: ".section",
@@ -22,10 +17,9 @@ const LANGUAGE_STORAGE_KEY = "komunikaty-language";
 
 let interfaceReady = false;
 let languageSwitchInProgress = false;
-let detailsClickAnchor = null;
 
 /* =========================================================
-   NARZĘDZIA
+   PODSTAWOWE NARZĘDZIA
 ========================================================= */
 
 function getSection(language) {
@@ -44,8 +38,16 @@ function getActiveSection() {
   return getSection(getActiveLanguage());
 }
 
+function getOtherLanguage(language = getActiveLanguage()) {
+  return language === "pl" ? "en" : "pl";
+}
+
 function getSlot(element) {
   return element?.closest(".load-slot") || null;
+}
+
+function getMainBody(element) {
+  return element?.closest(".accordion-body") || null;
 }
 
 function getAnnouncementKey(slot) {
@@ -63,6 +65,10 @@ function escapeSelector(value) {
   );
 }
 
+function clamp(value, minimum, maximum) {
+  return Math.min(maximum, Math.max(minimum, value));
+}
+
 function waitForNextPaint() {
   return new Promise(resolve => {
     requestAnimationFrame(() => {
@@ -71,30 +77,34 @@ function waitForNextPaint() {
   });
 }
 
-function clamp(value, minimum, maximum) {
-  return Math.min(
-    maximum,
-    Math.max(minimum, value)
-  );
-}
-
-function isElementVisible(element) {
-  if (!element) {
-    return false;
-  }
-
-  const rect = element.getBoundingClientRect();
-
-  return (
-    rect.width > 0 &&
-    rect.height > 0 &&
-    rect.bottom > 0 &&
-    rect.top < window.innerHeight
-  );
+function prefersReducedMotion() {
+  return window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  ).matches;
 }
 
 /* =========================================================
-   CZYSZCZENIE STARYCH ULUBIONYCH
+   PRZEWIJANIE OTWARTEJ ZAKŁADKI DO GÓRY
+========================================================= */
+
+async function scrollOpenedControlToTop(control) {
+  if (!control || !control.isConnected) {
+    return;
+  }
+
+  await waitForNextPaint();
+
+  control.scrollIntoView({
+    block: "start",
+    inline: "nearest",
+    behavior: prefersReducedMotion()
+      ? "auto"
+      : "smooth"
+  });
+}
+
+/* =========================================================
+   USUWANIE STARYCH ELEMENTÓW ULUBIONYCH
 ========================================================= */
 
 function removeLegacyFavorites(root = document) {
@@ -184,17 +194,14 @@ async function loadSections() {
 }
 
 /* =========================================================
-   AUTOMATYCZNE KLUCZE SYNCHRONIZACJI
-
-   Klucze są tworzone osobno dla każdego komunikatu:
-   - announcement-1-main
-   - announcement-1-expand-0
-   - announcement-6-details-2
-   itd.
+   AUTOMATYCZNE KLUCZE SYNCHRONIZACJI PL / EN
 ========================================================= */
 
 function prepareMainAccordion(slot, announcementKey) {
-  const header = slot.querySelector(SELECTORS.mainHeader);
+  const header = slot.querySelector(
+    SELECTORS.mainHeader
+  );
+
   const body = header?.nextElementSibling;
 
   if (!header || !body?.matches(SELECTORS.mainBody)) {
@@ -209,6 +216,7 @@ function prepareMainAccordion(slot, announcementKey) {
   body.dataset.syncKey = `${baseKey}-body`;
 
   header.setAttribute("type", "button");
+
   header.setAttribute(
     "aria-expanded",
     String(body.classList.contains("active"))
@@ -241,6 +249,7 @@ function prepareConnectionAccordions(
     body.dataset.syncKey = `${baseKey}-body`;
 
     toggle.setAttribute("type", "button");
+
     toggle.setAttribute(
       "aria-expanded",
       String(body.classList.contains("active"))
@@ -252,18 +261,15 @@ function prepareExpandableBlocks(
   slot,
   announcementKey
 ) {
-  const uniqueTargets = [];
-  const seenTargets = new Set();
+  const targets = [];
+  const usedTargets = new Set();
 
   slot.querySelectorAll(
     SELECTORS.expandableTrigger
   ).forEach(trigger => {
     const targetId = trigger.dataset.target;
 
-    if (
-      !targetId ||
-      seenTargets.has(targetId)
-    ) {
+    if (!targetId || usedTargets.has(targetId)) {
       return;
     }
 
@@ -275,15 +281,15 @@ function prepareExpandableBlocks(
       return;
     }
 
-    seenTargets.add(targetId);
+    usedTargets.add(targetId);
 
-    uniqueTargets.push({
+    targets.push({
       targetId,
       body
     });
   });
 
-  uniqueTargets.forEach((item, index) => {
+  targets.forEach((item, index) => {
     const baseKey =
       `announcement-${announcementKey}-expand-${index}`;
 
@@ -294,15 +300,11 @@ function prepareExpandableBlocks(
     ];
 
     triggers.forEach(trigger => {
-      trigger.dataset.syncKey = `${baseKey}-trigger`;
-      trigger.dataset.syncAnchor = `${baseKey}-trigger`;
+      trigger.dataset.syncKey =
+        `${baseKey}-trigger`;
 
-      if (
-        trigger.tagName === "BUTTON" &&
-        !trigger.hasAttribute("type")
-      ) {
-        trigger.setAttribute("type", "button");
-      }
+      trigger.dataset.syncAnchor =
+        `${baseKey}-trigger`;
 
       trigger.setAttribute(
         "aria-expanded",
@@ -310,7 +312,8 @@ function prepareExpandableBlocks(
       );
     });
 
-    item.body.dataset.syncKey = `${baseKey}-body`;
+    item.body.dataset.syncKey =
+      `${baseKey}-body`;
   });
 }
 
@@ -327,11 +330,15 @@ function prepareDetails(slot, announcementKey) {
     const baseKey =
       `announcement-${announcementKey}-details-${index}`;
 
-    detailsElement.dataset.syncKey = `${baseKey}-body`;
+    detailsElement.dataset.syncKey =
+      `${baseKey}-body`;
 
     if (summary) {
-      summary.dataset.syncKey = `${baseKey}-summary`;
-      summary.dataset.syncAnchor = `${baseKey}-summary`;
+      summary.dataset.syncKey =
+        `${baseKey}-summary`;
+
+      summary.dataset.syncAnchor =
+        `${baseKey}-summary`;
     }
   });
 }
@@ -349,21 +356,30 @@ function prepareLoadedContent() {
     slot.dataset.syncAnchor =
       `announcement-${announcementKey}-slot`;
 
-    prepareMainAccordion(slot, announcementKey);
+    prepareMainAccordion(
+      slot,
+      announcementKey
+    );
+
     prepareConnectionAccordions(
       slot,
       announcementKey
     );
+
     prepareExpandableBlocks(
       slot,
       announcementKey
     );
-    prepareDetails(slot, announcementKey);
+
+    prepareDetails(
+      slot,
+      announcementKey
+    );
   });
 }
 
 /* =========================================================
-   WYSZUKIWANIE ODPOWIEDNIKA W DRUGIM JĘZYKU
+   ODPOWIEDNIKI W DRUGIM JĘZYKU
 ========================================================= */
 
 function findMatchingElement(element, targetLanguage) {
@@ -373,22 +389,13 @@ function findMatchingElement(element, targetLanguage) {
     return null;
   }
 
-  const targetSection = getSection(targetLanguage);
-
-  if (!targetSection) {
-    return null;
-  }
-
-  return targetSection.querySelector(
+  return getSection(targetLanguage)?.querySelector(
     `[data-sync-key="${escapeSelector(syncKey)}"]`
-  );
+  ) || null;
 }
 
 /* =========================================================
-   KOTWICA WIDOKU
-
-   Zapamiętuje logiczny element widoczny mniej więcej
-   na 35% wysokości ekranu oraz położenie wewnątrz niego.
+   KOTWICA WIDOKU PODCZAS ZMIANY JĘZYKA
 ========================================================= */
 
 function captureViewportAnchor() {
@@ -398,12 +405,16 @@ function captureViewportAnchor() {
     return null;
   }
 
-  const referenceY = window.innerHeight * 0.35;
+  const referenceY =
+    window.innerHeight * 0.35;
 
   const candidates = [
-    ...section.querySelectorAll("[data-sync-anchor]")
+    ...section.querySelectorAll(
+      "[data-sync-anchor]"
+    )
   ].filter(element => {
-    const rect = element.getBoundingClientRect();
+    const rect =
+      element.getBoundingClientRect();
 
     return (
       rect.width > 0 &&
@@ -416,10 +427,11 @@ function captureViewportAnchor() {
   }
 
   let chosen = null;
-  let bestDistance = Number.POSITIVE_INFINITY;
+  let bestDistance = Infinity;
 
   for (const element of candidates) {
-    const rect = element.getBoundingClientRect();
+    const rect =
+      element.getBoundingClientRect();
 
     if (
       rect.top <= referenceY &&
@@ -444,7 +456,8 @@ function captureViewportAnchor() {
     return null;
   }
 
-  const rect = chosen.getBoundingClientRect();
+  const rect =
+    chosen.getBoundingClientRect();
 
   const ratio = rect.height > 0
     ? clamp(
@@ -471,9 +484,7 @@ async function restoreViewportAnchor(
 
   await waitForNextPaint();
 
-  const targetSection = getSection(targetLanguage);
-
-  const target = targetSection?.querySelector(
+  const target = getSection(targetLanguage)?.querySelector(
     `[data-sync-key="${escapeSelector(anchor.syncKey)}"]`
   );
 
@@ -481,7 +492,8 @@ async function restoreViewportAnchor(
     return;
   }
 
-  const rect = target.getBoundingClientRect();
+  const rect =
+    target.getBoundingClientRect();
 
   if (rect.height <= 0) {
     return;
@@ -505,316 +517,336 @@ async function restoreViewportAnchor(
 }
 
 /* =========================================================
-   ZACHOWANIE POŁOŻENIA KLIKNIĘTEGO ELEMENTU
+   USTAWIANIE STANÓW
 ========================================================= */
 
-function captureElementPosition(element) {
-  if (!element) {
-    return null;
-  }
-
-  return {
-    element,
-    top: element.getBoundingClientRect().top
-  };
-}
-
-async function restoreElementPosition(snapshot) {
-  if (!snapshot?.element?.isConnected) {
+function setMainBodyState(body, isOpen) {
+  if (!body) {
     return;
   }
 
-  await waitForNextPaint();
-
-  const currentTop =
-    snapshot.element.getBoundingClientRect().top;
-
-  const difference =
-    currentTop - snapshot.top;
-
-  if (Math.abs(difference) < 1) {
-    return;
-  }
-
-  window.scrollBy({
-    top: difference,
-    left: 0,
-    behavior: "auto"
-  });
-}
-
-/* =========================================================
-   SYNCHRONIZACJA STANU MIĘDZY JĘZYKAMI
-========================================================= */
-
-function mirrorMainAccordionState(
-  sourceBody,
-  isOpen
-) {
-  const targetLanguage =
-    getActiveLanguage() === "pl"
-      ? "en"
-      : "pl";
-
-  const targetBody = findMatchingElement(
-    sourceBody,
-    targetLanguage
-  );
-
-  if (!targetBody) {
-    return;
-  }
-
-  const targetHeader =
-    targetBody.previousElementSibling;
-
-  targetBody.classList.toggle(
+  body.classList.toggle(
     "active",
     isOpen
   );
 
-  if (targetHeader) {
-    targetHeader.setAttribute(
-      "aria-expanded",
-      String(isOpen)
-    );
-  }
-}
+  const header =
+    body.previousElementSibling;
 
-function mirrorConnectionState(
-  sourceToggle,
-  sourceBody,
-  isOpen
-) {
-  const targetLanguage =
-    getActiveLanguage() === "pl"
-      ? "en"
-      : "pl";
-
-  const targetToggle = findMatchingElement(
-    sourceToggle,
-    targetLanguage
-  );
-
-  const targetBody = findMatchingElement(
-    sourceBody,
-    targetLanguage
-  );
-
-  targetToggle?.classList.toggle(
-    "active",
-    isOpen
-  );
-
-  targetBody?.classList.toggle(
-    "active",
-    isOpen
-  );
-
-  targetToggle?.setAttribute(
+  header?.setAttribute(
     "aria-expanded",
     String(isOpen)
   );
 }
 
-function mirrorExpandableState(
-  sourceBody,
+function setConnectionState(
+  toggle,
+  body,
   isOpen
 ) {
-  const targetLanguage =
-    getActiveLanguage() === "pl"
-      ? "en"
-      : "pl";
-
-  const targetBody = findMatchingElement(
-    sourceBody,
-    targetLanguage
-  );
-
-  if (!targetBody) {
-    return;
-  }
-
-  targetBody.classList.toggle(
+  toggle?.classList.toggle(
     "active",
     isOpen
   );
 
-  targetBody.style.display =
-    isOpen ? "block" : "none";
+  body?.classList.toggle(
+    "active",
+    isOpen
+  );
 
-  const syncKey =
-    sourceBody.dataset.syncKey?.replace(
-      /-body$/,
-      "-trigger"
-    );
+  toggle?.setAttribute(
+    "aria-expanded",
+    String(isOpen)
+  );
+}
 
-  if (!syncKey) {
+function setExpandableState(body, isOpen) {
+  if (!body) {
     return;
   }
 
-  const targetSection =
-    getSection(targetLanguage);
-
-  targetSection
-    ?.querySelectorAll(
-      `[data-sync-key="${escapeSelector(syncKey)}"]`
-    )
-    .forEach(trigger => {
-      trigger.setAttribute(
-        "aria-expanded",
-        String(isOpen)
-      );
-    });
-}
-
-function mirrorDetailsState(
-  sourceDetails,
-  isOpen
-) {
-  const targetLanguage =
-    getActiveLanguage() === "pl"
-      ? "en"
-      : "pl";
-
-  const targetDetails = findMatchingElement(
-    sourceDetails,
-    targetLanguage
+  body.classList.toggle(
+    "active",
+    isOpen
   );
 
-  if (targetDetails) {
-    targetDetails.open = isOpen;
+  body.style.display =
+    isOpen ? "block" : "none";
+
+  const bodyId = body.id;
+  const slot = getSlot(body);
+
+  if (!bodyId || !slot) {
+    return;
   }
+
+  slot.querySelectorAll(
+    `[data-target="${escapeSelector(bodyId)}"]`
+  ).forEach(trigger => {
+    trigger.setAttribute(
+      "aria-expanded",
+      String(isOpen)
+    );
+  });
+}
+
+function setDetailsState(detailsElement, isOpen) {
+  if (!detailsElement) {
+    return;
+  }
+
+  if (detailsElement.open === isOpen) {
+    return;
+  }
+
+  detailsElement.dataset.internalToggle = "true";
+  detailsElement.open = isOpen;
+
+  setTimeout(() => {
+    delete detailsElement.dataset.internalToggle;
+  }, 0);
 }
 
 /* =========================================================
-   GŁÓWNY AKORDEON
+   SYNCHRONIZACJA Z DRUGIM JĘZYKIEM
+========================================================= */
+
+function mirrorMainBodyState(body, isOpen) {
+  const target = findMatchingElement(
+    body,
+    getOtherLanguage()
+  );
+
+  setMainBodyState(target, isOpen);
+}
+
+function mirrorConnectionState(
+  toggle,
+  body,
+  isOpen
+) {
+  const targetLanguage =
+    getOtherLanguage();
+
+  const targetToggle =
+    findMatchingElement(
+      toggle,
+      targetLanguage
+    );
+
+  const targetBody =
+    findMatchingElement(
+      body,
+      targetLanguage
+    );
+
+  setConnectionState(
+    targetToggle,
+    targetBody,
+    isOpen
+  );
+}
+
+function mirrorExpandableState(body, isOpen) {
+  const target = findMatchingElement(
+    body,
+    getOtherLanguage()
+  );
+
+  setExpandableState(
+    target,
+    isOpen
+  );
+}
+
+function mirrorDetailsState(
+  detailsElement,
+  isOpen
+) {
+  const target = findMatchingElement(
+    detailsElement,
+    getOtherLanguage()
+  );
+
+  setDetailsState(
+    target,
+    isOpen
+  );
+}
+
+/* =========================================================
+   ZAMYKANIE INNYCH PODZAKŁADEK
+
+   W jednym głównym komunikacie może być otwarta
+   tylko jedna podzakładka — niezależnie od tego,
+   czy jest wykonana jako details, data-target,
+   czy connection-toggle.
+========================================================= */
+
+function closeOtherSubsections(
+  mainBody,
+  exceptElement = null
+) {
+  if (!mainBody) {
+    return;
+  }
+
+  mainBody.querySelectorAll(
+    SELECTORS.details
+  ).forEach(detailsElement => {
+    if (
+      detailsElement === exceptElement ||
+      !detailsElement.open
+    ) {
+      return;
+    }
+
+    setDetailsState(
+      detailsElement,
+      false
+    );
+
+    mirrorDetailsState(
+      detailsElement,
+      false
+    );
+  });
+
+  mainBody.querySelectorAll(
+    SELECTORS.connectionToggle
+  ).forEach(toggle => {
+    const body =
+      toggle.nextElementSibling;
+
+    if (
+      toggle === exceptElement ||
+      body === exceptElement
+    ) {
+      return;
+    }
+
+    if (
+      !body?.matches(SELECTORS.connectionBody)
+    ) {
+      return;
+    }
+
+    setConnectionState(
+      toggle,
+      body,
+      false
+    );
+
+    mirrorConnectionState(
+      toggle,
+      body,
+      false
+    );
+  });
+
+  mainBody.querySelectorAll(
+    SELECTORS.expandableBody
+  ).forEach(body => {
+    if (body === exceptElement) {
+      return;
+    }
+
+    if (
+      !body.classList.contains("active") &&
+      body.style.display !== "block"
+    ) {
+      return;
+    }
+
+    setExpandableState(
+      body,
+      false
+    );
+
+    mirrorExpandableState(
+      body,
+      false
+    );
+  });
+}
+
+/* =========================================================
+   GŁÓWNE AKORDEONY
 ========================================================= */
 
 async function toggleMainAccordion(header) {
-  const body = header.nextElementSibling;
+  const body =
+    header.nextElementSibling;
 
   if (!body?.matches(SELECTORS.mainBody)) {
     return;
   }
 
-  const positionSnapshot =
-    captureElementPosition(header);
-
-  const section = header.closest(
-    SELECTORS.section
-  );
+  const section =
+    header.closest(SELECTORS.section);
 
   const willOpen =
     !body.classList.contains("active");
 
-  section
-    ?.querySelectorAll(SELECTORS.mainBody)
-    .forEach(otherBody => {
-      if (otherBody === body) {
-        return;
-      }
+  section?.querySelectorAll(
+    SELECTORS.mainBody
+  ).forEach(otherBody => {
+    if (otherBody === body) {
+      return;
+    }
 
-      otherBody.classList.remove("active");
+    setMainBodyState(
+      otherBody,
+      false
+    );
 
-      const otherHeader =
-        otherBody.previousElementSibling;
+    mirrorMainBodyState(
+      otherBody,
+      false
+    );
+  });
 
-      otherHeader?.setAttribute(
-        "aria-expanded",
-        "false"
-      );
-
-      mirrorMainAccordionState(
-        otherBody,
-        false
-      );
-    });
-
-  body.classList.toggle(
-    "active",
-    willOpen
-  );
-
-  header.setAttribute(
-    "aria-expanded",
-    String(willOpen)
-  );
-
-  mirrorMainAccordionState(
+  setMainBodyState(
     body,
     willOpen
   );
 
-  await restoreElementPosition(
-    positionSnapshot
+  mirrorMainBodyState(
+    body,
+    willOpen
   );
+
+  if (willOpen) {
+    await scrollOpenedControlToTop(header);
+  }
 }
 
 /* =========================================================
-   PODAKORDEONY CONNECTION-TOGGLE
+   CONNECTION-TOGGLE
 ========================================================= */
 
 async function toggleConnectionAccordion(toggle) {
-  const body = toggle.nextElementSibling;
+  const body =
+    toggle.nextElementSibling;
 
   if (!body?.matches(SELECTORS.connectionBody)) {
     return;
   }
 
-  const positionSnapshot =
-    captureElementPosition(toggle);
-
-  const slot = getSlot(toggle);
-
   const willOpen =
     !toggle.classList.contains("active");
 
-  slot
-    ?.querySelectorAll(SELECTORS.connectionToggle)
-    .forEach(otherToggle => {
-      if (otherToggle === toggle) {
-        return;
-      }
+  if (willOpen) {
+    closeOtherSubsections(
+      getMainBody(toggle),
+      body
+    );
+  }
 
-      const otherBody =
-        otherToggle.nextElementSibling;
-
-      otherToggle.classList.remove("active");
-
-      otherToggle.setAttribute(
-        "aria-expanded",
-        "false"
-      );
-
-      if (
-        otherBody?.matches(
-          SELECTORS.connectionBody
-        )
-      ) {
-        otherBody.classList.remove("active");
-
-        mirrorConnectionState(
-          otherToggle,
-          otherBody,
-          false
-        );
-      }
-    });
-
-  toggle.classList.toggle(
-    "active",
+  setConnectionState(
+    toggle,
+    body,
     willOpen
-  );
-
-  body.classList.toggle(
-    "active",
-    willOpen
-  );
-
-  toggle.setAttribute(
-    "aria-expanded",
-    String(willOpen)
   );
 
   mirrorConnectionState(
@@ -823,83 +855,108 @@ async function toggleConnectionAccordion(toggle) {
     willOpen
   );
 
-  await restoreElementPosition(
-    positionSnapshot
-  );
+  if (willOpen) {
+    await scrollOpenedControlToTop(toggle);
+  }
 }
 
 /* =========================================================
-   ROZWIJANE BLOKI DATA-TARGET
+   BLOKI DATA-TARGET
 ========================================================= */
 
 function resolveExpandableBody(trigger) {
-  const targetId = trigger?.dataset.target;
+  const targetId =
+    trigger?.dataset.target;
 
   if (!targetId) {
     return null;
   }
 
-  const slot = getSlot(trigger);
-
-  return slot?.querySelector(
+  return getSlot(trigger)?.querySelector(
     `#${escapeSelector(targetId)}`
   ) || null;
 }
 
 async function toggleExpandable(trigger) {
-  const body = resolveExpandableBody(trigger);
+  const body =
+    resolveExpandableBody(trigger);
 
   if (!body) {
     return;
   }
 
-  const positionSnapshot =
-    captureElementPosition(
-      trigger.closest(".gastronomy-header") ||
-      trigger
-    );
+  const control =
+    trigger.closest(".gastronomy-header") ||
+    trigger;
 
   const willOpen =
     !body.classList.contains("active");
 
-  body.classList.toggle(
-    "active",
+  if (willOpen) {
+    closeOtherSubsections(
+      getMainBody(trigger),
+      body
+    );
+  }
+
+  setExpandableState(
+    body,
     willOpen
   );
-
-  body.style.display =
-    willOpen ? "block" : "none";
-
-  const slot = getSlot(trigger);
-  const targetId = trigger.dataset.target;
-
-  slot
-    ?.querySelectorAll(
-      `[data-target="${escapeSelector(targetId)}"]`
-    )
-    .forEach(item => {
-      item.setAttribute(
-        "aria-expanded",
-        String(willOpen)
-      );
-    });
 
   mirrorExpandableState(
     body,
     willOpen
   );
 
-  await restoreElementPosition(
-    positionSnapshot
-  );
+  if (willOpen) {
+    await scrollOpenedControlToTop(control);
+  }
 }
 
 /* =========================================================
-   PRZEŁĄCZANIE JĘZYKA
+   ELEMENTY DETAILS — KOMUNIKAT 6
+========================================================= */
+
+async function handleDetailsToggle(detailsElement) {
+  if (
+    detailsElement.dataset.internalToggle === "true"
+  ) {
+    return;
+  }
+
+  const isOpen =
+    detailsElement.open;
+
+  if (isOpen) {
+    closeOtherSubsections(
+      getMainBody(detailsElement),
+      detailsElement
+    );
+  }
+
+  mirrorDetailsState(
+    detailsElement,
+    isOpen
+  );
+
+  if (isOpen) {
+    const summary =
+      detailsElement.querySelector(
+        ":scope > summary"
+      );
+
+    await scrollOpenedControlToTop(summary);
+  }
+}
+
+/* =========================================================
+   JĘZYK
 ========================================================= */
 
 function updateLanguageControls(language) {
-  const isPolish = language === "pl";
+  const isPolish =
+    language === "pl";
 
   const tabPL =
     document.getElementById("tabPL");
@@ -931,11 +988,13 @@ function updateLanguageControls(language) {
   );
 
   if (tabPL) {
-    tabPL.tabIndex = isPolish ? 0 : -1;
+    tabPL.tabIndex =
+      isPolish ? 0 : -1;
   }
 
   if (tabEN) {
-    tabEN.tabIndex = isPolish ? -1 : 0;
+    tabEN.tabIndex =
+      isPolish ? -1 : 0;
   }
 
   if (langFab) {
@@ -952,10 +1011,14 @@ function updateLanguageControls(language) {
 }
 
 function showLanguageSection(language) {
-  const isPolish = language === "pl";
+  const isPolish =
+    language === "pl";
 
-  const sectionPL = getSection("pl");
-  const sectionEN = getSection("en");
+  const sectionPL =
+    getSection("pl");
+
+  const sectionEN =
+    getSection("en");
 
   sectionPL?.classList.toggle(
     "active",
@@ -988,16 +1051,15 @@ async function setLanguage(
 ) {
   if (
     languageSwitchInProgress ||
-    (interfaceReady &&
-      language === getActiveLanguage())
+    (
+      interfaceReady &&
+      language === getActiveLanguage()
+    )
   ) {
     return;
   }
 
   languageSwitchInProgress = true;
-
-  const langFab =
-    document.getElementById("langFab");
 
   const tabPL =
     document.getElementById("tabPL");
@@ -1005,9 +1067,12 @@ async function setLanguage(
   const tabEN =
     document.getElementById("tabEN");
 
-  langFab?.setAttribute("disabled", "");
+  const langFab =
+    document.getElementById("langFab");
+
   tabPL?.setAttribute("disabled", "");
   tabEN?.setAttribute("disabled", "");
+  langFab?.setAttribute("disabled", "");
 
   const anchor = preservePosition
     ? captureViewportAnchor()
@@ -1029,7 +1094,7 @@ async function setLanguage(
     } catch {}
   }
 
-  if (preservePosition && anchor) {
+  if (anchor) {
     await restoreViewportAnchor(
       anchor,
       language
@@ -1042,15 +1107,15 @@ async function setLanguage(
     "is-language-switching"
   );
 
-  langFab?.removeAttribute("disabled");
   tabPL?.removeAttribute("disabled");
   tabEN?.removeAttribute("disabled");
+  langFab?.removeAttribute("disabled");
 
   languageSwitchInProgress = false;
 }
 
 /* =========================================================
-   OBSŁUGA KLIKNIĘĆ
+   OBSŁUGA INTERFEJSU
 ========================================================= */
 
 function bindInterface() {
@@ -1081,6 +1146,7 @@ function bindInterface() {
 
       if (connection) {
         event.preventDefault();
+        event.stopPropagation();
 
         toggleConnectionAccordion(
           connection
@@ -1103,28 +1169,8 @@ function bindInterface() {
   );
 
   document.addEventListener(
-    "pointerdown",
-    event => {
-      const summary =
-        event.target.closest(
-          SELECTORS.detailsSummary
-        );
-
-      if (!summary) {
-        return;
-      }
-
-      detailsClickAnchor =
-        captureElementPosition(summary);
-    },
-    {
-      passive: true
-    }
-  );
-
-  document.addEventListener(
     "toggle",
-    async event => {
+    event => {
       const detailsElement =
         event.target;
 
@@ -1136,21 +1182,9 @@ function bindInterface() {
         return;
       }
 
-      mirrorDetailsState(
-        detailsElement,
-        detailsElement.open
+      handleDetailsToggle(
+        detailsElement
       );
-
-      if (detailsClickAnchor) {
-        const snapshot =
-          detailsClickAnchor;
-
-        detailsClickAnchor = null;
-
-        await restoreElementPosition(
-          snapshot
-        );
-      }
     },
     true
   );
@@ -1159,18 +1193,14 @@ function bindInterface() {
     .getElementById("tabPL")
     ?.addEventListener(
       "click",
-      () => {
-        setLanguage("pl");
-      }
+      () => setLanguage("pl")
     );
 
   document
     .getElementById("tabEN")
     ?.addEventListener(
       "click",
-      () => {
-        setLanguage("en");
-      }
+      () => setLanguage("en")
     );
 
   document
@@ -1178,12 +1208,9 @@ function bindInterface() {
     ?.addEventListener(
       "click",
       () => {
-        const nextLanguage =
-          getActiveLanguage() === "pl"
-            ? "en"
-            : "pl";
-
-        setLanguage(nextLanguage);
+        setLanguage(
+          getOtherLanguage()
+        );
       }
     );
 
@@ -1195,7 +1222,9 @@ function bindInterface() {
         window.scrollTo({
           top: 0,
           left: 0,
-          behavior: "smooth"
+          behavior: prefersReducedMotion()
+            ? "auto"
+            : "smooth"
         });
       }
     );
@@ -1243,10 +1272,6 @@ async function waitForImages() {
   );
 }
 
-/* =========================================================
-   BLOKADA INTERFEJSU PODCZAS STARTU
-========================================================= */
-
 function setInterfaceDisabled(disabled) {
   [
     document.getElementById("tabPL"),
@@ -1290,12 +1315,13 @@ async function init() {
     }
   } catch {}
 
-  /*
-    Najpierw ustawiamy język bez zachowywania pozycji,
-    ponieważ treść nie jest jeszcze załadowana.
-  */
-  updateLanguageControls(savedLanguage);
-  showLanguageSection(savedLanguage);
+  updateLanguageControls(
+    savedLanguage
+  );
+
+  showLanguageSection(
+    savedLanguage
+  );
 
   await loadSections();
 
@@ -1309,6 +1335,7 @@ async function init() {
   await waitForNextPaint();
 
   interfaceReady = true;
+
   setInterfaceDisabled(false);
 }
 
