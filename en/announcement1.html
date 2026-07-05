@@ -1,31 +1,57 @@
-<section class="accordion">
-  <button class="accordion-header">1. POWITALNY - SKRÓCONY STARTOWY (EN)</button>
-  <div class="accordion-body">
+<section
+  class="accordion"
+  data-sync-id="announcement-1">
 
-    <div class="speech-box">
+  <button
+    class="accordion-header"
+    type="button"
+    aria-expanded="false"
+    data-sync-id="announcement-1-header">
+    1. POWITALNY – SKRÓCONY STARTOWY (EN)
+  </button>
 
-      <p style="font-size:0.7rem; color:#777; margin-bottom:0.4rem;">
-        - pomiędzy stacjami w mieście, w którym pociąg rozpoczyna bieg
+  <div
+    class="accordion-body"
+    data-sync-id="announcement-1-body">
+
+    <div class="speech-box announcement-content">
+
+      <p
+        class="announcement-instruction announcement-instruction--intro"
+        data-sync-id="announcement-1-intro">
+        – pomiędzy stacjami w mieście, w którym pociąg rozpoczyna bieg
       </p>
 
-      <p><strong>Next station</strong> ............. .</p>
+      <p data-sync-id="announcement-1-next-station">
+        <strong>Next station</strong> ............. .
+      </p>
 
-      <p><em>Jeśli pociąg jest opóźniony 5 lub więcej minut, dodać:</em></p>
-      <button class="accordion-subheader green-toggle">Delay information</button>
-      <div class="accordion-subbody green" style="border-radius:14px;">
+      <p
+        class="announcement-instruction"
+        data-sync-id="announcement-1-delay-instruction">
+        Jeśli pociąg jest opóźniony 5 lub więcej minut, dodać:
+      </p>
+
+      <div
+        class="green announcement-option"
+        data-sync-id="announcement-1-delay">
         <strong>We would like to apologize for the delay.</strong>
       </div>
 
-      <p><em>Jeśli w pociągu dostępna jest oferta gastronomiczna, dodać:</em></p>
-      <button class="accordion-subheader yellow-toggle">Gastronomic service availability</button>
-      <div class="accordion-subbody yellow" style="border-radius:14px;">
+      <p
+        class="announcement-instruction"
+        data-sync-id="announcement-1-gastronomy-instruction">
+        Jeśli w pociągu dostępna jest oferta gastronomiczna, dodać:
+      </p>
 
-        <!-- ZWIĘZŁA INFORMACJA – bez rozwijania i bez plusa -->
-        <div style="font-weight:700;color:#000;">
+      <div
+        class="yellow announcement-option"
+        data-sync-id="announcement-1-gastronomy">
+        <strong>
           We would like to invite you to try the gastronomic service.
-        </div>
-
+        </strong>
       </div>
+
     </div>
 
   </div>
