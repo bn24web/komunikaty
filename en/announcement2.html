@@ -42,16 +42,255 @@
 
       <!-- OPÓŹNIENIE -->
       <p><em>Jeśli pociąg jest opóźniony, dodać:</em></p>
-      <div class="green" style="border-radius:14px;">
-        <strong>
-          We would like to inform you that due to ……………
-          <em>(wybrać z Katalogu)</em>
-          the train is delayed about ………
-          minutes.
-          We would like to apologize for the delay.
-          Passengers willing to change to connecting trains
-          are asked to report this intention to the train crew.
-        </strong>
+
+      <div class="green" style="border-radius:14px; padding:1rem;">
+
+        <div style="
+          display:flex;
+          flex-wrap:wrap;
+          align-items:baseline;
+          gap:0.2rem;
+        ">
+
+          <span>
+            <strong>
+              We would like to inform you that due to
+            </strong>
+          </span>
+
+          <button
+            class="connection-toggle"
+            type="button"
+            aria-expanded="false"
+            style="
+              display:inline-flex !important;
+              width:auto;
+              min-width:0;
+              min-height:0;
+              margin:0;
+              padding:0.08rem 0.4rem;
+              vertical-align:baseline;
+              font-size:0.8rem;
+              font-style:italic;
+              font-weight:500;
+              line-height:1.35;
+              color:#55708d;
+              background:rgba(255,255,255,0.62);
+              border:1px solid rgba(82,112,141,0.2);
+              border-radius:8px;
+              box-shadow:none;
+              cursor:pointer;
+            ">
+            wybrać z Katalogu
+          </button>
+
+          <!-- ROZWIJANY KATALOG PRZYCZYN OPÓŹNIENIA -->
+          <div
+            class="accordion-subbody"
+            style="
+              flex:0 0 100%;
+              width:100%;
+              margin:0.75rem 0 0.85rem;
+              padding:0.9rem 1rem;
+              background:rgba(255,255,255,0.88);
+              border:1px solid rgba(83,122,74,0.18);
+              border-radius:14px;
+              box-shadow:none;
+            ">
+
+            <div style="
+              margin-bottom:0.7rem;
+              font-weight:800;
+              font-size:0.92rem;
+              line-height:1.35;
+              color:#294b2a;
+            ">
+              Najpopularniejsze przyczyny opóźnienia
+              <span style="
+                font-weight:600;
+                font-size:0.78rem;
+                color:#64748b;
+              ">
+                (reszta w sekcji 7)
+              </span>
+            </div>
+
+            <div style="
+              display:flex;
+              flex-direction:column;
+              gap:0.48rem;
+              margin:0;
+              color:#1f2937;
+            ">
+
+              <div style="
+                display:grid;
+                grid-template-columns:1.8rem minmax(0,1fr);
+                align-items:start;
+                column-gap:0.2rem;
+              ">
+                <span style="font-weight:400;">a)</span>
+                <span>failure of railway traffic control equipment</span>
+              </div>
+
+              <div style="
+                display:grid;
+                grid-template-columns:1.8rem minmax(0,1fr);
+                align-items:start;
+                column-gap:0.2rem;
+              ">
+                <span style="font-weight:400;">b)</span>
+                <span>an extended stop of the train at the station</span>
+              </div>
+
+              <div style="
+                display:grid;
+                grid-template-columns:1.8rem minmax(0,1fr);
+                align-items:start;
+                column-gap:0.2rem;
+              ">
+                <span style="font-weight:400;">c)</span>
+                <span>a large number of passengers boarding the train</span>
+              </div>
+
+              <div style="
+                display:grid;
+                grid-template-columns:1.8rem minmax(0,1fr);
+                align-items:start;
+                column-gap:0.2rem;
+              ">
+                <span style="font-weight:400;">d)</span>
+                <span>waiting for passengers from another train</span>
+              </div>
+
+              <div style="
+                display:grid;
+                grid-template-columns:1.8rem minmax(0,1fr);
+                align-items:start;
+                column-gap:0.2rem;
+              ">
+                <span style="font-weight:400;">e)</span>
+                <span>disruptions to railway traffic</span>
+              </div>
+
+              <div style="
+                display:grid;
+                grid-template-columns:1.8rem minmax(0,1fr);
+                align-items:start;
+                column-gap:0.2rem;
+              ">
+                <span style="font-weight:400;">f)</span>
+                <span>a technical inspection of the train</span>
+              </div>
+
+              <div style="
+                display:grid;
+                grid-template-columns:1.8rem minmax(0,1fr);
+                align-items:start;
+                column-gap:0.2rem;
+              ">
+                <span style="font-weight:400;">g)</span>
+                <span>an accident causing a temporary suspension of railway traffic</span>
+              </div>
+
+              <div style="
+                display:grid;
+                grid-template-columns:1.8rem minmax(0,1fr);
+                align-items:start;
+                column-gap:0.2rem;
+              ">
+                <span style="font-weight:400;">h)</span>
+                <span>difficult weather conditions</span>
+              </div>
+
+              <div style="
+                display:grid;
+                grid-template-columns:1.8rem minmax(0,1fr);
+                align-items:start;
+                column-gap:0.2rem;
+              ">
+                <span style="font-weight:400;">i)</span>
+                <span>a collision with an animal</span>
+              </div>
+
+              <div style="
+                display:grid;
+                grid-template-columns:1.8rem minmax(0,1fr);
+                align-items:start;
+                column-gap:0.2rem;
+              ">
+                <span style="font-weight:400;">j)</span>
+                <span>
+                  an intervention by the police, emergency medical services
+                  or the fire brigade
+                </span>
+              </div>
+
+              <div style="
+                display:grid;
+                grid-template-columns:1.8rem minmax(0,1fr);
+                align-items:start;
+                column-gap:0.2rem;
+              ">
+                <span style="font-weight:400;">k)</span>
+                <span>a failure of the overhead power supply system</span>
+              </div>
+
+              <div style="
+                display:grid;
+                grid-template-columns:1.8rem minmax(0,1fr);
+                align-items:start;
+                column-gap:0.2rem;
+              ">
+                <span style="font-weight:400;">l)</span>
+                <span>a failure of railway infrastructure</span>
+              </div>
+
+              <div style="
+                display:grid;
+                grid-template-columns:1.8rem minmax(0,1fr);
+                align-items:start;
+                column-gap:0.2rem;
+              ">
+                <span style="font-weight:400;">m)</span>
+                <span>the delayed arrival of the train from abroad</span>
+              </div>
+
+              <div style="
+                display:grid;
+                grid-template-columns:1.8rem minmax(0,1fr);
+                align-items:start;
+                column-gap:0.2rem;
+              ">
+                <span style="font-weight:400;">n)</span>
+                <span>giving priority to another train</span>
+              </div>
+
+              <div style="
+                display:grid;
+                grid-template-columns:1.8rem minmax(0,1fr);
+                align-items:start;
+                column-gap:0.2rem;
+              ">
+                <span style="font-weight:400;">o)</span>
+                <span>
+                  the train running at a reduced or restricted speed
+                </span>
+              </div>
+
+            </div>
+          </div>
+
+          <span>
+            <strong>
+              the train is delayed about ……… minutes.
+              We would like to apologize for the delay.
+              Passengers willing to change to connecting trains
+              are asked to report this intention to the train crew.
+            </strong>
+          </span>
+
+        </div>
       </div>
 
       <!-- BLOK KOŃCOWY -->
