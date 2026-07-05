@@ -103,7 +103,11 @@ em{
   outline: 0;
   border-radius: 999px;
   cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease;
   user-select: none;
   font-family: inherit;
   line-height: 1.2;
@@ -112,187 +116,13 @@ em{
 
 .tab.active{
   color: #fff;
-  background: linear-gradient(90deg, #1d4ed8 0%, #2563eb 52%, #60a5fa 100%);
+  background: linear-gradient(
+    90deg,
+    #1d4ed8 0%,
+    #2563eb 52%,
+    #60a5fa 100%
+  );
   box-shadow: 0 8px 18px rgba(37,99,235,0.28);
-}
-
-/* =========================
-   PANEL NARZĘDZI — SZUKANIE / ULUBIONE
-========================= */
-.tools-panel{
-  display: flex !important;
-  align-items: center;
-  gap: 0.55rem;
-  margin: 0.45rem 0.5rem 0.75rem;
-  padding: 0.5rem;
-  background: rgba(255,255,255,0.82);
-  border: 1px solid rgba(36,50,74,0.08);
-  border-radius: 20px;
-  box-shadow: 0 8px 18px rgba(31,41,55,0.06);
-  backdrop-filter: blur(8px);
-}
-
-.search-box{
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.search-input{
-  width: 100% !important;
-  min-height: 44px;
-  padding: 0.68rem 0.9rem;
-  border-radius: 16px;
-  border: 1px solid rgba(36,50,74,0.12);
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  color: #1f2937;
-  font-family: inherit;
-  font-size: 0.92rem;
-  font-weight: 650;
-  outline: none;
-  box-shadow: inset 0 1px 2px rgba(31,41,55,0.04);
-  appearance: none;
-  -webkit-appearance: none;
-}
-
-.search-input::placeholder{
-  color: #94a3b8;
-  font-weight: 600;
-}
-
-.search-input:focus{
-  border-color: rgba(37,99,235,0.45);
-  box-shadow:
-    0 0 0 3px rgba(37,99,235,0.12),
-    inset 0 1px 2px rgba(31,41,55,0.04);
-}
-
-.favorites-toggle{
-  flex: 0 0 auto;
-  min-height: 44px;
-  padding: 0.68rem 0.9rem;
-  border-radius: 16px;
-  border: 1px solid rgba(36,50,74,0.12);
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  color: #334155;
-  font-family: inherit;
-  font-size: 0.9rem;
-  font-weight: 800;
-  cursor: pointer;
-  white-space: nowrap;
-  -webkit-tap-highlight-color: transparent;
-  box-shadow: 0 4px 12px rgba(31,41,55,0.04);
-}
-
-.favorites-toggle.active{
-  color: #7a5300;
-  background: linear-gradient(180deg, #fff7d6 0%, #ffeaa3 100%);
-  border-color: rgba(180,126,0,0.25);
-  box-shadow: 0 6px 14px rgba(180,126,0,0.12);
-}
-
-/* =========================
-   LISTA ULUBIONYCH SKRÓTÓW
-========================= */
-.favorites-list{
-  margin: -0.25rem 0.5rem 0.75rem;
-  padding: 0.65rem;
-  background: rgba(255,255,255,0.84);
-  border: 1px solid rgba(36,50,74,0.08);
-  border-radius: 20px;
-  box-shadow: 0 8px 18px rgba(31,41,55,0.06);
-  backdrop-filter: blur(8px);
-}
-
-.favorites-list__title{
-  padding: 0.1rem 0.25rem 0.45rem;
-  font-size: 0.78rem;
-  font-weight: 850;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.favorites-list__items{
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-}
-
-.favorite-shortcut{
-  width: 100%;
-  min-height: 42px;
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  padding: 0.62rem 0.72rem;
-  border: 1px solid rgba(180,126,0,0.18);
-  border-radius: 15px;
-  background: linear-gradient(180deg, #fffdf2 0%, #fff7d6 100%);
-  color: #24324a;
-  font-family: inherit;
-  font-size: 0.88rem;
-  font-weight: 800;
-  line-height: 1.25;
-  text-align: left;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(180,126,0,0.08);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.favorite-shortcut__star{
-  flex: 0 0 auto;
-  width: 26px;
-  height: 26px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  color: #b77900;
-  background: rgba(255,255,255,0.72);
-  border: 1px solid rgba(180,126,0,0.18);
-  line-height: 1;
-}
-
-.favorite-shortcut__label{
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.favorites-list__empty{
-  padding: 0.7rem 0.8rem;
-  border-radius: 15px;
-  background: rgba(255,255,255,0.75);
-  color: #667085;
-  font-size: 0.88rem;
-  font-weight: 750;
-  text-align: center;
-}
-
-.favorite-shortcut:active{
-  transform: scale(0.995);
-}
-
-.empty-state{
-  margin: 0 0.5rem 0.8rem;
-  padding: 0.85rem 1rem;
-  border-radius: 16px;
-  border: 1px solid rgba(36,50,74,0.10);
-  background: rgba(255,255,255,0.82);
-  color: #667085;
-  font-size: 0.9rem;
-  font-weight: 700;
-  text-align: center;
-  box-shadow: 0 8px 18px rgba(31,41,55,0.05);
-}
-
-.load-error{
-  margin: 0.5rem 0;
-  padding: 0.8rem 1rem;
-  border-radius: 14px;
-  background: #fee2e2;
-  color: #991b1b;
-  font-weight: 700;
 }
 
 /* =========================
@@ -314,44 +144,60 @@ em{
   display: none !important;
 }
 
+.load-error{
+  margin: 0 0 0.55rem;
+  padding: 0.85rem 1rem;
+  color: #991b1b;
+  font-weight: 700;
+  background: #fee2e2;
+  border: 1px solid rgba(153,27,27,0.12);
+  border-radius: 16px;
+}
+
 /* =========================
    GŁÓWNE AKORDEONY
 ========================= */
 .accordion-header{
   width: 100%;
-  text-align: left;
-  padding: 1rem 1.05rem;
-  font-weight: 800;
-  font-size: 1.02rem;
-  letter-spacing: -0.02em;
-  color: #1f2937;
-  background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
-  border: 1px solid rgba(36,50,74,0.08);
-  cursor: pointer;
-  margin-bottom: 0.55rem;
-  border-radius: 18px;
-  appearance: none;
-  -webkit-appearance: none;
-  box-shadow: 0 8px 20px rgba(31,41,55,0.06);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
-  font-family: inherit;
-  line-height: 1.25;
-
+  min-height: 52px;
   display: flex !important;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+  margin-bottom: 0.55rem;
+  padding: 1rem 1.05rem;
+
+  text-align: left;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 1.02rem;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: #1f2937;
+
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+  border: 1px solid rgba(36,50,74,0.08);
+  border-radius: 18px;
+  box-shadow: 0 8px 20px rgba(31,41,55,0.06);
+
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
 }
 
 .accordion-body{
   display: none;
   padding: 0;
+  margin-bottom: 1rem;
+  overflow-x: auto;
   background: transparent;
   background-image: none;
   border: none;
   border-radius: 0;
-  margin-bottom: 1rem;
-  overflow-x: auto;
 }
 
 .accordion-body.active{
@@ -359,82 +205,51 @@ em{
 }
 
 /* =========================
-   GWIAZDKI ULUBIONYCH
-========================= */
-.favorite-star{
-  display: inline-flex !important;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  min-width: 32px;
-  height: 32px;
-  margin-left: auto !important;
-  margin-right: 0 !important;
-  margin-top: 0 !important;
-  border-radius: 999px;
-  color: #94a3b8;
-  background: rgba(255,255,255,0.72);
-  border: 1px solid rgba(36,50,74,0.10);
-  font-size: 1.15rem;
-  font-weight: 900;
-  line-height: 1;
-  vertical-align: middle;
-  cursor: pointer;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-  flex: 0 0 auto;
-  float: none !important;
-}
-
-.favorite-star.active{
-  color: #b77900;
-  background: linear-gradient(180deg, #fff7d6 0%, #ffeaa3 100%);
-  border-color: rgba(180,126,0,0.25);
-  box-shadow: 0 4px 12px rgba(180,126,0,0.14);
-}
-
-.favorite-star--small{
-  width: 30px;
-  min-width: 30px;
-  height: 30px;
-  font-size: 1.08rem;
-}
-
-/* =========================
    JEDYNY PODAKORDEON – LOTNISKA
 ========================= */
 .connection-toggle{
   width: 100%;
-  text-align: left;
-  padding: 0.95rem 1rem;
-  font-weight: 800;
-  font-size: 1rem;
-  color: #1e3a5f;
-  background: linear-gradient(90deg, #7cc6ff 0%, #dcedff 18%, #f8fbff 100%);
-  border: 1px solid rgba(36,50,74,0.08);
-  cursor: pointer;
-  margin-bottom: 0.55rem;
-  border-radius: 18px;
-  appearance: none;
-  -webkit-appearance: none;
-  box-shadow: 0 8px 20px rgba(59,130,246,0.10);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
-  font-family: inherit;
-  line-height: 1.25;
-
+  min-height: 52px;
   display: flex !important;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+  margin-bottom: 0.55rem;
+  padding: 0.95rem 1rem;
+
+  text-align: left;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 1rem;
+  line-height: 1.25;
+  color: #1e3a5f;
+
+  background: linear-gradient(
+    90deg,
+    #7cc6ff 0%,
+    #dcedff 18%,
+    #f8fbff 100%
+  );
+  border: 1px solid rgba(36,50,74,0.08);
+  border-radius: 18px;
+  box-shadow: 0 8px 20px rgba(59,130,246,0.10);
+
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
 }
 
 .connection-toggle + .accordion-subbody{
   display: none !important;
   padding: 1rem;
+  margin-bottom: 1rem;
   background: rgba(255,255,255,0.82);
   border: 1px solid rgba(36,50,74,0.08);
   border-radius: 18px;
-  margin-bottom: 1rem;
   box-shadow: 0 8px 18px rgba(31,41,55,0.06);
 }
 
@@ -467,11 +282,11 @@ em{
 .soft-panel,
 .sub-panel,
 .instruction-panel{
+  margin: 0.6rem 0;
+  padding: 0.85rem 0.9rem;
   background: rgba(255,255,255,0.78);
   border: 1px solid rgba(36,50,74,0.10);
   border-radius: 16px;
-  padding: 0.85rem 0.9rem;
-  margin: 0.6rem 0;
   box-shadow: 0 6px 16px rgba(31,41,55,0.045);
 }
 
@@ -480,16 +295,16 @@ em{
 .comment-muted{
   font-style: italic;
   font-size: 0.85rem;
-  color: #667085;
   line-height: 1.45;
+  color: #667085;
 }
 
 .sub-title,
 .panel-title{
   display: block;
+  margin-bottom: 0.35rem;
   font-weight: 800;
   color: #1f2937;
-  margin-bottom: 0.35rem;
 }
 
 .sub-paragraph,
@@ -514,12 +329,12 @@ em{
 .orange,
 .yellow,
 .cyan{
-  padding: 1rem 0.8rem;
-  margin: 0.5rem 0;
-  border-left: 5px solid;
   width: 100%;
-  border-radius: 0;
+  margin: 0.5rem 0;
+  padding: 1rem 0.8rem;
   overflow: visible;
+  border-left: 5px solid;
+  border-radius: 0;
   box-shadow: none;
 }
 
@@ -547,55 +362,55 @@ em{
    BLOKI TEKSTOWE
 ========================= */
 .speech-box{
+  margin: 0;
+  padding: 0.8rem;
   background: #fff;
   border: none;
-  padding: 0.8rem;
-  margin: 0;
   border-radius: 0;
   backdrop-filter: none;
 }
 
 .highlighted-info{
-  background: #e6e6e6;
-  padding: 0.8rem;
   margin: 0.5rem 0;
+  padding: 0.8rem;
   font-weight: 700;
+  color: #1f2937;
+  background: #e6e6e6;
   border-left: 4px solid #999;
   border-radius: 0;
-  color: #1f2937;
 }
 
 /* =========================
    TABELA LOTNISK
 ========================= */
 .airport-table-wrapper{
-  overflow-x: auto;
-  margin: 1rem 0;
   width: 100%;
+  margin: 1rem 0;
+  overflow-x: auto;
 }
 
 .airport-table{
   width: 100%;
+  overflow: visible;
+  font-size: 0.85rem;
+  background: #fff;
   border-collapse: collapse;
   border-spacing: 0;
-  font-size: 0.85rem;
-  overflow: visible;
   border-radius: 0;
-  background: #fff;
   box-shadow: none;
 }
 
 .airport-table th,
 .airport-table td{
-  border: 1px solid #ccc;
   padding: 0.55rem 0.8rem;
   text-align: left;
   white-space: normal;
+  border: 1px solid #ccc;
 }
 
 .airport-table th{
-  background: #eef4fb;
   font-weight: 700;
+  background: #eef4fb;
 }
 
 /* =========================
@@ -612,7 +427,7 @@ em{
 }
 
 /* =========================
-   GASTRONOMIA / KATALOG – ROZWIJANIE
+   GASTRONOMIA / KATALOG
 ========================= */
 .gastronomy-header{
   display: flex;
@@ -631,24 +446,26 @@ em{
 }
 
 .gastronomy-header > .gastronomy-plus{
+  position: relative;
+  z-index: 13;
   flex: 0 0 auto;
-  margin-left: auto;
   width: 34px;
   height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
-  line-height: 1;
+  margin-left: auto;
+  padding: 0;
+
   font-size: 1.5rem;
   font-weight: 800;
+  line-height: 1;
   color: #7b6a16;
+
+  background: rgba(255,255,255,0.45);
+  border-radius: 999px;
   cursor: pointer;
   user-select: none;
-  position: relative;
-  z-index: 13;
-  padding: 0;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.45);
 }
 
 .gastronomy-more{
@@ -661,25 +478,29 @@ em{
 }
 
 .gastronomy-comment-out{
+  margin: 0.7rem 0 0.25rem;
   font-style: italic;
   font-size: 0.85rem;
   color: #5b5560;
-  margin: 0.7rem 0 0.25rem;
   background: transparent;
 }
 
 .gastronomy-card{
-  background: linear-gradient(180deg, rgba(255,251,223,0.92) 0%, rgba(247,238,188,0.92) 100%);
-  border-radius: 16px;
-  padding: 1rem 1rem;
   margin: 0 0 0.9rem 0;
+  padding: 1rem;
+  background: linear-gradient(
+    180deg,
+    rgba(255,251,223,0.92) 0%,
+    rgba(247,238,188,0.92) 100%
+  );
   border: 1px solid rgba(120,92,11,0.14);
+  border-radius: 16px;
 }
 
 .gastronomy-text-strong{
   font-weight: 600;
-  line-height: 1.55;
   font-size: 1rem;
+  line-height: 1.55;
   color: #2b2b2b;
 }
 
@@ -701,54 +522,15 @@ em{
 .gastronomy-graybox{
   margin-top: 0.3rem;
   padding: 0.6rem 0.8rem;
-  border: 1px solid rgba(83,83,83,0.32);
-  border-radius: 12px;
-  background: rgba(255,255,255,0.58);
   font-weight: 700;
   line-height: 1.4;
+  background: rgba(255,255,255,0.58);
+  border: 1px solid rgba(83,83,83,0.32);
+  border-radius: 12px;
 }
 
 .gastronomy-graybox--right{
   margin-left: 2.2rem;
-}
-
-/* =========================
-   PODSEKCJE — GWIAZDKA + PLUSIK PO PRAWEJ
-   Bez ruszania mechaniki plusika
-========================= */
-.subsection-fav-row{
-  position: relative !important;
-  padding-right: 92px !important;
-}
-
-.subsection-favorite-star{
-  position: absolute !important;
-  right: 52px !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  margin: 0 !important;
-  float: none !important;
-  z-index: 12 !important;
-}
-
-.subsection-fav-row .gastronomy-plus{
-  position: absolute !important;
-  right: 10px !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  margin: 0 !important;
-  z-index: 13 !important;
-}
-
-/* summary/details */
-.summary-fav-row{
-  display: flex !important;
-  align-items: center !important;
-  gap: 0.65rem !important;
-}
-
-.summary-fav-row .favorite-star{
-  margin-left: auto !important;
 }
 
 /* =========================
@@ -781,7 +563,10 @@ em{
 ========================= */
 .lang-fab{
   position: fixed;
-  right: max(14px, calc((100vw - min(100vw, var(--pageWidth))) / 2 + 14px));
+  right: max(
+    14px,
+    calc((100vw - min(100vw, var(--pageWidth))) / 2 + 14px)
+  );
   bottom: 86px;
   z-index: 9999;
 
@@ -789,17 +574,17 @@ em{
   min-width: 64px;
   padding: 0 16px;
 
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.45);
-  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
-  color: #fff;
-
   font-family: inherit;
   font-weight: 800;
   font-size: 1rem;
   line-height: 1;
+  color: #fff;
 
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+  border: 1px solid rgba(255,255,255,0.45);
+  border-radius: 999px;
   box-shadow: 0 14px 28px rgba(37,99,235,0.30);
+
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
@@ -830,10 +615,10 @@ em{
 
 .topbar__inner{
   width: 100%;
-  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0;
   background: transparent;
   background-image: none;
 }
@@ -846,13 +631,13 @@ em{
   width: 92%;
   height: auto;
   display: block;
+  margin: 0 auto;
   object-fit: contain;
+  background: transparent !important;
   border: 0 !important;
   outline: 0 !important;
   box-shadow: none !important;
   filter: none !important;
-  background: transparent !important;
-  margin: 0 auto;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
@@ -876,11 +661,16 @@ em{
 
 .footerbar__inner{
   width: 100%;
-  padding: 10px 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(241,245,251,0.92) 100%);
+  padding: 10px 12px;
+
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.88) 0%,
+    rgba(241,245,251,0.92) 100%
+  );
   border: 1px solid rgba(36,50,74,0.08);
   border-radius: 18px;
   box-shadow: 0 8px 20px rgba(31,41,55,0.06);
@@ -890,18 +680,18 @@ em{
 .footerbar__meta{
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 7px;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  gap: 4px 7px;
   font-size: 11px;
-  color: #425066;
   line-height: 1.2;
   text-align: center;
+  color: #425066;
 }
 
 .footerbar__metaName{
-  color: #1f3b82;
   font-weight: 800;
+  color: #1f3b82;
 }
 
 .footerbar__dot{
@@ -911,20 +701,20 @@ em{
 .footerbar__counters{
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .chip{
-  font-size: 11px;
   padding: 5px 9px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.86);
-  color: #334155;
-  border: 1px solid rgba(36,50,74,0.10);
-  white-space: nowrap;
+  font-size: 11px;
   line-height: 1.1;
+  white-space: nowrap;
+  color: #334155;
+  background: rgba(255,255,255,0.86);
+  border: 1px solid rgba(36,50,74,0.10);
+  border-radius: 999px;
   box-shadow: 0 2px 8px rgba(31,41,55,0.04);
 }
 
@@ -959,6 +749,63 @@ em{
 }
 
 /* =========================
+   JEDNOLITOŚĆ I LEKKOŚĆ
+========================= */
+button{
+  font: inherit;
+}
+
+.accordion-header > :first-child,
+.connection-toggle > :first-child,
+.gastronomy-header > strong{
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/*
+  Zabezpieczenie przed starymi znacznikami ulubionych,
+  gdyby pozostały w którejś podstronie.
+*/
+.favorite-star,
+.subsection-favorite-star,
+.favorite-shortcut,
+.favorites-list,
+.tools-panel,
+.search-box,
+.search-input,
+.favorites-toggle,
+.empty-state,
+[data-favorite],
+[data-fav-id]{
+  display: none !important;
+}
+
+.subsection-fav-row{
+  padding-right: 0 !important;
+}
+
+.summary-fav-row{
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* =========================
+   STANY INTERAKCJI
+========================= */
+.accordion-header:active,
+.connection-toggle:active,
+.tab:active{
+  transform: scale(0.995);
+}
+
+@media (hover: hover){
+  .accordion-header:hover,
+  .connection-toggle:hover{
+    box-shadow: 0 10px 24px rgba(31,41,55,0.09);
+  }
+}
+
+/* =========================
    RESPONSYWNOŚĆ
 ========================= */
 @media (max-width: 768px){
@@ -968,10 +815,10 @@ em{
   }
 
   .tab{
+    min-height: 46px;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 46px;
     font-size: 0.92rem;
   }
 
@@ -1002,63 +849,6 @@ em{
     border-radius: 16px;
   }
 
-  .tools-panel{
-    gap: 0.42rem;
-    padding: 0.42rem;
-    border-radius: 18px;
-  }
-
-  .search-input{
-    min-height: 42px;
-    padding: 0.62rem 0.75rem;
-    font-size: 0.88rem;
-    border-radius: 14px;
-  }
-
-  .favorites-toggle{
-    min-height: 42px;
-    padding: 0.62rem 0.72rem;
-    font-size: 0.84rem;
-    border-radius: 14px;
-  }
-
-  .favorite-star{
-    width: 30px;
-    min-width: 30px;
-    height: 30px;
-    font-size: 1.08rem;
-  }
-
-  .favorites-list{
-    margin: -0.25rem 0.45rem 0.7rem;
-    padding: 0.55rem;
-    border-radius: 18px;
-  }
-
-  .favorite-shortcut{
-    min-height: 40px;
-    padding: 0.58rem 0.65rem;
-    font-size: 0.84rem;
-    border-radius: 14px;
-  }
-
-  .favorite-shortcut__star{
-    width: 24px;
-    height: 24px;
-  }
-
-  .subsection-fav-row{
-    padding-right: 88px !important;
-  }
-
-  .subsection-favorite-star{
-    right: 50px !important;
-  }
-
-  .subsection-fav-row .gastronomy-plus{
-    right: 8px !important;
-  }
-
   .green,
   .orange,
   .yellow,
@@ -1069,6 +859,26 @@ em{
 
   .speech-box{
     border-radius: 0;
+  }
+
+  .footerbar{
+    margin: 14px auto 16px;
+    padding: 0 6px;
+  }
+
+  .footerbar__inner{
+    padding: 10px 11px;
+    border-radius: 16px;
+  }
+
+  .footerbar__meta{
+    gap: 4px 6px;
+    font-size: 10.5px;
+  }
+
+  .chip{
+    padding: 5px 8px;
+    font-size: 10.5px;
   }
 }
 
@@ -1094,61 +904,12 @@ em{
   .footerbar__counters{
     justify-content: flex-end;
     flex-wrap: nowrap;
-    white-space: nowrap;
     gap: 5px;
+    white-space: nowrap;
   }
 
   .chip{
-    font-size: 10.5px;
     padding: 5px 8px;
-  }
-}
-
-@media (max-width: 480px){
-  .footerbar{
-    padding: 0 6px;
-    margin: 14px auto 16px;
-  }
-
-  .footerbar__inner{
-    padding: 10px 11px;
-    border-radius: 16px;
-  }
-
-  .footerbar__meta{
     font-size: 10.5px;
-    gap: 4px 6px;
-  }
-
-  .chip{
-    font-size: 10.5px;
-    padding: 5px 8px;
-  }
-}
-
-/* =========================
-   STANY INTERAKCJI
-========================= */
-.accordion-header:active,
-.connection-toggle:active,
-.tab:active,
-.favorites-toggle:active,
-.favorite-star:active{
-  transform: scale(0.995);
-}
-
-@media (hover: hover){
-  .accordion-header:hover,
-  .connection-toggle:hover{
-    box-shadow: 0 10px 24px rgba(31,41,55,0.09);
-  }
-
-  .favorite-star:hover{
-    color: #b77900;
-  }
-
-  .favorite-shortcut:hover{
-    border-color: rgba(180,126,0,0.30);
-    box-shadow: 0 6px 15px rgba(180,126,0,0.12);
   }
 }
