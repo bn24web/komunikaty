@@ -913,3 +913,38 @@ button{
     font-size: 10.5px;
   }
 }
+
+/* =========================================================
+   STABILIZACJA PRZEŁĄCZANIA PL / EN
+   Wariant dobry
+========================================================= */
+
+.accordion-container,
+.section,
+.load-slot,
+.accordion-body,
+.accordion-subbody,
+.gastronomy-more{
+  overflow-anchor: none;
+}
+
+html.is-language-switching{
+  scroll-behavior: auto !important;
+}
+
+html.is-language-switching *,
+html.is-language-switching *::before,
+html.is-language-switching *::after{
+  transition: none !important;
+  animation: none !important;
+}
+
+.tab:disabled,
+.lang-fab:disabled{
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+details > summary{
+  -webkit-tap-highlight-color: transparent;
+}
