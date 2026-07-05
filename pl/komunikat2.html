@@ -1,74 +1,262 @@
 <section class="accordion">
-  <button class="accordion-header">2. POWITALNY – ROZSZERZONY (PL)</button>
+  <button
+    class="accordion-header"
+    type="button"
+    aria-expanded="false">
+    2. POWITALNY – ROZSZERZONY (PL)
+  </button>
+
   <div class="accordion-body">
 
-    <!-- OPIS JAK NA SCREENIE – LEKKIE WCIĘCIE -->
-    <p style="font-size:0.7rem; color:#777; margin:0.4rem 0 0.6rem 0; padding-left:0.8rem;">
+    <!-- OPIS -->
+    <p style="
+      font-size: 0.7rem;
+      color: #777;
+      margin: 0.4rem 0 0.6rem 0;
+      padding-left: 0.8rem;
+    ">
       – za miastem, w którym pociąg rozpoczął bieg<br>
       – za miastem wojewódzkim<br>
       – po przekroczeniu granicy państwa
     </p>
 
     <!-- BLOK GŁÓWNY -->
-    <div class="speech-box" style="border:2px solid #ccc; border-radius:18px; padding:1rem;">
-
-      <p><strong>Dzień dobry! / Dobry wieczór!</strong></p>
+    <div
+      class="speech-box"
+      style="
+        border: 2px solid #ccc;
+        border-radius: 18px;
+        padding: 1rem;
+      ">
 
       <p>
-        <strong>Witamy w pociągu</strong> …………… …………… ……………
-        <em>(podać kategorię: Express Intercity Premium / Express Intercity / Intercity / TLK,
-        numer i nazwę pociągu, jeśli jest)</em>
-        <strong>ze stacji</strong> …………… <strong>do stacji</strong> ……………,
-        <strong>przez stację</strong> ……………
-        <em>(podać jedną lub ew. dwie stacje pośrednie, definiujące trasę przejazdu)</em>.
+        <strong>Dzień dobry! / Dobry wieczór!</strong>
       </p>
 
-      <p><em>
-        Jeśli pociąg prowadzi dwie lub więcej grup wagonów,
-        to w powyższym fragmencie należy podać relację zasadniczą,
-        a następnie dodać:
-      </em></p>
+      <p>
+        <strong>Witamy w pociągu</strong>
+        …………… …………… ……………
+
+        <em>
+          (podać kategorię: Express Intercity Premium /
+          Express Intercity / Intercity / TLK,
+          numer i nazwę pociągu, jeśli jest)
+        </em>
+
+        <strong>ze stacji</strong>
+        ……………
+
+        <strong>do stacji</strong>
+        ……………,
+
+        <strong>przez stację</strong>
+        ……………
+
+        <em>
+          (podać jedną lub ewentualnie dwie stacje pośrednie,
+          definiujące trasę przejazdu)
+        </em>.
+      </p>
+
+      <p>
+        <em>
+          Jeśli pociąg prowadzi dwie lub więcej grup wagonów,
+          to w powyższym fragmencie należy podać relację zasadniczą,
+          a następnie dodać:
+        </em>
+      </p>
 
       <!-- GRUPY WAGONÓW -->
-      <div class="orange" style="border-radius:14px;">
+      <div
+        class="orange"
+        style="border-radius: 14px;">
+
         <strong>
-          Pociąg prowadzi grupę/grupy wagonów do stacji ……………,
-          ……………
+          Pociąg prowadzi grupę/grupy wagonów do stacji
+          ……………, ……………
         </strong>
-        <em>(podać stację docelową / stacje docelowe każdej grupy wagonów)</em>.
+
+        <em>
+          (podać stację docelową / stacje docelowe każdej grupy wagonów)
+        </em>.
       </div>
 
-      <p><strong>Następna stacja</strong> …………… .</p>
+      <p>
+        <strong>Następna stacja</strong>
+        …………… .
+      </p>
 
       <!-- OPÓŹNIENIE -->
-      <p><em>Jeśli pociąg jest opóźniony, dodać:</em></p>
-      <div class="green" style="border-radius:14px;">
-        <strong>
-          Informujemy, że w związku z ……………
-          <em>(wybrać z Katalogu)</em>
-          pociąg jest opóźniony o ………
-          minut/minut.
-          Przepraszamy za opóźnienie.
-          Osoby przesiadające się do innych pociągów prosimy
-          o zgłaszanie tego zamiaru drużynie konduktorskiej.
-        </strong>
+      <p>
+        <em>Jeśli pociąg jest opóźniony, dodać:</em>
+      </p>
+
+      <div
+        class="green"
+        style="
+          border-radius: 14px;
+          padding: 1rem;
+        ">
+
+        <p style="margin: 0;">
+          <strong>
+            Informujemy, że w związku z
+          </strong>
+
+          <button
+            class="connection-toggle"
+            type="button"
+            aria-expanded="false"
+            style="
+              display: inline-flex !important;
+              width: auto;
+              min-height: 0;
+              margin: 0 0.15rem;
+              padding: 0.08rem 0.35rem;
+              vertical-align: baseline;
+              font-size: 0.8rem;
+              font-style: italic;
+              font-weight: 500;
+              line-height: 1.35;
+              color: #55708d;
+              background: rgba(255, 255, 255, 0.55);
+              border: 1px solid rgba(82, 112, 141, 0.18);
+              border-radius: 8px;
+              box-shadow: none;
+              cursor: pointer;
+            ">
+            wybrać z Katalogu
+          </button>
+
+          <div
+            class="accordion-subbody"
+            style="
+              margin: 0.75rem 0 0.85rem;
+              padding: 0.9rem;
+              background: rgba(255, 255, 255, 0.82);
+              border: 1px solid rgba(83, 122, 74, 0.18);
+              border-radius: 14px;
+              box-shadow: none;
+            ">
+
+            <div style="
+              margin-bottom: 0.65rem;
+              font-weight: 800;
+              font-size: 0.92rem;
+              color: #294b2a;
+            ">
+              Najpopularniejsze przyczyny opóźnienia
+            </div>
+
+            <ul style="
+              margin: 0;
+              padding-left: 1.25rem;
+              color: #1f2937;
+            ">
+
+              <li style="margin-bottom: 0.45rem;">
+                z powodu awarii urządzeń sterowania ruchem kolejowym
+              </li>
+
+              <li style="margin-bottom: 0.45rem;">
+                z powodu wydłużonego postoju pociągu na stacji
+                w związku z wsiadaniem dużej liczby podróżnych
+              </li>
+
+              <li style="margin-bottom: 0.45rem;">
+                z powodu oczekiwania na podróżnych z innego pociągu
+              </li>
+
+              <li style="margin-bottom: 0.45rem;">
+                z powodu utrudnień w ruchu kolejowym
+              </li>
+
+              <li style="margin-bottom: 0.45rem;">
+                z powodu oględzin taboru
+              </li>
+
+              <li style="margin-bottom: 0.45rem;">
+                w związku z wypadkiem powodującym przerwę w ruchu
+              </li>
+
+              <li style="margin-bottom: 0.45rem;">
+                z powodu trudnych warunków atmosferycznych
+              </li>
+
+              <li style="margin-bottom: 0.45rem;">
+                w związku z kolizją ze zwierzęciem
+              </li>
+
+              <li style="margin-bottom: 0.45rem;">
+                w związku z interwencją służb porządkowych,
+                medycznych lub straży pożarnej
+              </li>
+
+              <li style="margin-bottom: 0.45rem;">
+                w związku z awarią sieci trakcyjnej
+              </li>
+
+              <li style="margin-bottom: 0.45rem;">
+                w związku z awarią elementów infrastruktury kolejowej
+              </li>
+
+              <li style="margin-bottom: 0.45rem;">
+                w związku z opóźnionym przyjazdem pociągu z zagranicy
+              </li>
+
+              <li style="margin-bottom: 0.45rem;">
+                w związku z przepuszczaniem innego pociągu
+              </li>
+
+              <li>
+                w związku z jazdą pociągu ze zmniejszoną
+                lub ograniczoną prędkością
+              </li>
+
+            </ul>
+          </div>
+
+          <strong>
+            pociąg jest opóźniony o ……… minut/minut.
+            Przepraszamy za opóźnienie.
+            Osoby przesiadające się do innych pociągów prosimy
+            o zgłaszanie tego zamiaru drużynie konduktorskiej.
+          </strong>
+        </p>
       </div>
 
       <!-- BLOK KOŃCOWY -->
-      <div style="border:2px solid #ccc; border-radius:18px; padding:1rem; margin-top:1rem;">
+      <div style="
+        border: 2px solid #ccc;
+        border-radius: 18px;
+        padding: 1rem;
+        margin-top: 1rem;
+      ">
+
         <p>
           <strong>
-            W trosce o Państwa komfort i bezpieczeństwo, prosimy o zapoznanie się
-            z informacjami zamieszczonymi w wagonach.
+            W trosce o Państwa komfort i bezpieczeństwo,
+            prosimy o zapoznanie się z informacjami zamieszczonymi
+            w wagonach.
+
             Drużyna konduktorska pozostaje do Państwa dyspozycji
             i służy pomocą w trakcie całej podróży.
-            Przedział konduktorski znajduje się w wagonie numer ……… .
+
+            Przedział konduktorski znajduje się
+            w wagonie numer ……… .
           </strong>
         </p>
 
-        <p><em>Jeśli w pociągu przewidziany jest bezpłatny poczęstunek, dodać:</em></p>
+        <p>
+          <em>
+            Jeśli w pociągu przewidziany jest bezpłatny poczęstunek,
+            dodać:
+          </em>
+        </p>
 
-        <div class="highlighted-info" style="border-radius:12px;">
+        <div
+          class="highlighted-info"
+          style="border-radius: 12px;">
           W trakcie podróży otrzymają Państwo poczęstunek.
         </div>
       </div>
@@ -76,22 +264,45 @@
     </div>
 
     <!-- DODATKOWO ZARZĄDZONE KOMUNIKATY -->
-    <div class="accordion-subbody yellow" style="margin-top:0.5rem; border-radius:14px;">
+    <div
+      class="accordion-subbody yellow"
+      style="
+        margin-top: 0.5rem;
+        border-radius: 14px;
+      ">
 
-      <div class="gastronomy-header gastronomy-plus"
-           data-target="gastronomy-pl-2"
-           style="cursor:pointer; color:#000; text-decoration:none;">
-        <strong>Zapraszamy do skorzystania z oferty gastronomicznej.</strong>
-        <span class="gastronomy-plus" data-target="gastronomy-pl-2">+</span>
+      <div
+        class="gastronomy-header"
+        style="
+          cursor: pointer;
+          color: #000;
+          text-decoration: none;
+        ">
+
+        <strong>
+          Zapraszamy do skorzystania z oferty gastronomicznej.
+        </strong>
+
+        <span
+          class="gastronomy-plus"
+          data-target="gastronomy-pl-2">
+          +
+        </span>
       </div>
 
-      <div id="gastronomy-pl-2"
-           class="gastronomy-more"
-           style="border-left:none; padding-left:0;">
+      <div
+        id="gastronomy-pl-2"
+        class="gastronomy-more"
+        style="
+          border-left: none;
+          padding-left: 0;
+        ">
 
         <p class="gastronomy-comment-out">
-          Jeśli w pociągu znajduje się strefa gastronomiczna, dodać:
+          Jeśli w pociągu znajduje się strefa gastronomiczna,
+          dodać:
         </p>
+
         <div class="gastronomy-card">
           <div class="gastronomy-text-strong">
             Zapraszamy do skorzystania z oferty gastronomicznej WARS,
@@ -99,33 +310,42 @@
           </div>
 
           <div class="gastronomy-comment-in">
-            Jeśli oferta dostępna jest w skróconej relacji, dodać:
+            Jeśli oferta dostępna jest w skróconej relacji,
+            dodać:
           </div>
+
           <div class="gastronomy-graybox">
-            Oferta gastronomiczna dostępna jest do stacji …………… .
+            Oferta gastronomiczna dostępna jest
+            do stacji …………… .
           </div>
         </div>
 
         <p class="gastronomy-comment-out">
           Jeśli w pociągu nie ma strefy gastronomicznej,
-          ale znajdują się sprawne automaty vendingowe, dodać:
+          ale znajdują się sprawne automaty vendingowe,
+          dodać:
         </p>
+
         <div class="gastronomy-card">
           <div class="gastronomy-text-strong">
-            Zapraszamy do zakupu napojów i przekąsek w automatach,
-            w wagonie/wagonach numer …… .
+            Zapraszamy do zakupu napojów i przekąsek
+            w automatach, w wagonie/wagonach numer …… .
           </div>
         </div>
 
         <p class="gastronomy-comment-out">
           Jeśli w pociągu wyjątkowo nie ma strefy gastronomicznej,
-          ale znajduje się wózek mini-bar lub sprawne automaty vendingowe, dodać:
+          ale znajduje się wózek mini-bar lub sprawne automaty
+          vendingowe, dodać:
         </p>
+
         <div class="gastronomy-card gastronomy-card--dashed">
           <div class="gastronomy-text-strong">
             Informujemy, że w pociągu nie ma wagonu gastronomicznego,
-            za co Państwa przepraszamy. Zakup napojów i przekąsek
-            możliwy jest z wózka mini-bar / w automatach
+            za co Państwa przepraszamy.
+
+            Zakup napojów i przekąsek możliwy jest
+            z wózka mini-bar / w automatach
             w wagonie/wagonach numer …… .
           </div>
         </div>
@@ -134,6 +354,7 @@
           Jeśli w pociągu znajduje się strefa gastronomiczna
           oraz sprawne automaty vendingowe, dodać:
         </p>
+
         <div class="gastronomy-card">
           <div class="gastronomy-text-strong">
             Zapraszamy do skorzystania z oferty gastronomicznej WARS,
@@ -146,9 +367,12 @@
           Jeśli w pociągu nie ma strefy gastronomicznej,
           ale znajduje się wózek mini-bar, dodać:
         </p>
+
         <div class="gastronomy-card">
           <div class="gastronomy-text-strong">
-            Zapraszamy do zakupu napojów i przekąsek z wózka mini-bar.
+            Zapraszamy do zakupu napojów i przekąsek
+            z wózka mini-bar.
+
             Oferta dostępna będzie do stacji …………… .
           </div>
 
@@ -156,6 +380,7 @@
             Jeśli nie ma możliwości przemieszczania się przez skład
             z wózkiem mini-bar, dodać:
           </div>
+
           <div class="gastronomy-graybox gastronomy-graybox--right">
             w wagonie numer …… .
           </div>
@@ -163,9 +388,10 @@
 
         <p class="gastronomy-comment-out">
           Jeśli w pociągu wyjątkowo nie ma oferty gastronomicznej
-          (brak strefy gastronomicznej lub wózka mini-bar,
-          niesprawne automaty vendingowe lub ich brak), dodać:
+          — brak strefy gastronomicznej lub wózka mini-bar,
+          niesprawne automaty vendingowe lub ich brak — dodać:
         </p>
+
         <div class="gastronomy-card gastronomy-card--dashed">
           <div class="gastronomy-text-strong">
             Informujemy, że w pociągu oferta gastronomiczna
