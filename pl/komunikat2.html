@@ -1,4 +1,5 @@
 <section class="accordion">
+
   <button
     class="accordion-header"
     type="button"
@@ -159,6 +160,7 @@
               color: #294b2a;
             ">
               Najpopularniejsze przyczyny opóźnienia
+
               <span style="
                 font-weight: 600;
                 font-size: 0.78rem;
@@ -168,7 +170,6 @@
               </span>
             </div>
 
-            <!-- LISTA a), b), c) -->
             <div style="
               display: flex;
               flex-direction: column;
@@ -184,7 +185,9 @@
                 column-gap: 0.2rem;
               ">
                 <span style="font-weight: 400;">a)</span>
-                <span>z powodu awarii urządzeń sterowania ruchem kolejowym</span>
+                <span>
+                  z powodu awarii urządzeń sterowania ruchem kolejowym
+                </span>
               </div>
 
               <div style="
@@ -194,7 +197,9 @@
                 column-gap: 0.2rem;
               ">
                 <span style="font-weight: 400;">b)</span>
-                <span>z powodu wydłużonego postoju pociągu na stacji</span>
+                <span>
+                  z powodu wydłużonego postoju pociągu na stacji
+                </span>
               </div>
 
               <div style="
@@ -204,7 +209,9 @@
                 column-gap: 0.2rem;
               ">
                 <span style="font-weight: 400;">c)</span>
-                <span>w związku z wsiadaniem dużej liczby podróżnych</span>
+                <span>
+                  w związku z wsiadaniem dużej liczby podróżnych
+                </span>
               </div>
 
               <div style="
@@ -214,7 +221,9 @@
                 column-gap: 0.2rem;
               ">
                 <span style="font-weight: 400;">d)</span>
-                <span>z powodu oczekiwania na podróżnych z innego pociągu</span>
+                <span>
+                  z powodu oczekiwania na podróżnych z innego pociągu
+                </span>
               </div>
 
               <div style="
@@ -224,7 +233,9 @@
                 column-gap: 0.2rem;
               ">
                 <span style="font-weight: 400;">e)</span>
-                <span>z powodu utrudnień w ruchu kolejowym</span>
+                <span>
+                  z powodu utrudnień w ruchu kolejowym
+                </span>
               </div>
 
               <div style="
@@ -234,7 +245,9 @@
                 column-gap: 0.2rem;
               ">
                 <span style="font-weight: 400;">f)</span>
-                <span>z powodu oględzin taboru</span>
+                <span>
+                  z powodu oględzin taboru
+                </span>
               </div>
 
               <div style="
@@ -244,7 +257,9 @@
                 column-gap: 0.2rem;
               ">
                 <span style="font-weight: 400;">g)</span>
-                <span>w związku z wypadkiem powodującym przerwę w ruchu</span>
+                <span>
+                  w związku z wypadkiem powodującym przerwę w ruchu
+                </span>
               </div>
 
               <div style="
@@ -254,7 +269,9 @@
                 column-gap: 0.2rem;
               ">
                 <span style="font-weight: 400;">h)</span>
-                <span>z powodu trudnych warunków atmosferycznych</span>
+                <span>
+                  z powodu trudnych warunków atmosferycznych
+                </span>
               </div>
 
               <div style="
@@ -264,7 +281,9 @@
                 column-gap: 0.2rem;
               ">
                 <span style="font-weight: 400;">i)</span>
-                <span>w związku z kolizją ze zwierzęciem</span>
+                <span>
+                  w związku z kolizją ze zwierzęciem
+                </span>
               </div>
 
               <div style="
@@ -287,7 +306,9 @@
                 column-gap: 0.2rem;
               ">
                 <span style="font-weight: 400;">k)</span>
-                <span>w związku z awarią sieci trakcyjnej</span>
+                <span>
+                  w związku z awarią sieci trakcyjnej
+                </span>
               </div>
 
               <div style="
@@ -297,7 +318,9 @@
                 column-gap: 0.2rem;
               ">
                 <span style="font-weight: 400;">l)</span>
-                <span>w związku z awarią elementów infrastruktury kolejowej</span>
+                <span>
+                  w związku z awarią elementów infrastruktury kolejowej
+                </span>
               </div>
 
               <div style="
@@ -307,7 +330,9 @@
                 column-gap: 0.2rem;
               ">
                 <span style="font-weight: 400;">m)</span>
-                <span>w związku z opóźnionym przyjazdem pociągu z zagranicy</span>
+                <span>
+                  w związku z opóźnionym przyjazdem pociągu z zagranicy
+                </span>
               </div>
 
               <div style="
@@ -317,7 +342,9 @@
                 column-gap: 0.2rem;
               ">
                 <span style="font-weight: 400;">n)</span>
-                <span>w związku z przepuszczaniem innego pociągu</span>
+                <span>
+                  w związku z przepuszczaniem innego pociągu
+                </span>
               </div>
 
               <div style="
@@ -388,18 +415,38 @@
 
     <!-- DODATKOWO ZARZĄDZONE KOMUNIKATY -->
     <div
+      class="highlighted-info"
+      style="margin-top: 1rem;">
+      Dodatkowo zarządzone komunikaty.
+    </div>
+
+    <!-- GASTRONOMIA -->
+    <div
       class="accordion-subbody yellow"
       style="
         margin-top: 0.5rem;
         border-radius: 14px;
       ">
 
-      <div
+      <!-- CAŁY NAGŁÓWEK JEST KLIKALNY -->
+      <button
         class="gastronomy-header"
+        type="button"
+        data-target="gastronomy-pl-2"
+        aria-expanded="false"
+        aria-controls="gastronomy-pl-2"
         style="
-          cursor: pointer;
+          width: 100%;
+          margin: 0;
+          border: 0;
+          background: transparent;
+          text-align: left;
+          font-family: inherit;
           color: #000;
-          text-decoration: none;
+          cursor: pointer;
+          appearance: none;
+          -webkit-appearance: none;
+          -webkit-tap-highlight-color: transparent;
         ">
 
         <strong>
@@ -408,10 +455,11 @@
 
         <span
           class="gastronomy-plus"
-          data-target="gastronomy-pl-2">
+          aria-hidden="true">
           +
         </span>
-      </div>
+
+      </button>
 
       <div
         id="gastronomy-pl-2"
